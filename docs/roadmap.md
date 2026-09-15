@@ -6,9 +6,9 @@ Every week ends with: tests passing, a deploy to the server, and this doc update
 
 ---
 
-## Week 1 — Foundation & Infrastructure
+## Week 1 — Foundation & Infrastructure ✅ COMPLETE (2026-09-16)
 
-**Status (2026-09-16): `https://www.mingly.ai` is live in production**, TLS included, confirmed publicly reachable. Coming Soon page deployed. LinkedIn auth code, DB migration, and backend skeleton are written and tested locally but not yet deployed — that's next, once the LinkedIn Developer app is finished.
+**Status:** exit test passed. `https://www.mingly.ai` is live in production with TLS. LinkedIn login tested end to end with a real account — a real user record exists in the production database. Backend, Postgres+pgvector, and the initial migration are all deployed and verified working. Coming Soon page is live with the real logo.
 
 **Goal:** empty product, but a real one — reachable at `www.mingly.ai`, with auth working end to end.
 

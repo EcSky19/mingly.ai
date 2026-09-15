@@ -1,5 +1,15 @@
 # Deployment Log
 
+## 2026-09-16 — Backend, database, and LinkedIn auth deployed. Week 1 complete.
+
+**Backend + database:** deployed via `docker compose up -d --build db backend`. Backend on host port 8010 (8000 was taken by CareerRadar), Postgres+pgvector not exposed to the host at all — only reachable internally via the Docker network. Migration `0001_initial_users` applied successfully (fixed a bug first: the enum type was being created twice — caught and fixed by testing against a real local Postgres+pgvector instance before redeploying).
+
+**nginx:** added `/api/` routing to the existing `mingly-ai` site config (proxies to backend on 8010), inserted via script to avoid manual edit errors, verified with `nginx -t` before reload.
+
+**LinkedIn OAuth:** tested end to end with a real LinkedIn account. Login → LinkedIn consent → callback → user record created in production database → redirect to onboarding, all confirmed working.
+
+**Week 1 exit test: passed.** `www.mingly.ai` is live, LinkedIn login works, a real user record exists in the production database.
+
 ## 2026-09-16 — First deploy: Coming Soon page
 
 **Server:** shared Hetzner box (also runs CareerRadar, sma-engine, taengine — see notes below), 2 vCPU / 4GB RAM / 40GB disk, Helsinki.
