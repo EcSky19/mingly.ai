@@ -19,7 +19,10 @@ export default function ComingSoon() {
 
       <main className="page">
         <div className="content">
-          <span className="wordmark">Mingly.ai</span>
+          <div className="wordmark">
+            <img src="/mingly-mark.png" alt="" className="mark" />
+            <span>Mingly.ai</span>
+          </div>
 
           <h1 className="headline">
             Meet your
@@ -84,13 +87,24 @@ export default function ComingSoon() {
         }
 
         .wordmark {
+          display: flex;
+          align-items: center;
+          gap: 0.6rem;
+          margin-bottom: 3.5rem;
+        }
+
+        .mark {
+          height: 1.7rem;
+          width: auto;
+          display: block;
+        }
+
+        .wordmark span {
           font-family: "Fraunces", serif;
           font-size: 1.05rem;
           font-weight: 500;
           letter-spacing: 0.02em;
           color: #e8a548;
-          display: inline-block;
-          margin-bottom: 3.5rem;
         }
 
         .headline {
