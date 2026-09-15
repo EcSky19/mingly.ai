@@ -55,6 +55,19 @@ Same pattern, applied to the `school` field.
 - **Explicit "my school isn't listed" fallback:** the suggestion dropdown always includes a final option like "Can't find your school? Enter it manually" - clicking it (or simply not selecting any suggestion and just typing/submitting) switches the field to plain free text. This matters because Hipolabs' list, while large, won't include every trade school, bootcamp, small international institution, or program someone might have attended - the fallback is not an edge case, it's a first-class path, same as company.
 - Same fail-open behavior if the Hipolabs call errors or times out: field remains usable as free text.
 
+## Current role / title autocomplete
+
+Same spirit as company/school - live, but here the underlying data is actually stable enough to import once rather than call a third party at request time.
+
+**Provider:** O\*NET (U.S. Department of Labor's Occupational Information Network) "Job Titles" file - public domain, free, updated quarterly at onetcenter.org. Contains ~57,000 real-world alternate/"lay" job titles (sourced from employer job postings, worker surveys, and government classification systems, not just formal titles) linked to ~900 standardized O\*NET-SOC occupations. This is meaningfully broader and closer to how people actually title themselves than a hand-curated list would be - includes jargon and non-standard titles, not just formal occupation names.
+
+**Architecture - different from company/school, same spirit as the static lists:**
+- At ~57,000 rows, too large to bundle as flat JSON loaded into every request/process the way the smaller CIP/degree lists are handled.
+- Import the O\*NET Job Titles file into its own Postgres table (e.g. `reference_job_titles`) as a one-time data load (documented as a seed/import script, re-run whenever we pull a new quarterly O\*NET release).
+- Use Postgres trigram search (`pg_trgm` extension) or a simple prefix index for fast fuzzy/partial matching - no external network call needed at request time, since the data lives in our own database.
+- Endpoint: `GET /api/job-titles/autocomplete?q=<partial>` queries this table directly.
+- Same fallback pattern as everywhere else: free text always available if nothing matches - not every real title (especially at small/early-stage companies - "Growth Hacker," "Head of Vibes," etc.) will be in any standardized taxonomy, and that's fine.
+
 ## Degree and field of study autocomplete
 
 Different approach from company/school, deliberately. Company names and school names are huge, open-ended, constantly-changing universes (millions of companies; schools open/close/rename) - that's why those need live third-party APIs. Degree types and fields of study are the opposite: **bounded, stable, well-known lists**. Depending on another external API for these would add a third-party failure point for no real benefit. Both ship as static lists bundled directly in our own app - no external API call, no rate limits, works offline, nothing to fail open from.
