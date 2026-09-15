@@ -54,3 +54,13 @@ Same pattern, applied to the `school` field.
 - Debounced on the frontend, same as company
 - **Explicit "my school isn't listed" fallback:** the suggestion dropdown always includes a final option like "Can't find your school? Enter it manually" - clicking it (or simply not selecting any suggestion and just typing/submitting) switches the field to plain free text. This matters because Hipolabs' list, while large, won't include every trade school, bootcamp, small international institution, or program someone might have attended - the fallback is not an edge case, it's a first-class path, same as company.
 - Same fail-open behavior if the Hipolabs call errors or times out: field remains usable as free text.
+
+## Degree and field of study autocomplete
+
+Different approach from company/school, deliberately. Company names and school names are huge, open-ended, constantly-changing universes (millions of companies; schools open/close/rename) - that's why those need live third-party APIs. Degree types and fields of study are the opposite: **bounded, stable, well-known lists**. Depending on another external API for these would add a third-party failure point for no real benefit. Both ship as static lists bundled directly in our own app - no external API call, no rate limits, works offline, nothing to fail open from.
+
+**Degree type** (`degree` field): a short curated list we own and maintain ourselves (~20-30 entries) - Associate's (AA/AS), Bachelor's (BA/BS/BFA/BEng), Master's (MA/MS/MBA/MEd/MFA/LLM), Doctoral (PhD/EdD/JD/MD/DO/PsyD), Professional Certificate, and an explicit "Other" / free-text option. No external dataset needed; this list is small and slow-changing enough to hand-maintain in the codebase.
+
+**Field of study** (`field_of_study` field): sourced from the U.S. Department of Education's **CIP (Classification of Instructional Programs)** codes - the standard federal taxonomy of academic fields, public domain, free, and stable (used by NCES and referenced by universities' own registrars). We'll use the CIP 2020 4-digit level (~400 categories - "Computer Science," "Economics," "Mechanical Engineering") rather than the full 6-digit level (2,000+ narrow subcategories), since 4-digit is granular enough to be useful without overwhelming the autocomplete with near-duplicate entries. Bundled as a static JSON file in the repo (e.g. `backend/app/data/cip_fields_of_study.json`), not fetched from any live API.
+
+Both fields keep the same UX pattern as company/school: type-ahead search against the bundled list, with a "not listed / enter manually" free-text fallback always available, since not everyone's actual field of study or credential type will cleanly match a fixed taxonomy.
