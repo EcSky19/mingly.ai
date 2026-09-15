@@ -18,8 +18,8 @@
 
 **DNS (GoDaddy):** root `@` record was previously attached to GoDaddy's Website Builder product (serving a parked page) and had no dedicated `www` record — only a `www` CNAME pointing at the root. Fixed by disconnecting Website Builder and adding a plain A record for `@` → `204.168.186.74` (the existing `www` CNAME then resolves through automatically). Other subdomains (`api`, `careerradar`, `smaengine`, `taengine`) were already correctly configured and were not touched.
 
-**TLS:** not yet issued — first Certbot attempt failed because DNS hadn't propagated yet (old GoDaddy parking IPs were still being served). Waiting on propagation, will retry `certbot --nginx -d mingly.ai -d www.mingly.ai`.
+**TLS:** issued successfully via `certbot --nginx -d mingly.ai -d www.mingly.ai` on 2026-09-16, after DNS finished propagating. Certificate expires 2026-12-14, auto-renewal configured by Certbot.
 
-**Status:** container running and verified serving real content locally on the server (`curl localhost:3010` returns the actual page). Public HTTPS access pending DNS propagation + Certbot.
+**Status:** **live** — `https://www.mingly.ai` confirmed publicly reachable, serving the real Coming Soon page over HTTPS. Verified by fetching the URL directly.
 
 **Not yet deployed:** backend API, Postgres+pgvector, LinkedIn auth (LinkedIn Developer app also still in setup — Company Page and app product pending).
