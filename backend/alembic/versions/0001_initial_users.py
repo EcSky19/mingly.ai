@@ -18,6 +18,14 @@ account_status_enum = postgresql.ENUM(
     "active", "suspended", "banned", "deleted", name="accountstatus"
 )
 
+# Separate reference used inside create_table: create_type=False tells
+# SQLAlchemy not to attempt "CREATE TYPE" again here, since we already
+# create it explicitly (with checkfirst) below. Without this, create_table
+# tries to create the same enum type a second time and fails.
+account_status_column_type = postgresql.ENUM(
+    "active", "suspended", "banned", "deleted", name="accountstatus", create_type=False
+)
+
 
 def upgrade():
     op.execute("CREATE EXTENSION IF NOT EXISTS vector")
@@ -34,7 +42,7 @@ def upgrade():
         sa.Column("last_name", sa.String(), nullable=False),
         sa.Column("birth_year", sa.Integer(), nullable=True),
         sa.Column("profile_photo_url", sa.String(), nullable=True),
-        sa.Column("account_status", account_status_enum, nullable=False, server_default="active"),
+        sa.Column("account_status", account_status_column_type, nullable=False, server_default="active"),
         sa.Column("onboarding_completed", sa.Boolean(), nullable=False, server_default=sa.false()),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
