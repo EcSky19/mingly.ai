@@ -1,0 +1,14 @@
+# Caddy reverse proxy config for the Hetzner server.
+# Caddy handles TLS automatically via Let's Encrypt for the domains below.
+
+www.mingly.ai, mingly.ai {
+    # API routes go to the backend container
+    handle /api/* {
+        reverse_proxy backend:8000
+    }
+
+    # Everything else goes to the Next.js frontend
+    handle {
+        reverse_proxy frontend:3000
+    }
+}
