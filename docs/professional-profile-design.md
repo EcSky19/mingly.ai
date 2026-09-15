@@ -27,3 +27,17 @@ These are independent — a user can, for example, share `industry` for matching
 ## Implementation note for Week 2
 
 The `professional_profiles` table (see roadmap Week 2) should make every column above nullable, with the privacy flags stored per-field (or per-field-group if that proves simpler once the onboarding UI is built) rather than one blanket privacy setting for the whole professional section. The onboarding UI should present company/industry as a single UI step with two paths ("share company" vs "just share industry"), not as two separate unrelated form fields, so the intent is clear to the user.
+
+## Company name autocomplete
+
+As the user types in the `company` field, suggest real company names for a better typing experience (avoids typos, normalizes names like "Google" vs "Google LLC" vs "google.com").
+
+**Provider:** Clearbit's Company Autocomplete API (`https://autocomplete.clearbit.com/v1/companies/suggest?query=...`). Free, no registration/API key required as of 2026 (confirmed still free after Clearbit sunset most of their other free tools in April 2025). Returns `[{name, domain, logo}, ...]`.
+
+**Architecture:** proxy through our own backend rather than calling Clearbit directly from the browser:
+- New endpoint: `GET /api/companies/autocomplete?q=<partial>`
+- Backend calls Clearbit server-side, returns just `{name, domain}` pairs (drop the logo - we don't need it)
+- Debounce on the frontend (e.g. 250ms) before firing a request, don't fire on every keystroke
+- If the Clearbit call fails or times out, fail open - the field remains a normal free-text input, never blocks the user from typing and submitting a company name that isn't in Clearbit's index (many real companies, especially small/early-stage ones, won't be)
+
+This keeps us able to swap providers later (e.g. if Clearbit changes its free-tier terms) without any frontend changes, and keeps company names optional/free-text underneath the suggestions - autocomplete is a UX aid, never a validation gate.
