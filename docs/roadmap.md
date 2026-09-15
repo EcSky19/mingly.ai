@@ -8,6 +8,8 @@ Every week ends with: tests passing, a deploy to the server, and this doc update
 
 ## Week 1 — Foundation & Infrastructure
 
+**Status (2026-09-16):** repo scaffolding, backend skeleton, LinkedIn auth code, and DB migration are written and tested locally (see `docs/deployment-log.md`). Coming Soon page is deployed and running on the server, port 3010, behind a new nginx site config — DNS just fixed, TLS pending propagation. LinkedIn Developer app setup in progress (Company Page created; app + OIDC product + credentials still pending). Backend/DB not deployed to the server yet.
+
 **Goal:** empty product, but a real one — reachable at `www.mingly.ai`, with auth working end to end.
 
 - Repo structure (frontend / backend / database / docs)
