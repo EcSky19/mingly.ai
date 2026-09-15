@@ -41,3 +41,16 @@ As the user types in the `company` field, suggest real company names for a bette
 - If the Clearbit call fails or times out, fail open - the field remains a normal free-text input, never blocks the user from typing and submitting a company name that isn't in Clearbit's index (many real companies, especially small/early-stage ones, won't be)
 
 This keeps us able to swap providers later (e.g. if Clearbit changes its free-tier terms) without any frontend changes, and keeps company names optional/free-text underneath the suggestions - autocomplete is a UX aid, never a validation gate.
+
+## School name autocomplete
+
+Same pattern, applied to the `school` field.
+
+**Provider:** Hipolabs Universities API (`http://universities.hipolabs.com/search?name=<partial>`). Free, no API key, no registration. Covers roughly 10,000+ institutions worldwide, searchable by name and/or country. Returns `[{name, country, domain, web_page}, ...]`.
+
+**Architecture:** same as company autocomplete -
+- New endpoint: `GET /api/schools/autocomplete?q=<partial>`
+- Backend proxies to Hipolabs server-side, returns just `{name, country}` pairs
+- Debounced on the frontend, same as company
+- **Explicit "my school isn't listed" fallback:** the suggestion dropdown always includes a final option like "Can't find your school? Enter it manually" - clicking it (or simply not selecting any suggestion and just typing/submitting) switches the field to plain free text. This matters because Hipolabs' list, while large, won't include every trade school, bootcamp, small international institution, or program someone might have attended - the fallback is not an edge case, it's a first-class path, same as company.
+- Same fail-open behavior if the Hipolabs call errors or times out: field remains usable as free text.
