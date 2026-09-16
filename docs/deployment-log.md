@@ -1,6 +1,21 @@
 # Deployment Log
 
+## 2026-09-16 (later still) — Onboarding UI live, verified interactively in browser
+
+**Deployed:** migration 0003 (user_education table, seeded job titles), education CRUD endpoints, industries autocomplete, full onboarding form rewrite.
+
+**Fixed along the way:**
+- Real UUID JSON serialization bug in EducationEntryOut schema, caught by tests before deploy
+- A test-methodology bug (not a real security bug) in my own authorization test - verified with request-scoped cookies that ownership checks are actually correct
+- Company/Industry section relabeled ("Current Employment" / "Share Company" / "Share Industry") and industry field given real autocomplete, per direct user feedback after first browser test
+
+**Verified live:**
+- `/api/industries/autocomplete`, `/api/job-titles/autocomplete` (now seeded, 110 real titles) - confirmed via curl
+- `/api/profile/education` - confirmed protected (401 without session)
+- **Full onboarding form tested interactively in a real browser by the user** - loads correctly, autocomplete works, company/industry toggle works, multi-entry education (add another degree) works, save/continue works. This is the first UI in this project confirmed working end-to-end by a human rather than just by automated tests/curl.
+
 ## 2026-09-16 (later) — Professional profile backend deployed and verified live
+
 
 **Deployed:** migration 0002 (`professional_profiles`, `reference_job_titles` tables), 5 autocomplete endpoints, session auth bugfix. Deployed at commit `f1b177e`.
 
