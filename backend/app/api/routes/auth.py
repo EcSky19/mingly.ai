@@ -9,6 +9,7 @@ from app.core.config import settings
 from app.db.session import get_db
 from app.models.user import User
 from app.services import linkedin_auth
+from app.services.session_auth import get_current_user
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -66,12 +67,7 @@ async def logout(request: Request):
 
 @router.get("/me")
 async def me(request: Request, db: Session = Depends(get_db)):
-    user_id = request.session.get("user_id")
-    if not user_id:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=401, detail="Not authenticated")
+    user = get_current_user(request, db)
     return {
         "id": str(user.id),
         "first_name": user.first_name,
