@@ -7,7 +7,7 @@ export default function ComingSoon() {
         <title>Mingly.ai — Meet your kind of people</title>
         <meta
           name="description"
-          content="A social community for career-oriented professionals to build a life outside of work. Launching in New York City."
+          content="A social community for career-oriented professionals to build a life outside of work."
         />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -40,7 +40,6 @@ export default function ComingSoon() {
             <a className="cta" href="mailto:hello@mingly.ai?subject=Early access">
               Get early access
             </a>
-            <span className="location">Launching in New York City</span>
           </div>
         </div>
 
@@ -147,11 +146,6 @@ export default function ComingSoon() {
         .cta:hover {
           background: #f2b768;
           transform: translateY(-1px);
-        }
-
-        .location {
-          font-size: 0.9rem;
-          color: #8f84ad;
         }
 
         .motif {
