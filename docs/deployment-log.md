@@ -1,5 +1,19 @@
 # Deployment Log
 
+## 2026-09-16 (later) — Professional profile backend deployed and verified live
+
+**Deployed:** migration 0002 (`professional_profiles`, `reference_job_titles` tables), 5 autocomplete endpoints, session auth bugfix. Deployed at commit `f1b177e`.
+
+**Verified in production (not just locally):**
+- `GET /api/degrees/autocomplete?q=bach` → correct static-list results
+- `GET /api/companies/autocomplete?q=goog` → real live Clearbit results ("Google" first) - this endpoint couldn't be fully verified from the development sandbox (network-blocked there), confirmed working from the production server instead
+- `GET /api/schools/autocomplete?q=harvard` → real live Hipolabs result ("Harvard University")
+- `GET /api/job-titles/autocomplete?q=engineer` → correctly returns `[]` (table not yet seeded - documented, expected, fails open rather than erroring)
+
+**Known gap, tracked honestly:** `reference_job_titles` table exists but is unseeded. O*NET import script not yet written (see `backend/app/data/README.md`). `fields_of_study_starter.json` is a 75-entry starter list, not the full CIP taxonomy (also documented there) - full CIP import blocked on getting the source file onto a machine with unrestricted network access.
+
+**Server sync note:** server's git history had diverged from GitHub again (same root cause as this morning - server had older commits under the pre-rotation history). Resolved with `git fetch` + `git reset --hard FETCH_HEAD`, same fix as before.
+
 ## 2026-09-16 — Backend, database, and LinkedIn auth deployed. Week 1 complete.
 
 **Backend + database:** deployed via `docker compose up -d --build db backend`. Backend on host port 8010 (8000 was taken by CareerRadar), Postgres+pgvector not exposed to the host at all — only reachable internally via the Docker network. Migration `0001_initial_users` applied successfully (fixed a bug first: the enum type was being created twice — caught and fixed by testing against a real local Postgres+pgvector instance before redeploying).
