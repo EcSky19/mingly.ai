@@ -1,0 +1,52 @@
+"""
+Pydantic schemas for the professional profile onboarding step.
+"""
+from typing import Optional
+from pydantic import BaseModel
+
+from app.models.professional_profile import CareerStage
+
+
+class FieldWithPrivacy(BaseModel):
+    """A value plus its two independent privacy flags. Used for every
+    field in the professional profile - see docs/professional-profile-design.md."""
+    value: Optional[str] = None
+    visible_on_profile: bool = False
+    usable_for_matching: bool = True
+
+
+class ProfessionalProfileUpdate(BaseModel):
+    """Request body for creating/updating a professional profile. Every
+    field is optional - a user can submit a partial update, or nothing
+    at all, and still complete onboarding."""
+    current_role: Optional[FieldWithPrivacy] = None
+    company: Optional[FieldWithPrivacy] = None
+    industry: Optional[FieldWithPrivacy] = None
+    career_stage: Optional[CareerStage] = None
+    career_stage_visible_on_profile: bool = False
+    career_stage_usable_for_matching: bool = True
+    school: Optional[FieldWithPrivacy] = None
+    degree: Optional[FieldWithPrivacy] = None
+    field_of_study: Optional[FieldWithPrivacy] = None
+    graduation_year: Optional[int] = None
+    graduation_year_visible_on_profile: bool = False
+    graduation_year_usable_for_matching: bool = True
+
+
+class ProfessionalProfileOut(BaseModel):
+    current_role: Optional[str] = None
+    company: Optional[str] = None
+    industry: Optional[str] = None
+    career_stage: Optional[CareerStage] = None
+    school: Optional[str] = None
+    degree: Optional[str] = None
+    field_of_study: Optional[str] = None
+    graduation_year: Optional[int] = None
+
+    class Config:
+        from_attributes = True
+
+
+class AutocompleteSuggestion(BaseModel):
+    value: str
+    subtitle: Optional[str] = None  # e.g. domain for companies, country for schools

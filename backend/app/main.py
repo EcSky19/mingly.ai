@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.core.config import settings
-from app.api.routes import auth
+from app.api.routes import auth, autocomplete, professional_profile
 
 app = FastAPI(title="Mingly.ai API", version="0.1.0")
 
@@ -25,6 +25,8 @@ app.add_middleware(
 )
 
 app.include_router(auth.router)
+app.include_router(autocomplete.router)
+app.include_router(professional_profile.router)
 
 
 @app.get("/api/health")
