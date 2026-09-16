@@ -58,21 +58,4 @@ class ProfessionalProfile(Base):
     career_stage_visible_on_profile = Column(Boolean, nullable=False, default=False)
     career_stage_usable_for_matching = Column(Boolean, nullable=False, default=True)
 
-    # --- Education ---
-    school = Column(String, nullable=True)
-    school_visible_on_profile = Column(Boolean, nullable=False, default=False)
-    school_usable_for_matching = Column(Boolean, nullable=False, default=True)
-
-    degree = Column(String, nullable=True)
-    degree_visible_on_profile = Column(Boolean, nullable=False, default=False)
-    degree_usable_for_matching = Column(Boolean, nullable=False, default=True)
-
-    field_of_study = Column(String, nullable=True)
-    field_of_study_visible_on_profile = Column(Boolean, nullable=False, default=False)
-    field_of_study_usable_for_matching = Column(Boolean, nullable=False, default=True)
-
-    graduation_year = Column(Integer, nullable=True)
-    graduation_year_visible_on_profile = Column(Boolean, nullable=False, default=False)
-    graduation_year_usable_for_matching = Column(Boolean, nullable=False, default=True)
-
     user = relationship("User", backref="professional_profile", uselist=False)
