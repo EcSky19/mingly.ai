@@ -18,6 +18,27 @@ const emptyField = (): FieldState => ({
   usableForMatching: true,
 });
 
+type EducationEntry = {
+  id: string; // client-side temp id, or real id once saved
+  savedId?: string; // set once persisted to the backend
+  school: string;
+  degree: string;
+  fieldOfStudy: string;
+  graduationYear: string;
+  visibleOnProfile: boolean;
+  usableForMatching: boolean;
+};
+
+const emptyEducationEntry = (): EducationEntry => ({
+  id: `local-${Math.random().toString(36).slice(2)}`,
+  school: "",
+  degree: "",
+  fieldOfStudy: "",
+  graduationYear: "",
+  visibleOnProfile: false,
+  usableForMatching: true,
+});
+
 const CAREER_STAGES: { value: string; label: string }[] = [
   { value: "student", label: "Student" },
   { value: "early_career", label: "Early career" },
@@ -40,10 +61,7 @@ export default function Onboarding() {
   const [company, setCompany] = useState<FieldState>(emptyField());
   const [industry, setIndustry] = useState<FieldState>(emptyField());
   const [careerStage, setCareerStage] = useState("");
-  const [school, setSchool] = useState<FieldState>(emptyField());
-  const [degree, setDegree] = useState<FieldState>(emptyField());
-  const [fieldOfStudy, setFieldOfStudy] = useState<FieldState>(emptyField());
-  const [gradYear, setGradYear] = useState("");
+  const [education, setEducation] = useState<EducationEntry[]>([emptyEducationEntry()]);
 
   useEffect(() => {
     fetch(`${API_URL}/api/auth/me`, { credentials: "include" })
@@ -57,6 +75,29 @@ export default function Onboarding() {
       .finally(() => setCheckingAuth(false));
   }, [router]);
 
+  function updateEducation(id: string, patch: Partial<EducationEntry>) {
+    setEducation((prev) => prev.map((e) => (e.id === id ? { ...e, ...patch } : e)));
+  }
+
+  function addEducationEntry() {
+    setEducation((prev) => [...prev, emptyEducationEntry()]);
+  }
+
+  async function removeEducationEntry(entry: EducationEntry) {
+    setEducation((prev) => prev.filter((e) => e.id !== entry.id));
+    if (entry.savedId) {
+      try {
+        await fetch(`${API_URL}/api/profile/education/${entry.savedId}`, {
+          method: "DELETE",
+          credentials: "include",
+        });
+      } catch {
+        // Fails open - the entry is already gone from the UI; a failed
+        // delete call here isn't worth blocking the user over.
+      }
+    }
+  }
+
   function fieldPayload(f: FieldState) {
     if (!f.value.trim()) return undefined;
     return {
@@ -64,6 +105,31 @@ export default function Onboarding() {
       visible_on_profile: f.visibleOnProfile,
       usable_for_matching: f.usableForMatching,
     };
+  }
+
+  async function saveEducationEntries() {
+    const toSave = education.filter(
+      (e) => !e.savedId && (e.school || e.degree || e.fieldOfStudy || e.graduationYear)
+    );
+    for (const entry of toSave) {
+      try {
+        await fetch(`${API_URL}/api/profile/education`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            school: entry.school || undefined,
+            degree: entry.degree || undefined,
+            field_of_study: entry.fieldOfStudy || undefined,
+            graduation_year: entry.graduationYear ? parseInt(entry.graduationYear, 10) : undefined,
+            visible_on_profile: entry.visibleOnProfile,
+            usable_for_matching: entry.usableForMatching,
+          }),
+        });
+      } catch {
+        // Fails open - one failed entry save doesn't block the rest of onboarding.
+      }
+    }
   }
 
   async function handleSave(skipRest: boolean) {
@@ -74,10 +140,6 @@ export default function Onboarding() {
         company: shareCompany ? fieldPayload(company) : undefined,
         industry: !shareCompany ? fieldPayload(industry) : undefined,
         career_stage: careerStage || undefined,
-        school: fieldPayload(school),
-        degree: fieldPayload(degree),
-        field_of_study: fieldPayload(fieldOfStudy),
-        graduation_year: gradYear ? parseInt(gradYear, 10) : undefined,
       };
       await fetch(`${API_URL}/api/profile/professional`, {
         method: "PUT",
@@ -85,6 +147,7 @@ export default function Onboarding() {
         credentials: "include",
         body: JSON.stringify(body),
       });
+      await saveEducationEntries();
       setSaved(true);
       if (skipRest) router.push("/home");
     } catch {
@@ -149,21 +212,21 @@ export default function Onboarding() {
 
           <section className="section">
             <div className="section-header-row">
-              <h2 className="section-title">Company</h2>
+              <h2 className="section-title">Current Employment</h2>
               <div className="toggle-pair">
                 <button
                   type="button"
                   className={shareCompany ? "toggle-btn active" : "toggle-btn"}
                   onClick={() => setShareCompany(true)}
                 >
-                  Share company
+                  Share Company
                 </button>
                 <button
                   type="button"
                   className={!shareCompany ? "toggle-btn active" : "toggle-btn"}
                   onClick={() => setShareCompany(false)}
                 >
-                  Just share industry
+                  Share Industry
                 </button>
               </div>
             </div>
@@ -186,16 +249,13 @@ export default function Onboarding() {
               </>
             ) : (
               <>
-                <div className="field">
-                  <label className="field-label">Industry</label>
-                  <input
-                    className="field-input"
-                    type="text"
-                    placeholder="e.g. Technology"
-                    value={industry.value}
-                    onChange={(e) => setIndustry({ ...industry, value: e.target.value })}
-                  />
-                </div>
+                <AutocompleteField
+                  label="Industry"
+                  placeholder="e.g. Technology"
+                  value={industry.value}
+                  onChange={(v) => setIndustry({ ...industry, value: v })}
+                  endpoint="/api/industries/autocomplete"
+                />
                 <PrivacyToggles
                   visibleOnProfile={industry.visibleOnProfile}
                   usableForMatching={industry.usableForMatching}
@@ -226,61 +286,67 @@ export default function Onboarding() {
 
           <section className="section">
             <h2 className="section-title">Education</h2>
-            <AutocompleteField
-              label="School"
-              placeholder="e.g. Cornell University"
-              value={school.value}
-              onChange={(v) => setSchool({ ...school, value: v })}
-              endpoint="/api/schools/autocomplete"
-              emptyHint="Can't find your school? What you've typed will be saved as-is."
-            />
-            <PrivacyToggles
-              visibleOnProfile={school.visibleOnProfile}
-              usableForMatching={school.usableForMatching}
-              onChangeVisible={(v) => setSchool({ ...school, visibleOnProfile: v })}
-              onChangeMatching={(v) => setSchool({ ...school, usableForMatching: v })}
-            />
-
-            <AutocompleteField
-              label="Degree"
-              placeholder="e.g. Bachelor of Science (BS)"
-              value={degree.value}
-              onChange={(v) => setDegree({ ...degree, value: v })}
-              endpoint="/api/degrees/autocomplete"
-            />
-            <PrivacyToggles
-              visibleOnProfile={degree.visibleOnProfile}
-              usableForMatching={degree.usableForMatching}
-              onChangeVisible={(v) => setDegree({ ...degree, visibleOnProfile: v })}
-              onChangeMatching={(v) => setDegree({ ...degree, usableForMatching: v })}
-            />
-
-            <AutocompleteField
-              label="Field of study"
-              placeholder="e.g. Computer Science"
-              value={fieldOfStudy.value}
-              onChange={(v) => setFieldOfStudy({ ...fieldOfStudy, value: v })}
-              endpoint="/api/fields-of-study/autocomplete"
-            />
-            <PrivacyToggles
-              visibleOnProfile={fieldOfStudy.visibleOnProfile}
-              usableForMatching={fieldOfStudy.usableForMatching}
-              onChangeVisible={(v) => setFieldOfStudy({ ...fieldOfStudy, visibleOnProfile: v })}
-              onChangeMatching={(v) => setFieldOfStudy({ ...fieldOfStudy, usableForMatching: v })}
-            />
-
-            <div className="field">
-              <label className="field-label">Graduation year</label>
-              <input
-                className="field-input"
-                type="number"
-                placeholder="e.g. 2022"
-                value={gradYear}
-                onChange={(e) => setGradYear(e.target.value)}
-                min={1950}
-                max={2035}
-              />
-            </div>
+            {education.map((entry, index) => (
+              <div className="education-entry" key={entry.id}>
+                {education.length > 1 && (
+                  <div className="education-entry-header">
+                    <span className="education-entry-label">
+                      {index === 0 ? "First degree" : `Degree ${index + 1}`}
+                    </span>
+                    <button
+                      type="button"
+                      className="remove-entry"
+                      onClick={() => removeEducationEntry(entry)}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+                <AutocompleteField
+                  label="School"
+                  placeholder="e.g. Cornell University"
+                  value={entry.school}
+                  onChange={(v) => updateEducation(entry.id, { school: v })}
+                  endpoint="/api/schools/autocomplete"
+                  emptyHint="Can't find your school? What you've typed will be saved as-is."
+                />
+                <AutocompleteField
+                  label="Degree"
+                  placeholder="e.g. Bachelor of Science (BS)"
+                  value={entry.degree}
+                  onChange={(v) => updateEducation(entry.id, { degree: v })}
+                  endpoint="/api/degrees/autocomplete"
+                />
+                <AutocompleteField
+                  label="Field of study"
+                  placeholder="e.g. Computer Science"
+                  value={entry.fieldOfStudy}
+                  onChange={(v) => updateEducation(entry.id, { fieldOfStudy: v })}
+                  endpoint="/api/fields-of-study/autocomplete"
+                />
+                <div className="field">
+                  <label className="field-label">Graduation year</label>
+                  <input
+                    className="field-input"
+                    type="number"
+                    placeholder="e.g. 2022"
+                    value={entry.graduationYear}
+                    onChange={(e) => updateEducation(entry.id, { graduationYear: e.target.value })}
+                    min={1950}
+                    max={2035}
+                  />
+                </div>
+                <PrivacyToggles
+                  visibleOnProfile={entry.visibleOnProfile}
+                  usableForMatching={entry.usableForMatching}
+                  onChangeVisible={(v) => updateEducation(entry.id, { visibleOnProfile: v })}
+                  onChangeMatching={(v) => updateEducation(entry.id, { usableForMatching: v })}
+                />
+              </div>
+            ))}
+            <button type="button" className="add-entry" onClick={addEducationEntry}>
+              + Add another degree
+            </button>
           </section>
 
           <div className="actions">
@@ -470,6 +536,50 @@ function PageStyles() {
         color: #8f84ad;
       }
       .privacy-toggle input { accent-color: #e8a548; }
+
+      .education-entry {
+        margin-bottom: 1.75rem;
+        padding-bottom: 1.75rem;
+        border-bottom: 1px dashed rgba(185, 175, 209, 0.2);
+      }
+      .education-entry:last-of-type { border-bottom: none; }
+
+      .education-entry-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+      }
+      .education-entry-label {
+        font-size: 0.8rem;
+        color: #8f84ad;
+        text-transform: none;
+      }
+      .remove-entry {
+        background: transparent;
+        border: none;
+        color: #b9afd1;
+        font-size: 0.8rem;
+        cursor: pointer;
+        text-decoration: underline;
+      }
+
+      .add-entry {
+        background: transparent;
+        border: 1px dashed rgba(185, 175, 209, 0.35);
+        color: #b9afd1;
+        font-family: "Public Sans", sans-serif;
+        font-size: 0.9rem;
+        padding: 0.6rem 1rem;
+        border-radius: 4px;
+        cursor: pointer;
+        width: 100%;
+        text-align: center;
+      }
+      .add-entry:hover {
+        border-color: #e8a548;
+        color: #e8a548;
+      }
 
       .actions {
         display: flex;
