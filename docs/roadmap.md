@@ -30,9 +30,9 @@ Every week ends with: tests passing, a deploy to the server, and this doc update
 
 - Professional profile (role, industry, career stage, school)
 - Privacy model: `visible_on_profile` vs `usable_for_matching`, enforced server-side
-- Location (neighborhood-level, generalized coordinates)
+- Location (neighborhood-level, generalized coordinates; multi-location support, free - see `docs/location-design.md`)
 - Interests, activities (top 3 flagged), lifestyle, availability, social cadence, planning style, social comfort, social goals
-- Languages, pets, spending preference, conversation interests, recurring routines
+- Languages, pets (profile + pet-related activity interests - see `docs/pets-design.md`), spending preference, conversation interests, recurring routines
 - Autosave + resume onboarding
 
 **Exit test:** a new user completes onboarding in ~5 minutes and their structured profile is correctly stored and editable afterward.
