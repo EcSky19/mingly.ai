@@ -6,6 +6,8 @@ from alembic import context
 from app.core.config import settings
 from app.db.session import Base
 from app.models import user  # noqa: F401 - import all models so autogenerate sees them
+from app.models import professional_profile  # noqa: F401
+from app.models import job_title  # noqa: F401
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
