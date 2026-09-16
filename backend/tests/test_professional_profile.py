@@ -128,7 +128,112 @@ def test_company_autocomplete_fails_open_on_short_query():
 
 
 def test_job_titles_autocomplete_fails_open_when_unseeded():
-    # Table has no seed data in this test DB - should return empty, not error
+    # Table has no seed data in this test DB (only production has the
+    # seeded starter set via migration 0003's data seed) - should
+    # return empty, not error.
     response = client.get("/api/job-titles/autocomplete?q=engineer")
     assert response.status_code == 200
     assert response.json() == []
+
+
+def test_industries_autocomplete():
+    response = client.get("/api/industries/autocomplete?q=tech")
+    assert response.status_code == 200
+    results = response.json()
+    assert any("Technology" in r["value"] for r in results)
+
+
+def test_education_requires_auth():
+    assert client.get("/api/profile/education").status_code == 401
+    assert client.post("/api/profile/education", json={}).status_code == 401
+
+
+def test_education_supports_multiple_entries(test_user):
+    """The core requirement this whole redesign was for: a user must be
+    able to add more than one school/degree, not just one."""
+    cookie = _session_cookie_for(str(test_user.id))
+    client.cookies.set(settings.SESSION_COOKIE_NAME, cookie)
+
+    r1 = client.post(
+        "/api/profile/education",
+        json={"school": "Cornell University", "degree": "Bachelor of Science (BS)", "field_of_study": "Computer Science", "graduation_year": 2020},
+    )
+    assert r1.status_code == 201
+    entry1_id = r1.json()["id"]
+
+    r2 = client.post(
+        "/api/profile/education",
+        json={"school": "Columbia University", "degree": "Master of Business Administration (MBA)", "graduation_year": 2024},
+    )
+    assert r2.status_code == 201
+    entry2_id = r2.json()["id"]
+    assert entry1_id != entry2_id
+
+    listing = client.get("/api/profile/education")
+    assert listing.status_code == 200
+    schools = [e["school"] for e in listing.json()]
+    assert "Cornell University" in schools
+    assert "Columbia University" in schools
+    assert len(listing.json()) == 2
+
+    # Deleting one entry doesn't touch the other
+    delete_resp = client.delete(f"/api/profile/education/{entry1_id}")
+    assert delete_resp.status_code == 204
+    listing_after = client.get("/api/profile/education").json()
+    assert len(listing_after) == 1
+    assert listing_after[0]["school"] == "Columbia University"
+
+    client.cookies.clear()
+
+
+def test_education_delete_is_scoped_to_owner(test_user):
+    """A user can't delete someone else's education entry. Uses explicit
+    per-request cookies (not the shared client.cookies jar) to avoid any
+    ambiguity about which identity a request is actually using."""
+    cookie = _session_cookie_for(str(test_user.id))
+
+    other_user_db = SessionLocal()
+    other_user = User(
+        linkedin_sub=f"test-other-{uuid.uuid4()}",
+        email=f"test-other-{uuid.uuid4()}@example.com",
+        first_name="Other",
+        last_name="User",
+    )
+    other_user_db.add(other_user)
+    other_user_db.commit()
+    other_user_db.refresh(other_user)
+    other_cookie = _session_cookie_for(str(other_user.id))
+
+    cookie_name = settings.SESSION_COOKIE_NAME
+
+    create_resp = client.post(
+        "/api/profile/education",
+        json={"school": "Someone Else's School"},
+        cookies={cookie_name: other_cookie},
+    )
+    other_entry_id = create_resp.json()["id"]
+
+    # Confirm it was actually created under the OTHER user, not test_user -
+    # otherwise this test wouldn't be testing what it claims to.
+    other_users_entries = client.get(
+        "/api/profile/education", cookies={cookie_name: other_cookie}
+    ).json()
+    assert any(e["id"] == other_entry_id for e in other_users_entries)
+    test_users_entries = client.get(
+        "/api/profile/education", cookies={cookie_name: cookie}
+    ).json()
+    assert not any(e["id"] == other_entry_id for e in test_users_entries)
+
+    # Now the actual test: test_user tries to delete other_user's entry
+    delete_resp = client.delete(
+        f"/api/profile/education/{other_entry_id}", cookies={cookie_name: cookie}
+    )
+    assert delete_resp.status_code == 404
+
+    # And it's still there, since the delete should have been rejected
+    still_there = client.get(
+        "/api/profile/education", cookies={cookie_name: other_cookie}
+    ).json()
+    assert any(e["id"] == other_entry_id for e in still_there)
+
+    other_user_db.close()
