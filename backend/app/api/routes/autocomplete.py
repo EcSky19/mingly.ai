@@ -31,6 +31,11 @@ def fields_of_study_autocomplete(q: str = Query(default="", max_length=100)):
     return autocomplete.autocomplete_fields_of_study(q)
 
 
+@router.get("/industries/autocomplete", response_model=list[AutocompleteSuggestion])
+def industries_autocomplete(q: str = Query(default="", max_length=100)):
+    return autocomplete.autocomplete_industries(q)
+
+
 @router.get("/job-titles/autocomplete", response_model=list[AutocompleteSuggestion])
 def job_titles_autocomplete(q: str = Query(default="", max_length=100), db: Session = Depends(get_db)):
     return autocomplete.autocomplete_job_titles(db, q)

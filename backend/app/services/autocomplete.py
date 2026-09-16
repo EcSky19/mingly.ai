@@ -21,6 +21,7 @@ DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
 _degrees_cache: list[str] | None = None
 _fields_of_study_cache: list[str] | None = None
+_industries_cache: list[str] | None = None
 
 
 def _load_json_list(filename: str) -> list[str]:
@@ -99,6 +100,20 @@ def autocomplete_fields_of_study(query: str) -> list[AutocompleteSuggestion]:
     q = query.lower()
     matches = [f for f in _fields_of_study_cache if q in f.lower()]
     return [AutocompleteSuggestion(value=f) for f in matches[:10]]
+
+
+def autocomplete_industries(query: str) -> list[AutocompleteSuggestion]:
+    """Static, bundled starter list - see app/data/README.md."""
+    global _industries_cache
+    if _industries_cache is None:
+        _industries_cache = _load_json_list("industries_starter.json")
+
+    if not query:
+        return [AutocompleteSuggestion(value=i) for i in _industries_cache[:10]]
+
+    q = query.lower()
+    matches = [i for i in _industries_cache if q in i.lower()]
+    return [AutocompleteSuggestion(value=i) for i in matches[:10]]
 
 
 def autocomplete_job_titles(db: Session, query: str) -> list[AutocompleteSuggestion]:

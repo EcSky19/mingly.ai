@@ -1,6 +1,9 @@
 """
 Endpoints for saving/reading the professional profile onboarding step.
 Requires an authenticated session (see app/api/routes/auth.py).
+
+Education is handled separately - see app/api/routes/education.py -
+since a user can have multiple entries (undergrad + grad school, etc).
 """
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
@@ -52,26 +55,6 @@ def update_professional_profile(
         profile.career_stage = body.career_stage
         profile.career_stage_visible_on_profile = body.career_stage_visible_on_profile
         profile.career_stage_usable_for_matching = body.career_stage_usable_for_matching
-
-    if body.school is not None:
-        profile.school = body.school.value
-        profile.school_visible_on_profile = body.school.visible_on_profile
-        profile.school_usable_for_matching = body.school.usable_for_matching
-
-    if body.degree is not None:
-        profile.degree = body.degree.value
-        profile.degree_visible_on_profile = body.degree.visible_on_profile
-        profile.degree_usable_for_matching = body.degree.usable_for_matching
-
-    if body.field_of_study is not None:
-        profile.field_of_study = body.field_of_study.value
-        profile.field_of_study_visible_on_profile = body.field_of_study.visible_on_profile
-        profile.field_of_study_usable_for_matching = body.field_of_study.usable_for_matching
-
-    if body.graduation_year is not None:
-        profile.graduation_year = body.graduation_year
-        profile.graduation_year_visible_on_profile = body.graduation_year_visible_on_profile
-        profile.graduation_year_usable_for_matching = body.graduation_year_usable_for_matching
 
     db.commit()
     db.refresh(profile)
