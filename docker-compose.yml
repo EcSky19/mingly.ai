@@ -31,14 +31,20 @@ services:
       - ./backend:/app
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
     restart: unless-stopped
     env_file:
       - .env
     depends_on:
       - backend
+    # Host port 3000 is already used by another project on this shared
+    # server (see docs/deployment-log.md) - 3010 matches what nginx
+    # already routes to (infrastructure/nginx/mingly-ai.conf).
     ports:
-      - "3000:3000"
+      - "3010:3000"
 
 volumes:
   mingly_pg_data:
