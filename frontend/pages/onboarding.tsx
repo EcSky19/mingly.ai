@@ -104,6 +104,7 @@ const MAX_TOP_ACTIVITIES = 3;
 export default function Onboarding() {
   const router = useRouter();
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [firstName, setFirstName] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [shareCompany, setShareCompany] = useState(true);
@@ -133,6 +134,9 @@ export default function Onboarding() {
           return null;
         }
         return res.json();
+      })
+      .then((data) => {
+        if (data?.first_name) setFirstName(data.first_name);
       })
       .finally(() => setCheckingAuth(false));
   }, [router]);
@@ -479,11 +483,13 @@ export default function Onboarding() {
             <span>Mingly.ai</span>
           </span>
 
-          <h1 className="headline">Your professional context</h1>
+          <h1 className="headline">{firstName ? `${firstName}'s` : "Your"} Mingly.ai Onboarding</h1>
           <p className="subhead">
-            Everything below is optional. It helps us find people you'll
-            actually click with — nothing here is required, and you choose
-            what's visible versus just used for matching.
+            Every detail you add helps us find people you'll genuinely click
+            with — people who share your interests, your pace, and your idea
+            of a good time. You control what's visible on your profile, and
+            information you shared is only used to help you find meaningful
+            connections.
           </p>
 
           <section className="section">
