@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import AutocompleteField from "../components/AutocompleteField";
 import PrivacyToggles from "../components/PrivacyToggles";
+import ChipSelect from "../components/ChipSelect";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -50,6 +51,54 @@ const CAREER_STAGES: { value: string; label: string }[] = [
   { value: "other", label: "Other" },
 ];
 
+type LocationEntry = {
+  id: string;
+  savedId?: string;
+  city: string;
+  neighborhood: string;
+  label: string;
+  isPrimary: boolean;
+};
+
+const emptyLocationEntry = (isPrimary: boolean): LocationEntry => ({
+  id: `local-${Math.random().toString(36).slice(2)}`,
+  city: "",
+  neighborhood: "",
+  label: "",
+  isPrimary,
+});
+
+type CatalogItem = { id: string; name: string; category?: string };
+
+type ActivityContext = {
+  interestStrength: string;
+  skillLevel: string;
+  activityStyle: string;
+  desiredFrequency: string;
+  preferredGroupSize: string;
+  targetTimeframe: string;
+};
+
+const emptyActivityContext = (): ActivityContext => ({
+  interestStrength: "",
+  skillLevel: "",
+  activityStyle: "",
+  desiredFrequency: "",
+  preferredGroupSize: "",
+  targetTimeframe: "",
+});
+
+const TARGET_TIMEFRAMES: { value: string; label: string }[] = [
+  { value: "", label: "Prefer not to say" },
+  { value: "ready_now", label: "Ready now" },
+  { value: "sometime_soon", label: "Sometime soon" },
+  { value: "when_season_right", label: "When the season's right" },
+  { value: "no_rush", label: "No rush, just excited" },
+];
+
+const MAX_TOP_INTERESTS = 5;
+const MAX_TOP_ACTIVITIES = 3;
+
 export default function Onboarding() {
   const router = useRouter();
   const [checkingAuth, setCheckingAuth] = useState(true);
@@ -63,6 +112,17 @@ export default function Onboarding() {
   const [careerStage, setCareerStage] = useState("");
   const [education, setEducation] = useState<EducationEntry[]>([emptyEducationEntry()]);
 
+  const [locations, setLocations] = useState<LocationEntry[]>([emptyLocationEntry(true)]);
+
+  const [interestCatalog, setInterestCatalog] = useState<CatalogItem[]>([]);
+  const [selectedInterestIds, setSelectedInterestIds] = useState<string[]>([]);
+  const [topInterestIds, setTopInterestIds] = useState<string[]>([]);
+
+  const [activityCatalog, setActivityCatalog] = useState<CatalogItem[]>([]);
+  const [selectedActivityIds, setSelectedActivityIds] = useState<string[]>([]);
+  const [topActivityIds, setTopActivityIds] = useState<string[]>([]);
+  const [activityContext, setActivityContext] = useState<Record<string, ActivityContext>>({});
+
   useEffect(() => {
     fetch(`${API_URL}/api/auth/me`, { credentials: "include" })
       .then((res) => {
@@ -74,6 +134,90 @@ export default function Onboarding() {
       })
       .finally(() => setCheckingAuth(false));
   }, [router]);
+
+  useEffect(() => {
+    if (checkingAuth) return;
+
+    fetch(`${API_URL}/api/catalog/interests`)
+      .then((r) => r.json())
+      .then(setInterestCatalog)
+      .catch(() => setInterestCatalog([]));
+
+    fetch(`${API_URL}/api/catalog/activities`)
+      .then((r) => r.json())
+      .then(setActivityCatalog)
+      .catch(() => setActivityCatalog([]));
+
+    fetch(`${API_URL}/api/profile/interests`, { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((rows: { interest_id: string; is_top_pick: boolean }[]) => {
+        if (rows.length === 0) return;
+        setSelectedInterestIds(rows.map((r) => r.interest_id));
+        setTopInterestIds(rows.filter((r) => r.is_top_pick).map((r) => r.interest_id));
+      })
+      .catch(() => {});
+
+    fetch(`${API_URL}/api/profile/activities`, { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : []))
+      .then(
+        (
+          rows: {
+            activity_id: string;
+            is_top_pick: boolean;
+            interest_strength?: string;
+            skill_level?: string;
+            activity_style?: string;
+            desired_frequency?: string;
+            preferred_group_size?: string;
+            target_timeframe?: string;
+          }[]
+        ) => {
+          if (rows.length === 0) return;
+          setSelectedActivityIds(rows.map((r) => r.activity_id));
+          setTopActivityIds(rows.filter((r) => r.is_top_pick).map((r) => r.activity_id));
+          const ctx: Record<string, ActivityContext> = {};
+          rows.forEach((r) => {
+            ctx[r.activity_id] = {
+              interestStrength: r.interest_strength || "",
+              skillLevel: r.skill_level || "",
+              activityStyle: r.activity_style || "",
+              desiredFrequency: r.desired_frequency || "",
+              preferredGroupSize: r.preferred_group_size || "",
+              targetTimeframe: r.target_timeframe || "",
+            };
+          });
+          setActivityContext(ctx);
+        }
+      )
+      .catch(() => {});
+
+    fetch(`${API_URL}/api/profile/locations`, { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : []))
+      .then(
+        (
+          rows: {
+            id: string;
+            city?: string;
+            neighborhood?: string;
+            label?: string;
+            is_primary: boolean;
+          }[]
+        ) => {
+          if (rows.length === 0) return;
+          setLocations(
+            rows.map((r) => ({
+              id: r.id,
+              savedId: r.id,
+              city: r.city || "",
+              neighborhood: r.neighborhood || "",
+              label: r.label || "",
+              isPrimary: r.is_primary,
+            }))
+          );
+        }
+      )
+      .catch(() => {});
+  }, [checkingAuth]);
 
   function updateEducation(id: string, patch: Partial<EducationEntry>) {
     setEducation((prev) => prev.map((e) => (e.id === id ? { ...e, ...patch } : e)));
@@ -132,6 +276,144 @@ export default function Onboarding() {
     }
   }
 
+  function updateLocation(id: string, patch: Partial<LocationEntry>) {
+    setLocations((prev) => prev.map((l) => (l.id === id ? { ...l, ...patch } : l)));
+  }
+
+  function setPrimaryLocation(id: string) {
+    setLocations((prev) => prev.map((l) => ({ ...l, isPrimary: l.id === id })));
+  }
+
+  function addLocationEntry() {
+    setLocations((prev) => [...prev, emptyLocationEntry(false)]);
+  }
+
+  async function removeLocationEntry(entry: LocationEntry) {
+    setLocations((prev) => prev.filter((l) => l.id !== entry.id));
+    if (entry.savedId) {
+      try {
+        await fetch(`${API_URL}/api/profile/locations/${entry.savedId}`, {
+          method: "DELETE",
+          credentials: "include",
+        });
+      } catch {
+        // Fails open - same as education deletion.
+      }
+    }
+  }
+
+  async function saveLocationEntries() {
+    const toSave = locations.filter((l) => !l.savedId && (l.city || l.neighborhood));
+    for (const entry of toSave) {
+      try {
+        await fetch(`${API_URL}/api/profile/locations`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            city: entry.city || undefined,
+            neighborhood: entry.neighborhood || undefined,
+            label: entry.label || undefined,
+            is_primary: entry.isPrimary,
+          }),
+        });
+      } catch {
+        // Fails open.
+      }
+    }
+  }
+
+  function toggleInterest(id: string) {
+    setSelectedInterestIds((prev) => {
+      if (prev.includes(id)) {
+        setTopInterestIds((t) => t.filter((x) => x !== id));
+        return prev.filter((x) => x !== id);
+      }
+      return [...prev, id];
+    });
+  }
+
+  function toggleTopInterest(id: string) {
+    setTopInterestIds((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      if (prev.length >= MAX_TOP_INTERESTS) return prev;
+      return [...prev, id];
+    });
+  }
+
+  async function saveInterests() {
+    if (selectedInterestIds.length === 0) return;
+    try {
+      await fetch(`${API_URL}/api/profile/interests`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          interest_ids: selectedInterestIds,
+          top_pick_ids: topInterestIds,
+          visible_on_profile: true,
+        }),
+      });
+    } catch {
+      // Fails open.
+    }
+  }
+
+  function toggleActivity(id: string) {
+    setSelectedActivityIds((prev) => {
+      if (prev.includes(id)) {
+        setTopActivityIds((t) => t.filter((x) => x !== id));
+        return prev.filter((x) => x !== id);
+      }
+      return [...prev, id];
+    });
+    setActivityContext((prev) => (prev[id] ? prev : { ...prev, [id]: emptyActivityContext() }));
+  }
+
+  function toggleTopActivity(id: string) {
+    setTopActivityIds((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      if (prev.length >= MAX_TOP_ACTIVITIES) return prev;
+      return [...prev, id];
+    });
+  }
+
+  function updateActivityContext(id: string, patch: Partial<ActivityContext>) {
+    setActivityContext((prev) => ({
+      ...prev,
+      [id]: { ...(prev[id] || emptyActivityContext()), ...patch },
+    }));
+  }
+
+  async function saveActivities() {
+    if (selectedActivityIds.length === 0) return;
+    try {
+      await fetch(`${API_URL}/api/profile/activities`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          activities: selectedActivityIds.map((id) => {
+            const ctx = activityContext[id] || emptyActivityContext();
+            return {
+              activity_id: id,
+              interest_strength: ctx.interestStrength || undefined,
+              skill_level: ctx.skillLevel || undefined,
+              activity_style: ctx.activityStyle || undefined,
+              desired_frequency: ctx.desiredFrequency || undefined,
+              preferred_group_size: ctx.preferredGroupSize || undefined,
+              is_top_pick: topActivityIds.includes(id),
+              target_timeframe: ctx.targetTimeframe || undefined,
+              visible_on_profile: true,
+            };
+          }),
+        }),
+      });
+    } catch {
+      // Fails open.
+    }
+  }
+
   async function handleSave(skipRest: boolean) {
     setSaving(true);
     try {
@@ -148,6 +430,9 @@ export default function Onboarding() {
         body: JSON.stringify(body),
       });
       await saveEducationEntries();
+      await saveLocationEntries();
+      await saveInterests();
+      await saveActivities();
       setSaved(true);
       if (skipRest) router.push("/home");
     } catch {
@@ -347,6 +632,201 @@ export default function Onboarding() {
             <button type="button" className="add-entry" onClick={addEducationEntry}>
               + Add another degree
             </button>
+          </section>
+
+          <section className="section">
+            <h2 className="section-title">Location</h2>
+            {locations.map((entry, index) => (
+              <div className="education-entry" key={entry.id}>
+                {locations.length > 1 && (
+                  <div className="education-entry-header">
+                    <span className="education-entry-label">
+                      {entry.isPrimary ? "Primary" : `Location ${index + 1}`}
+                    </span>
+                    <button
+                      type="button"
+                      className="remove-entry"
+                      onClick={() => removeLocationEntry(entry)}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+                <div className="field">
+                  <label className="field-label">City</label>
+                  <input
+                    className="field-input"
+                    type="text"
+                    placeholder="e.g. New York"
+                    value={entry.city}
+                    onChange={(e) => updateLocation(entry.id, { city: e.target.value })}
+                  />
+                </div>
+                <div className="field">
+                  <label className="field-label">Neighborhood (optional)</label>
+                  <input
+                    className="field-input"
+                    type="text"
+                    placeholder="e.g. Brooklyn"
+                    value={entry.neighborhood}
+                    onChange={(e) => updateLocation(entry.id, { neighborhood: e.target.value })}
+                  />
+                </div>
+                <div className="field">
+                  <label className="field-label">Label (optional)</label>
+                  <input
+                    className="field-input"
+                    type="text"
+                    placeholder="e.g. Home, or Work travel"
+                    value={entry.label}
+                    onChange={(e) => updateLocation(entry.id, { label: e.target.value })}
+                  />
+                </div>
+                {locations.length > 1 && !entry.isPrimary && (
+                  <button
+                    type="button"
+                    className="set-primary"
+                    onClick={() => setPrimaryLocation(entry.id)}
+                  >
+                    Make this my primary location
+                  </button>
+                )}
+              </div>
+            ))}
+            <button type="button" className="add-entry" onClick={addLocationEntry}>
+              + Add another location
+            </button>
+            <p className="section-hint">
+              Frequently visit a second city for work or lifestyle reasons? Add it — this is free
+              and helps us match you accurately wherever you actually spend time.
+            </p>
+          </section>
+
+          <section className="section">
+            <h2 className="section-title">Interests</h2>
+            <p className="section-hint">
+              Things you enjoy. Star up to {MAX_TOP_INTERESTS} that matter most to you.
+            </p>
+            <ChipSelect
+              items={interestCatalog.map((i) => ({ id: i.id, label: i.name }))}
+              selectedIds={selectedInterestIds}
+              topPickIds={topInterestIds}
+              maxTopPicks={MAX_TOP_INTERESTS}
+              onToggleSelect={toggleInterest}
+              onToggleTopPick={toggleTopInterest}
+            />
+          </section>
+
+          <section className="section">
+            <h2 className="section-title">Activities</h2>
+            <p className="section-hint">
+              Things you'd actually do with someone — not just enjoy in theory. Star up to{" "}
+              {MAX_TOP_ACTIVITIES} you genuinely want to do this month; those get the most weight
+              in your recommendations.
+            </p>
+            <ChipSelect
+              items={activityCatalog.map((a) => ({ id: a.id, label: a.name }))}
+              selectedIds={selectedActivityIds}
+              topPickIds={topActivityIds}
+              maxTopPicks={MAX_TOP_ACTIVITIES}
+              onToggleSelect={toggleActivity}
+              onToggleTopPick={toggleTopActivity}
+            />
+
+            {topActivityIds.length > 0 && (
+              <div className="top-activity-context">
+                <p className="section-hint">
+                  A bit more about your top picks helps us suggest the right plan:
+                </p>
+                {topActivityIds.map((id) => {
+                  const activity = activityCatalog.find((a) => a.id === id);
+                  const ctx = activityContext[id] || emptyActivityContext();
+                  if (!activity) return null;
+                  return (
+                    <div className="education-entry" key={id}>
+                      <div className="education-entry-header">
+                        <span className="education-entry-label">{activity.name}</span>
+                      </div>
+                      <div className="field">
+                        <label className="field-label">Skill level</label>
+                        <select
+                          className="field-input"
+                          value={ctx.skillLevel}
+                          onChange={(e) => updateActivityContext(id, { skillLevel: e.target.value })}
+                        >
+                          <option value="">Prefer not to say</option>
+                          <option value="beginner">Beginner</option>
+                          <option value="intermediate">Intermediate</option>
+                          <option value="advanced">Advanced</option>
+                          <option value="competitive">Competitive</option>
+                        </select>
+                      </div>
+                      <div className="field">
+                        <label className="field-label">Style</label>
+                        <select
+                          className="field-input"
+                          value={ctx.activityStyle}
+                          onChange={(e) => updateActivityContext(id, { activityStyle: e.target.value })}
+                        >
+                          <option value="">Prefer not to say</option>
+                          <option value="casual_social">Casual / social</option>
+                          <option value="fitness_focused">Fitness-focused</option>
+                          <option value="competitive">Competitive</option>
+                          <option value="exploratory">Exploratory (trying new things)</option>
+                        </select>
+                      </div>
+                      <div className="field">
+                        <label className="field-label">How often would you like to do this?</label>
+                        <select
+                          className="field-input"
+                          value={ctx.desiredFrequency}
+                          onChange={(e) =>
+                            updateActivityContext(id, { desiredFrequency: e.target.value })
+                          }
+                        >
+                          <option value="">Prefer not to say</option>
+                          <option value="rarely">Rarely</option>
+                          <option value="monthly">Monthly</option>
+                          <option value="weekly">Weekly</option>
+                          <option value="multiple_times_per_week">Multiple times a week</option>
+                        </select>
+                      </div>
+                      <div className="field">
+                        <label className="field-label">Preferred group size</label>
+                        <select
+                          className="field-input"
+                          value={ctx.preferredGroupSize}
+                          onChange={(e) =>
+                            updateActivityContext(id, { preferredGroupSize: e.target.value })
+                          }
+                        >
+                          <option value="">Prefer not to say</option>
+                          <option value="one_on_one">1-on-1</option>
+                          <option value="small_group">Small group</option>
+                          <option value="either">Either</option>
+                        </select>
+                      </div>
+                      <div className="field">
+                        <label className="field-label">When would you like to do this?</label>
+                        <select
+                          className="field-input"
+                          value={ctx.targetTimeframe}
+                          onChange={(e) =>
+                            updateActivityContext(id, { targetTimeframe: e.target.value })
+                          }
+                        >
+                          {TARGET_TIMEFRAMES.map((t) => (
+                            <option key={t.value} value={t.value}>
+                              {t.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </section>
 
           <div className="actions">
@@ -579,6 +1059,64 @@ function PageStyles() {
       .add-entry:hover {
         border-color: #e8a548;
         color: #e8a548;
+      }
+
+      .section-hint {
+        font-size: 0.85rem;
+        color: #8f84ad;
+        margin: 0 0 1rem 0;
+        line-height: 1.5;
+      }
+
+      .set-primary {
+        background: transparent;
+        border: none;
+        color: #e8a548;
+        font-size: 0.8rem;
+        cursor: pointer;
+        text-decoration: underline;
+        padding: 0;
+        margin-top: -0.4rem;
+      }
+
+      .chip-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+      }
+
+      .chip {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: #2c2650;
+        border: 1px solid rgba(185, 175, 209, 0.25);
+        color: #b9afd1;
+        font-family: "Public Sans", sans-serif;
+        font-size: 0.9rem;
+        padding: 0.5rem 0.9rem;
+        border-radius: 999px;
+        cursor: pointer;
+      }
+
+      .chip-selected {
+        background: rgba(232, 165, 72, 0.15);
+        border-color: #e8a548;
+        color: #f6f1e7;
+      }
+
+      .chip-star {
+        color: #59517a;
+        font-size: 0.9rem;
+        cursor: pointer;
+      }
+
+      .chip-star-active {
+        color: #e8a548;
+      }
+
+      .top-activity-context {
+        margin-top: 1.75rem;
       }
 
       .actions {
