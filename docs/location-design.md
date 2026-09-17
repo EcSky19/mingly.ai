@@ -43,3 +43,15 @@ label (optional, e.g. "Work" / "Home" - free text, user's own words)
 ## Implementation note for Week 2
 
 Build `user_locations` as multi-row from day one - do not build a single-row version now and migrate later, the way education had to be redesigned after initial feedback. Location is explicitly called out in this doc precisely to avoid repeating that rework.
+
+## City and neighborhood autocomplete
+
+Added after initial build shipped with plain free-text city/neighborhood fields - real user feedback flagged the missing autocomplete.
+
+**Provider:** Photon (by Komoot), an OpenStreetMap-based geocoder explicitly built for search-as-you-type. **Not Nominatim** - Nominatim's own usage policy explicitly forbids autocomplete use ("Auto-complete search... you must not implement such a service"), and Photon's README specifically points Nominatim users here for exactly this use case. Free, no API key, welcomes reasonable end-user-triggered volume per its usage policy - request headers identify the app with a proper User-Agent, per that policy.
+
+**City field:** queries Photon filtered to `layer=city` and `layer=locality` (catches smaller towns not tagged strictly as cities). Returns name, state/country as subtitle, and latitude/longitude - the coordinates are captured and stored (not just the display name), since they enable location-biased neighborhood search and, later, real distance-based feasibility matching (see root PRD's location model).
+
+**Neighborhood field:** queries Photon filtered to `layer=district` and `layer=locality`, biased toward the selected city's coordinates (via Photon's `lat`/`lon`/`location_bias_scale` params) so searching "Park Slope" after selecting New York doesn't surface a same-named place elsewhere. Disabled until a city is selected, since the bias needs city coordinates to be meaningful - the field shows a "enter a city first" hint rather than silently ignoring the dependency.
+
+**Fails open the same way as every other autocomplete field** - if Photon is unreachable or returns nothing, city and neighborhood both remain plain free text.

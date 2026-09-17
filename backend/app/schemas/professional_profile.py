@@ -65,3 +65,5 @@ class EducationEntryOut(BaseModel):
 class AutocompleteSuggestion(BaseModel):
     value: str
     subtitle: Optional[str] = None  # e.g. domain for companies, country for schools
+    latitude: Optional[float] = None  # for city/neighborhood results
+    longitude: Optional[float] = None
