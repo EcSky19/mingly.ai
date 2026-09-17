@@ -905,9 +905,10 @@ function PageStyles() {
       .headline {
         font-family: "Fraunces", serif;
         font-weight: 600;
-        font-size: clamp(1.9rem, 4vw, 2.6rem);
+        font-size: clamp(1.5rem, 3.4vw, 2.15rem);
         line-height: 1.1;
         margin: 0 0 0.75rem 0;
+        white-space: nowrap;
       }
 
       .subhead {
@@ -1169,6 +1170,12 @@ function PageStyles() {
         text-decoration: underline;
       }
       .saved-hint { color: #8f84ad; font-size: 0.85rem; margin-top: 1rem; }
+
+      @media (max-width: 420px) {
+        .headline {
+          font-size: 1.15rem;
+        }
+      }
     `}</style>
   );
 }
