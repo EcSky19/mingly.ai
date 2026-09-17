@@ -27,7 +27,7 @@ def _to_out(row: UserActivity) -> UserActivityOut:
         desired_frequency=row.desired_frequency,
         preferred_group_size=row.preferred_group_size,
         is_top_pick=row.is_top_pick,
-        wants_to_do_now=row.wants_to_do_now,
+        target_timeframe=row.target_timeframe,
         visible_on_profile=row.visible_on_profile,
     )
 
@@ -72,7 +72,7 @@ def set_user_activities(body: UserActivitySet, request: Request, db: Session = D
                 desired_frequency=a.desired_frequency,
                 preferred_group_size=a.preferred_group_size,
                 is_top_pick=a.is_top_pick,
-                wants_to_do_now=a.wants_to_do_now,
+                target_timeframe=a.target_timeframe,
                 visible_on_profile=a.visible_on_profile,
             )
         )
