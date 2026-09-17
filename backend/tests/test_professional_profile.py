@@ -127,6 +127,21 @@ def test_company_autocomplete_fails_open_on_short_query():
     assert response.json() == []
 
 
+def test_cities_autocomplete_endpoint_exists_and_fails_open():
+    # No live network to Photon in the test environment - confirms the
+    # route is correctly registered and fails open rather than erroring
+    # or 404ing (this caught a real path-mismatch bug during development).
+    response = client.get("/api/cities/autocomplete?q=new+york")
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+def test_neighborhoods_autocomplete_endpoint_exists_and_fails_open():
+    response = client.get("/api/neighborhoods/autocomplete?q=brooklyn&near_lat=40.7&near_lon=-74.0")
+    assert response.status_code == 200
+    assert response.json() == []
+
+
 def test_job_titles_autocomplete_fails_open_when_unseeded():
     # Table has no seed data in this test DB (only production has the
     # seeded starter set via migration 0003's data seed) - should
