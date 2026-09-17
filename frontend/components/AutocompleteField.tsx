@@ -2,7 +2,12 @@ import { useEffect, useRef, useState } from "react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-export type Suggestion = { value: string; subtitle?: string | null };
+export type Suggestion = {
+  value: string;
+  subtitle?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+};
 
 type Props = {
   label: string;
@@ -11,6 +16,10 @@ type Props = {
   onChange: (value: string) => void;
   endpoint: string; // e.g. "/api/companies/autocomplete"
   emptyHint?: string; // shown when no suggestions match, e.g. "Not listed? Just type it in."
+  onSelectSuggestion?: (suggestion: Suggestion) => void; // fires only on click, for capturing metadata like lat/lon
+  extraQueryParams?: Record<string, string | number | undefined>; // e.g. near_lat/near_lon for neighborhood bias
+  disabled?: boolean;
+  disabledHint?: string;
 };
 
 // Debounced type-ahead field. Always usable as plain free text underneath -
@@ -22,6 +31,10 @@ export default function AutocompleteField({
   onChange,
   endpoint,
   emptyHint = "Not listed? What you've typed will be saved as-is.",
+  onSelectSuggestion,
+  extraQueryParams,
+  disabled = false,
+  disabledHint,
 }: Props) {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [open, setOpen] = useState(false);
@@ -52,7 +65,13 @@ export default function AutocompleteField({
     debounceRef.current = setTimeout(async () => {
       setLoading(true);
       try {
-        const res = await fetch(`${API_URL}${endpoint}?q=${encodeURIComponent(next)}`, {
+        const params = new URLSearchParams({ q: next });
+        if (extraQueryParams) {
+          Object.entries(extraQueryParams).forEach(([key, val]) => {
+            if (val !== undefined) params.set(key, String(val));
+          });
+        }
+        const res = await fetch(`${API_URL}${endpoint}?${params.toString()}`, {
           credentials: "include",
         });
         if (res.ok) {
@@ -75,11 +94,12 @@ export default function AutocompleteField({
       <input
         className="field-input"
         type="text"
-        placeholder={placeholder}
+        placeholder={disabled ? disabledHint || placeholder : placeholder}
         value={value}
         onChange={(e) => handleChange(e.target.value)}
         onFocus={() => suggestions.length > 0 && setOpen(true)}
         autoComplete="off"
+        disabled={disabled}
       />
       {open && (
         <div className="suggestions">
@@ -95,6 +115,7 @@ export default function AutocompleteField({
                 className="suggestion"
                 onClick={() => {
                   onChange(s.value);
+                  onSelectSuggestion?.(s);
                   setOpen(false);
                 }}
               >

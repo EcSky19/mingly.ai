@@ -55,6 +55,8 @@ type LocationEntry = {
   id: string;
   savedId?: string;
   city: string;
+  cityLat?: number;
+  cityLon?: number;
   neighborhood: string;
   label: string;
   isPrimary: boolean;
@@ -199,6 +201,8 @@ export default function Onboarding() {
             id: string;
             city?: string;
             neighborhood?: string;
+            latitude?: number;
+            longitude?: number;
             label?: string;
             is_primary: boolean;
           }[]
@@ -209,6 +213,8 @@ export default function Onboarding() {
               id: r.id,
               savedId: r.id,
               city: r.city || "",
+              cityLat: r.latitude,
+              cityLon: r.longitude,
               neighborhood: r.neighborhood || "",
               label: r.label || "",
               isPrimary: r.is_primary,
@@ -313,6 +319,8 @@ export default function Onboarding() {
           body: JSON.stringify({
             city: entry.city || undefined,
             neighborhood: entry.neighborhood || undefined,
+            latitude: entry.cityLat,
+            longitude: entry.cityLon,
             label: entry.label || undefined,
             is_primary: entry.isPrimary,
           }),
@@ -652,26 +660,32 @@ export default function Onboarding() {
                     </button>
                   </div>
                 )}
-                <div className="field">
-                  <label className="field-label">City</label>
-                  <input
-                    className="field-input"
-                    type="text"
-                    placeholder="e.g. New York"
-                    value={entry.city}
-                    onChange={(e) => updateLocation(entry.id, { city: e.target.value })}
-                  />
-                </div>
-                <div className="field">
-                  <label className="field-label">Neighborhood (optional)</label>
-                  <input
-                    className="field-input"
-                    type="text"
-                    placeholder="e.g. Brooklyn"
-                    value={entry.neighborhood}
-                    onChange={(e) => updateLocation(entry.id, { neighborhood: e.target.value })}
-                  />
-                </div>
+                <AutocompleteField
+                  label="City"
+                  placeholder="e.g. New York"
+                  value={entry.city}
+                  onChange={(v) => updateLocation(entry.id, { city: v, cityLat: undefined, cityLon: undefined })}
+                  onSelectSuggestion={(s) =>
+                    updateLocation(entry.id, {
+                      city: s.value,
+                      cityLat: s.latitude ?? undefined,
+                      cityLon: s.longitude ?? undefined,
+                    })
+                  }
+                  endpoint="/api/cities/autocomplete"
+                  emptyHint="Not listed? What you've typed will be saved as-is."
+                />
+                <AutocompleteField
+                  label="Neighborhood (optional)"
+                  placeholder="e.g. Brooklyn"
+                  value={entry.neighborhood}
+                  onChange={(v) => updateLocation(entry.id, { neighborhood: v })}
+                  endpoint="/api/neighborhoods/autocomplete"
+                  extraQueryParams={{ near_lat: entry.cityLat, near_lon: entry.cityLon }}
+                  disabled={!entry.city}
+                  disabledHint="Enter a city first"
+                  emptyHint="Not listed? What you've typed will be saved as-is."
+                />
                 <div className="field">
                   <label className="field-label">Label (optional)</label>
                   <input
@@ -965,6 +979,10 @@ function PageStyles() {
       .field-input:focus {
         outline: none;
         border-color: #e8a548;
+      }
+      .field-input:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
       }
       select.field-input {
         appearance: none;
