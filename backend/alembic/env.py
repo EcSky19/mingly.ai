@@ -9,6 +9,9 @@ from app.models import user  # noqa: F401 - import all models so autogenerate se
 from app.models import professional_profile  # noqa: F401
 from app.models import job_title  # noqa: F401
 from app.models import user_education  # noqa: F401
+from app.models import user_location  # noqa: F401
+from app.models import interest  # noqa: F401
+from app.models import activity  # noqa: F401
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
