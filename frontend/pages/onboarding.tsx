@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import AutocompleteField from "../components/AutocompleteField";
 import PrivacyToggles from "../components/PrivacyToggles";
-import ChipSelect from "../components/ChipSelect";
 import OnboardingStyles from "../components/OnboardingStyles";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -71,36 +70,6 @@ const emptyLocationEntry = (isPrimary: boolean): LocationEntry => ({
   isPrimary,
 });
 
-type CatalogItem = { id: string; name: string; category?: string };
-
-type ActivityContext = {
-  interestStrength: string;
-  skillLevel: string;
-  activityStyle: string;
-  desiredFrequency: string;
-  preferredGroupSize: string;
-  targetTimeframe: string;
-};
-
-const emptyActivityContext = (): ActivityContext => ({
-  interestStrength: "",
-  skillLevel: "",
-  activityStyle: "",
-  desiredFrequency: "",
-  preferredGroupSize: "",
-  targetTimeframe: "",
-});
-
-const TARGET_TIMEFRAMES: { value: string; label: string }[] = [
-  { value: "", label: "Prefer not to say" },
-  { value: "ready_now", label: "Ready now" },
-  { value: "sometime_soon", label: "Sometime soon" },
-  { value: "when_season_right", label: "When the season's right" },
-  { value: "no_rush", label: "No rush, just excited" },
-];
-
-const MAX_TOP_INTERESTS = 5;
-const MAX_TOP_ACTIVITIES = 3;
 
 export default function Onboarding() {
   const router = useRouter();
@@ -117,15 +86,6 @@ export default function Onboarding() {
   const [education, setEducation] = useState<EducationEntry[]>([emptyEducationEntry()]);
 
   const [locations, setLocations] = useState<LocationEntry[]>([emptyLocationEntry(true)]);
-
-  const [interestCatalog, setInterestCatalog] = useState<CatalogItem[]>([]);
-  const [selectedInterestIds, setSelectedInterestIds] = useState<string[]>([]);
-  const [topInterestIds, setTopInterestIds] = useState<string[]>([]);
-
-  const [activityCatalog, setActivityCatalog] = useState<CatalogItem[]>([]);
-  const [selectedActivityIds, setSelectedActivityIds] = useState<string[]>([]);
-  const [topActivityIds, setTopActivityIds] = useState<string[]>([]);
-  const [activityContext, setActivityContext] = useState<Record<string, ActivityContext>>({});
 
   useEffect(() => {
     fetch(`${API_URL}/api/auth/me`, { credentials: "include" })
@@ -145,55 +105,30 @@ export default function Onboarding() {
   useEffect(() => {
     if (checkingAuth) return;
 
-    fetch(`${API_URL}/api/catalog/interests`)
-      .then((r) => r.json())
-      .then(setInterestCatalog)
-      .catch(() => setInterestCatalog([]));
-
-    fetch(`${API_URL}/api/catalog/activities`)
-      .then((r) => r.json())
-      .then(setActivityCatalog)
-      .catch(() => setActivityCatalog([]));
-
-    fetch(`${API_URL}/api/profile/interests`, { credentials: "include" })
-      .then((r) => (r.ok ? r.json() : []))
-      .then((rows: { interest_id: string; is_top_pick: boolean }[]) => {
-        if (rows.length === 0) return;
-        setSelectedInterestIds(rows.map((r) => r.interest_id));
-        setTopInterestIds(rows.filter((r) => r.is_top_pick).map((r) => r.interest_id));
-      })
-      .catch(() => {});
-
-    fetch(`${API_URL}/api/profile/activities`, { credentials: "include" })
-      .then((r) => (r.ok ? r.json() : []))
+    // Restores previously saved role/company/industry/career stage on
+    // reload - this fetch was missing before (education and locations
+    // restored correctly, but professional profile silently didn't).
+    fetch(`${API_URL}/api/profile/professional`, { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
       .then(
         (
-          rows: {
-            activity_id: string;
-            is_top_pick: boolean;
-            interest_strength?: string;
-            skill_level?: string;
-            activity_style?: string;
-            desired_frequency?: string;
-            preferred_group_size?: string;
-            target_timeframe?: string;
-          }[]
+          data: {
+            current_role?: string;
+            company?: string;
+            industry?: string;
+            career_stage?: string;
+          } | null
         ) => {
-          if (rows.length === 0) return;
-          setSelectedActivityIds(rows.map((r) => r.activity_id));
-          setTopActivityIds(rows.filter((r) => r.is_top_pick).map((r) => r.activity_id));
-          const ctx: Record<string, ActivityContext> = {};
-          rows.forEach((r) => {
-            ctx[r.activity_id] = {
-              interestStrength: r.interest_strength || "",
-              skillLevel: r.skill_level || "",
-              activityStyle: r.activity_style || "",
-              desiredFrequency: r.desired_frequency || "",
-              preferredGroupSize: r.preferred_group_size || "",
-              targetTimeframe: r.target_timeframe || "",
-            };
-          });
-          setActivityContext(ctx);
+          if (!data) return;
+          if (data.current_role) setCurrentRole({ ...emptyField(), value: data.current_role });
+          if (data.company) {
+            setCompany({ ...emptyField(), value: data.company });
+            setShareCompany(true);
+          } else if (data.industry) {
+            setIndustry({ ...emptyField(), value: data.industry });
+            setShareCompany(false);
+          }
+          if (data.career_stage) setCareerStage(data.career_stage);
         }
       )
       .catch(() => {});
@@ -336,98 +271,7 @@ export default function Onboarding() {
     }
   }
 
-  function toggleInterest(id: string) {
-    setSelectedInterestIds((prev) => {
-      if (prev.includes(id)) {
-        setTopInterestIds((t) => t.filter((x) => x !== id));
-        return prev.filter((x) => x !== id);
-      }
-      return [...prev, id];
-    });
-  }
-
-  function toggleTopInterest(id: string) {
-    setTopInterestIds((prev) => {
-      if (prev.includes(id)) return prev.filter((x) => x !== id);
-      if (prev.length >= MAX_TOP_INTERESTS) return prev;
-      return [...prev, id];
-    });
-  }
-
-  async function saveInterests() {
-    if (selectedInterestIds.length === 0) return;
-    try {
-      await fetch(`${API_URL}/api/profile/interests`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          interest_ids: selectedInterestIds,
-          top_pick_ids: topInterestIds,
-          visible_on_profile: true,
-        }),
-      });
-    } catch {
-      // Fails open.
-    }
-  }
-
-  function toggleActivity(id: string) {
-    setSelectedActivityIds((prev) => {
-      if (prev.includes(id)) {
-        setTopActivityIds((t) => t.filter((x) => x !== id));
-        return prev.filter((x) => x !== id);
-      }
-      return [...prev, id];
-    });
-    setActivityContext((prev) => (prev[id] ? prev : { ...prev, [id]: emptyActivityContext() }));
-  }
-
-  function toggleTopActivity(id: string) {
-    setTopActivityIds((prev) => {
-      if (prev.includes(id)) return prev.filter((x) => x !== id);
-      if (prev.length >= MAX_TOP_ACTIVITIES) return prev;
-      return [...prev, id];
-    });
-  }
-
-  function updateActivityContext(id: string, patch: Partial<ActivityContext>) {
-    setActivityContext((prev) => ({
-      ...prev,
-      [id]: { ...(prev[id] || emptyActivityContext()), ...patch },
-    }));
-  }
-
-  async function saveActivities() {
-    if (selectedActivityIds.length === 0) return;
-    try {
-      await fetch(`${API_URL}/api/profile/activities`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          activities: selectedActivityIds.map((id) => {
-            const ctx = activityContext[id] || emptyActivityContext();
-            return {
-              activity_id: id,
-              interest_strength: ctx.interestStrength || undefined,
-              skill_level: ctx.skillLevel || undefined,
-              activity_style: ctx.activityStyle || undefined,
-              desired_frequency: ctx.desiredFrequency || undefined,
-              preferred_group_size: ctx.preferredGroupSize || undefined,
-              is_top_pick: topActivityIds.includes(id),
-              target_timeframe: ctx.targetTimeframe || undefined,
-              visible_on_profile: true,
-            };
-          }),
-        }),
-      });
-    } catch {
-      // Fails open.
-    }
-  }
-
-  async function handleSave(skipRest: boolean) {
+  async function handleSave() {
     setSaving(true);
     try {
       const body = {
@@ -444,14 +288,12 @@ export default function Onboarding() {
       });
       await saveEducationEntries();
       await saveLocationEntries();
-      await saveInterests();
-      await saveActivities();
       setSaved(true);
-      if (skipRest) router.push("/home");
+      router.push("/onboarding/interests");
     } catch {
       // Fails open - nothing here blocks the user from continuing even
       // if the save request fails; onboarding is not a validation gate.
-      if (skipRest) router.push("/home");
+      router.push("/onboarding/interests");
     } finally {
       setSaving(false);
     }
@@ -723,143 +565,20 @@ export default function Onboarding() {
             </p>
           </section>
 
-          <section className="section">
-            <h2 className="section-title">Interests</h2>
-            <p className="section-hint">
-              Things you enjoy. Star up to {MAX_TOP_INTERESTS} that matter most to you.
-            </p>
-            <ChipSelect
-              items={interestCatalog.map((i) => ({ id: i.id, label: i.name }))}
-              selectedIds={selectedInterestIds}
-              topPickIds={topInterestIds}
-              maxTopPicks={MAX_TOP_INTERESTS}
-              onToggleSelect={toggleInterest}
-              onToggleTopPick={toggleTopInterest}
-            />
-          </section>
-
-          <section className="section">
-            <h2 className="section-title">Activities</h2>
-            <p className="section-hint">
-              Things you'd actually do with someone — not just enjoy in theory. Star up to{" "}
-              {MAX_TOP_ACTIVITIES} you genuinely want to do this month; those get the most weight
-              in your recommendations.
-            </p>
-            <ChipSelect
-              items={activityCatalog.map((a) => ({ id: a.id, label: a.name }))}
-              selectedIds={selectedActivityIds}
-              topPickIds={topActivityIds}
-              maxTopPicks={MAX_TOP_ACTIVITIES}
-              onToggleSelect={toggleActivity}
-              onToggleTopPick={toggleTopActivity}
-            />
-
-            {topActivityIds.length > 0 && (
-              <div className="top-activity-context">
-                <p className="section-hint">
-                  A bit more about your top picks helps us suggest the right plan:
-                </p>
-                {topActivityIds.map((id) => {
-                  const activity = activityCatalog.find((a) => a.id === id);
-                  const ctx = activityContext[id] || emptyActivityContext();
-                  if (!activity) return null;
-                  return (
-                    <div className="education-entry" key={id}>
-                      <div className="education-entry-header">
-                        <span className="education-entry-label">{activity.name}</span>
-                      </div>
-                      <div className="field">
-                        <label className="field-label">Skill level</label>
-                        <select
-                          className="field-input"
-                          value={ctx.skillLevel}
-                          onChange={(e) => updateActivityContext(id, { skillLevel: e.target.value })}
-                        >
-                          <option value="">Prefer not to say</option>
-                          <option value="beginner">Beginner</option>
-                          <option value="intermediate">Intermediate</option>
-                          <option value="advanced">Advanced</option>
-                          <option value="competitive">Competitive</option>
-                        </select>
-                      </div>
-                      <div className="field">
-                        <label className="field-label">Style</label>
-                        <select
-                          className="field-input"
-                          value={ctx.activityStyle}
-                          onChange={(e) => updateActivityContext(id, { activityStyle: e.target.value })}
-                        >
-                          <option value="">Prefer not to say</option>
-                          <option value="casual_social">Casual / social</option>
-                          <option value="fitness_focused">Fitness-focused</option>
-                          <option value="competitive">Competitive</option>
-                          <option value="exploratory">Exploratory (trying new things)</option>
-                        </select>
-                      </div>
-                      <div className="field">
-                        <label className="field-label">How often would you like to do this?</label>
-                        <select
-                          className="field-input"
-                          value={ctx.desiredFrequency}
-                          onChange={(e) =>
-                            updateActivityContext(id, { desiredFrequency: e.target.value })
-                          }
-                        >
-                          <option value="">Prefer not to say</option>
-                          <option value="rarely">Rarely</option>
-                          <option value="monthly">Monthly</option>
-                          <option value="weekly">Weekly</option>
-                          <option value="multiple_times_per_week">Multiple times a week</option>
-                        </select>
-                      </div>
-                      <div className="field">
-                        <label className="field-label">Preferred group size</label>
-                        <select
-                          className="field-input"
-                          value={ctx.preferredGroupSize}
-                          onChange={(e) =>
-                            updateActivityContext(id, { preferredGroupSize: e.target.value })
-                          }
-                        >
-                          <option value="">Prefer not to say</option>
-                          <option value="one_on_one">1-on-1</option>
-                          <option value="small_group">Small group</option>
-                          <option value="either">Either</option>
-                        </select>
-                      </div>
-                      <div className="field">
-                        <label className="field-label">When would you like to do this?</label>
-                        <select
-                          className="field-input"
-                          value={ctx.targetTimeframe}
-                          onChange={(e) =>
-                            updateActivityContext(id, { targetTimeframe: e.target.value })
-                          }
-                        >
-                          {TARGET_TIMEFRAMES.map((t) => (
-                            <option key={t.value} value={t.value}>
-                              {t.label}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </section>
-
           <div className="actions">
             <button
               type="button"
               className="cta"
               disabled={saving}
-              onClick={() => handleSave(true)}
+              onClick={() => handleSave()}
             >
               {saving ? "Saving…" : "Continue"}
             </button>
-            <button type="button" className="skip" onClick={() => router.push("/home")}>
+            <button
+              type="button"
+              className="skip"
+              onClick={() => router.push("/onboarding/interests")}
+            >
               Skip for now
             </button>
           </div>
