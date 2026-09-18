@@ -22,6 +22,7 @@ class ActivityCategory(str, enum.Enum):
     outdoor = "outdoor"
     casual = "casual"
     pets = "pets"
+    nightlife = "nightlife"
 
 
 class SkillLevel(str, enum.Enum):
