@@ -133,6 +133,37 @@ export default function Onboarding() {
       )
       .catch(() => {});
 
+    fetch(`${API_URL}/api/profile/education`, { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : []))
+      .then(
+        (
+          rows: {
+            id: string;
+            school?: string;
+            degree?: string;
+            field_of_study?: string;
+            graduation_year?: number;
+            visible_on_profile: boolean;
+            usable_for_matching: boolean;
+          }[]
+        ) => {
+          if (rows.length === 0) return;
+          setEducation(
+            rows.map((r) => ({
+              id: r.id,
+              savedId: r.id,
+              school: r.school || "",
+              degree: r.degree || "",
+              fieldOfStudy: r.field_of_study || "",
+              graduationYear: r.graduation_year ? String(r.graduation_year) : "",
+              visibleOnProfile: r.visible_on_profile,
+              usableForMatching: r.usable_for_matching,
+            }))
+          );
+        }
+      )
+      .catch(() => {});
+
     fetch(`${API_URL}/api/profile/locations`, { credentials: "include" })
       .then((r) => (r.ok ? r.json() : []))
       .then(
