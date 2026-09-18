@@ -35,7 +35,7 @@ const TARGET_TIMEFRAMES: { value: string; label: string }[] = [
 ];
 
 const MAX_TOP_INTERESTS = 5;
-const MAX_TOP_ACTIVITIES = 3;
+const MAX_TOP_ACTIVITIES = 10;
 
 // Split out from the main onboarding page: personal/professional info
 // (role, education, location) rarely changes once filled in, but
@@ -129,22 +129,22 @@ export default function OnboardingInterests() {
       .catch(() => {});
   }, [checkingAuth]);
 
-  function toggleInterest(id: string) {
-    setSelectedInterestIds((prev) => {
-      if (prev.includes(id)) {
-        setTopInterestIds((t) => t.filter((x) => x !== id));
-        return prev.filter((x) => x !== id);
-      }
-      return [...prev, id];
-    });
-  }
+  function cycleInterest(id: string) {
+    const isLoved = topInterestIds.includes(id);
+    const isLiked = !isLoved && selectedInterestIds.includes(id);
 
-  function toggleTopInterest(id: string) {
-    setTopInterestIds((prev) => {
-      if (prev.includes(id)) return prev.filter((x) => x !== id);
-      if (prev.length >= MAX_TOP_INTERESTS) return prev;
-      return [...prev, id];
-    });
+    if (isLoved) {
+      // loved -> unselected
+      setTopInterestIds((prev) => prev.filter((x) => x !== id));
+      setSelectedInterestIds((prev) => prev.filter((x) => x !== id));
+    } else if (isLiked) {
+      // liked -> loved, unless loved is already at capacity (stays liked)
+      if (topInterestIds.length >= MAX_TOP_INTERESTS) return;
+      setTopInterestIds((prev) => [...prev, id]);
+    } else {
+      // unselected -> liked
+      setSelectedInterestIds((prev) => [...prev, id]);
+    }
   }
 
   async function saveInterests() {
@@ -165,23 +165,20 @@ export default function OnboardingInterests() {
     }
   }
 
-  function toggleActivity(id: string) {
-    setSelectedActivityIds((prev) => {
-      if (prev.includes(id)) {
-        setTopActivityIds((t) => t.filter((x) => x !== id));
-        return prev.filter((x) => x !== id);
-      }
-      return [...prev, id];
-    });
-    setActivityContext((prev) => (prev[id] ? prev : { ...prev, [id]: emptyActivityContext() }));
-  }
+  function cycleActivity(id: string) {
+    const isLoved = topActivityIds.includes(id);
+    const isLiked = !isLoved && selectedActivityIds.includes(id);
 
-  function toggleTopActivity(id: string) {
-    setTopActivityIds((prev) => {
-      if (prev.includes(id)) return prev.filter((x) => x !== id);
-      if (prev.length >= MAX_TOP_ACTIVITIES) return prev;
-      return [...prev, id];
-    });
+    if (isLoved) {
+      setTopActivityIds((prev) => prev.filter((x) => x !== id));
+      setSelectedActivityIds((prev) => prev.filter((x) => x !== id));
+    } else if (isLiked) {
+      if (topActivityIds.length >= MAX_TOP_ACTIVITIES) return;
+      setTopActivityIds((prev) => [...prev, id]);
+    } else {
+      setSelectedActivityIds((prev) => [...prev, id]);
+      setActivityContext((prev) => (prev[id] ? prev : { ...prev, [id]: emptyActivityContext() }));
+    }
   }
 
   function updateActivityContext(id: string, patch: Partial<ActivityContext>) {
@@ -277,38 +274,37 @@ export default function OnboardingInterests() {
           <section className="section">
             <h2 className="section-title">Interests</h2>
             <p className="section-hint">
-              Things you enjoy. Star up to {MAX_TOP_INTERESTS} that matter most to you.
+              Click once to like something, again to love it (up to {MAX_TOP_INTERESTS}), a third
+              time to clear it.
             </p>
             <ChipSelect
               items={interestCatalog.map((i) => ({ id: i.id, label: i.name }))}
               selectedIds={selectedInterestIds}
-              topPickIds={topInterestIds}
-              maxTopPicks={MAX_TOP_INTERESTS}
-              onToggleSelect={toggleInterest}
-              onToggleTopPick={toggleTopInterest}
+              lovedIds={topInterestIds}
+              maxLoved={MAX_TOP_INTERESTS}
+              onCycle={cycleInterest}
             />
           </section>
 
           <section className="section">
             <h2 className="section-title">Activities</h2>
             <p className="section-hint">
-              Things you'd actually do with someone — not just enjoy in theory. Star up to{" "}
-              {MAX_TOP_ACTIVITIES} you genuinely want to do this month; those get the most weight
-              in your recommendations.
+              Things you'd actually do with someone — not just enjoy in theory. Click once to
+              like, again to love (up to {MAX_TOP_ACTIVITIES}) — loved activities get the most
+              weight in your recommendations.
             </p>
             <ChipSelect
               items={activityCatalog.map((a) => ({ id: a.id, label: a.name }))}
               selectedIds={selectedActivityIds}
-              topPickIds={topActivityIds}
-              maxTopPicks={MAX_TOP_ACTIVITIES}
-              onToggleSelect={toggleActivity}
-              onToggleTopPick={toggleTopActivity}
+              lovedIds={topActivityIds}
+              maxLoved={MAX_TOP_ACTIVITIES}
+              onCycle={cycleActivity}
             />
 
             {topActivityIds.length > 0 && (
               <div className="top-activity-context">
                 <p className="section-hint">
-                  A bit more about your top picks helps us suggest the right plan:
+                  A bit more about your loved activities helps us suggest the right plan:
                 </p>
                 {topActivityIds.map((id) => {
                   const activity = activityCatalog.find((a) => a.id === id);

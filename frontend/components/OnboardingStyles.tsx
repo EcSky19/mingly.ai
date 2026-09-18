@@ -254,22 +254,29 @@ export default function OnboardingStyles() {
         padding: 0.5rem 0.9rem;
         border-radius: 999px;
         cursor: pointer;
+        transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
       }
 
-      .chip-selected {
-        background: rgba(232, 165, 72, 0.15);
+      .chip-liked {
+        background: rgba(124, 107, 175, 0.18);
+        border-color: #7c6baf;
+        color: #f6f1e7;
+      }
+
+      .chip-loved {
+        background: rgba(232, 165, 72, 0.18);
         border-color: #e8a548;
         color: #f6f1e7;
       }
 
-      .chip-star {
-        color: #59517a;
-        font-size: 0.9rem;
-        cursor: pointer;
+      .chip-heart {
+        color: #e8a548;
+        font-size: 0.85rem;
       }
 
-      .chip-star-active {
-        color: #e8a548;
+      .chip-check {
+        color: #7c6baf;
+        font-size: 0.8rem;
       }
 
       .top-activity-context {
