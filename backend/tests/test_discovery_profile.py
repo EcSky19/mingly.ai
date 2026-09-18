@@ -32,6 +32,13 @@ def setup_db():
         Activity(id=uuid.uuid4(), name="Dog Walks", category="pets"),
         Activity(id=uuid.uuid4(), name="Coffee", category="social_food"),
         Activity(id=uuid.uuid4(), name="Hiking", category="outdoor"),
+        Activity(id=uuid.uuid4(), name="Yoga", category="sports"),
+        Activity(id=uuid.uuid4(), name="Brunch", category="social_food"),
+        Activity(id=uuid.uuid4(), name="Museums", category="entertainment"),
+        Activity(id=uuid.uuid4(), name="Cycling", category="sports"),
+        Activity(id=uuid.uuid4(), name="Camping", category="outdoor"),
+        Activity(id=uuid.uuid4(), name="Karaoke", category="nightlife"),
+        Activity(id=uuid.uuid4(), name="Chess", category="casual"),
     ]
     db.add_all(interests + activities)
     db.commit()
@@ -238,7 +245,7 @@ def test_activity_all_four_target_timeframes_accepted(test_user):
 def test_activities_too_many_top_picks_rejected(test_user):
     cookies = _cookie_for(str(test_user.id))
     catalog = client.get("/api/catalog/activities").json()
-    assert len(catalog) == 4, "test assumes 4 seeded activities so 4 top picks exceeds the max of 3"
+    assert len(catalog) == 11, "test assumes 11 seeded activities so marking all of them exceeds the max of 10"
 
     response = client.put(
         "/api/profile/activities",
@@ -246,6 +253,23 @@ def test_activities_too_many_top_picks_rejected(test_user):
         cookies=cookies,
     )
     assert response.status_code == 400
+
+
+def test_activities_exactly_ten_top_picks_allowed(test_user):
+    """Boundary check: exactly 10 (the new max, raised from 3) should
+    succeed, only 11+ should be rejected."""
+    cookies = _cookie_for(str(test_user.id))
+    catalog = client.get("/api/catalog/activities").json()
+    ten = catalog[:10]
+
+    response = client.put(
+        "/api/profile/activities",
+        json={"activities": [{"activity_id": a["id"], "is_top_pick": True} for a in ten]},
+        cookies=cookies,
+    )
+    assert response.status_code == 200
+    fetched = client.get("/api/profile/activities", cookies=cookies).json()
+    assert sum(1 for a in fetched if a["is_top_pick"]) == 10
 
 
 # --- Locations ---

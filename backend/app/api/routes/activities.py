@@ -13,7 +13,7 @@ from app.services.session_auth import get_current_user
 router = APIRouter(prefix="/api/profile/activities", tags=["activities"])
 catalog_router = APIRouter(prefix="/api/catalog/activities", tags=["catalog"])
 
-MAX_TOP_PICKS = 3  # "top 3 activities they genuinely want to do this month" - root PRD section 20
+MAX_TOP_PICKS = 10  # raised from 3 after product feedback - "loved" activities via the click-cycle UI, not just "top 3 this month"
 
 
 def _to_out(row: UserActivity) -> UserActivityOut:
