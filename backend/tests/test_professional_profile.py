@@ -136,6 +136,88 @@ def test_cities_autocomplete_endpoint_exists_and_fails_open():
     assert response.json() == []
 
 
+def test_languages_autocomplete_matches():
+    response = client.get("/api/languages/autocomplete?q=span")
+    assert response.status_code == 200
+    results = response.json()
+    assert any(r["value"] == "Spanish" for r in results)
+
+
+def test_languages_requires_auth():
+    assert client.get("/api/profile/languages").status_code == 401
+    assert client.post("/api/profile/languages", json={"language": "English"}).status_code == 401
+
+
+def test_add_multiple_languages_with_proficiency_and_matching_flag(test_user):
+    cookie = _session_cookie_for(str(test_user.id))
+    client.cookies.set(settings.SESSION_COOKIE_NAME, cookie)
+
+    r1 = client.post(
+        "/api/profile/languages",
+        json={"language": "English", "proficiency": "native", "visible_on_profile": True, "usable_for_matching": True},
+    )
+    assert r1.status_code == 201
+    lang1_id = r1.json()["id"]
+
+    r2 = client.post(
+        "/api/profile/languages",
+        json={"language": "Spanish", "proficiency": "conversational", "usable_for_matching": False},
+    )
+    assert r2.status_code == 201
+
+    listing = client.get("/api/profile/languages").json()
+    assert len(listing) == 2
+    english = next(l for l in listing if l["language"] == "English")
+    assert english["proficiency"] == "native"
+    assert english["usable_for_matching"] is True
+    spanish = next(l for l in listing if l["language"] == "Spanish")
+    assert spanish["proficiency"] == "conversational"
+    assert spanish["usable_for_matching"] is False  # explicitly opted out
+
+    delete_resp = client.delete(f"/api/profile/languages/{lang1_id}")
+    assert delete_resp.status_code == 204
+    remaining = client.get("/api/profile/languages").json()
+    assert len(remaining) == 1
+    assert remaining[0]["language"] == "Spanish"
+
+    client.cookies.clear()
+
+
+def test_language_delete_scoped_to_owner(test_user):
+    cookie = _session_cookie_for(str(test_user.id))
+
+    other_db = SessionLocal()
+    other_user = User(
+        linkedin_sub=f"test-other-lang-{uuid.uuid4()}",
+        email=f"test-other-lang-{uuid.uuid4()}@example.com",
+        first_name="Other",
+        last_name="User",
+    )
+    other_db.add(other_user)
+    other_db.commit()
+    other_db.refresh(other_user)
+    other_cookie = _session_cookie_for(str(other_user.id))
+    cookie_name = settings.SESSION_COOKIE_NAME
+
+    create_resp = client.post(
+        "/api/profile/languages", json={"language": "French"}, cookies={cookie_name: other_cookie}
+    )
+    other_entry_id = create_resp.json()["id"]
+
+    delete_resp = client.delete(
+        f"/api/profile/languages/{other_entry_id}", cookies={cookie_name: cookie}
+    )
+    assert delete_resp.status_code == 404
+
+    still_there = client.get(
+        "/api/profile/languages", cookies={cookie_name: other_cookie}
+    ).json()
+    assert any(l["id"] == other_entry_id for l in still_there)
+
+    other_db.close()
+    client.cookies.clear()
+
+
 def test_neighborhoods_autocomplete_endpoint_exists_and_fails_open():
     response = client.get("/api/neighborhoods/autocomplete?q=brooklyn&near_lat=40.7&near_lon=-74.0")
     assert response.status_code == 200
