@@ -83,6 +83,39 @@ class Activity(Base):
     category = Column(Enum(ActivityCategory), nullable=False)
 
 
+class ActivitySubtag(Base):
+    """A finer-grained option under a specific activity - e.g. "NFL"
+    under "Football Watch Parties," or "Fly Fishing" under "Fishing."
+    Exists to preserve richer matching signal without bloating the main
+    activity selector with hundreds of narrow entries (see root PRD's
+    "do not interrogate users about every minor activity").
+
+    Honest scope: only seeded for a handful of activities where subtags
+    add real value (see app/data/activity_subtags_starter.json), not
+    every one of the 111 catalog activities."""
+    __tablename__ = "activity_subtags"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    activity_id = Column(UUID(as_uuid=True), ForeignKey("activities.id", ondelete="CASCADE"), nullable=False, index=True)
+    name = Column(String, nullable=False)
+
+    activity = relationship("Activity", backref="subtags")
+
+
+class UserActivitySubtag(Base):
+    """A user's chosen subtag(s) for one of their selected activities.
+    Many-to-many between a user's activity selection and the subtag
+    catalog - a user can pick more than one (e.g. both "NFL" and
+    "College Football")."""
+    __tablename__ = "user_activity_subtags"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_activity_id = Column(UUID(as_uuid=True), ForeignKey("user_activities.id", ondelete="CASCADE"), nullable=False, index=True)
+    subtag_id = Column(UUID(as_uuid=True), ForeignKey("activity_subtags.id", ondelete="CASCADE"), nullable=False)
+
+    subtag = relationship("ActivitySubtag")
+
+
 class UserActivity(Base):
     """A user's selected activity plus context. Top 3 activities get
     significant ranking weight per root PRD section 20 - is_top_pick
@@ -106,3 +139,4 @@ class UserActivity(Base):
 
     user = relationship("User", backref="activities")
     activity = relationship("Activity")
+    chosen_subtags = relationship("UserActivitySubtag", backref="user_activity", cascade="all, delete-orphan")
