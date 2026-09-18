@@ -269,8 +269,9 @@ export default function OnboardingInterests() {
             {firstName ? `${firstName}'s` : "Your"} Interests & Activities
           </h1>
           <p className="subhead">
-            These are the things worth revisiting anytime — what you're into changes more than
-            your job title does. Update them whenever your interests shift.
+            This is where we find your people. Tell us what excites you and what you'd actually
+            love to do with someone — it's how we connect you with people who get it, not just
+            people who exist nearby.
           </p>
 
           <section className="section">
