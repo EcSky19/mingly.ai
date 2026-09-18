@@ -34,7 +34,7 @@ def _to_out(row: UserActivity) -> UserActivityOut:
 
 @catalog_router.get("", response_model=list[ActivityCatalogOut])
 def list_activity_catalog(db: Session = Depends(get_db)):
-    return db.query(Activity).order_by(Activity.category, Activity.name).all()
+    return db.query(Activity).order_by(Activity.name).all()
 
 
 @router.get("", response_model=list[UserActivityOut])
