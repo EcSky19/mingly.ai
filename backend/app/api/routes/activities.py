@@ -34,7 +34,14 @@ def _to_out(row: UserActivity) -> UserActivityOut:
 
 @catalog_router.get("", response_model=list[ActivityCatalogOut])
 def list_activity_catalog(db: Session = Depends(get_db)):
-    return db.query(Activity).order_by(Activity.name).all()
+    # Sort in application code, not via DB ORDER BY - Postgres's default
+    # locale collation compares punctuation/spaces differently than plain
+    # codepoint order (confirmed: production sorted "Ski Trips" after
+    # "Skiing / Snowboarding", which ORDER BY name alone got wrong).
+    # Sorting here guarantees identical, predictable behavior regardless
+    # of the database's locale settings.
+    activities = db.query(Activity).all()
+    return sorted(activities, key=lambda a: a.name)
 
 
 @router.get("", response_model=list[UserActivityOut])

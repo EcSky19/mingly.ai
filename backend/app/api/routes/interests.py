@@ -18,7 +18,11 @@ MAX_TOP_PICKS = 5
 
 @catalog_router.get("", response_model=list[InterestCatalogOut])
 def list_interest_catalog(db: Session = Depends(get_db)):
-    return db.query(Interest).order_by(Interest.name).all()
+    # Same fix as activities catalog - sort in application code to avoid
+    # depending on the database's locale collation for punctuation/space
+    # ordering.
+    interests = db.query(Interest).all()
+    return sorted(interests, key=lambda i: i.name)
 
 
 @router.get("", response_model=list[UserInterestOut])

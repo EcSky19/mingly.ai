@@ -83,6 +83,20 @@ def test_interests_catalog_is_public():
     assert len(response.json()) == 6
 
 
+def test_interests_catalog_is_alphabetical():
+    """Regression test: catalog must be sorted alphabetically regardless
+    of insertion order or database collation. A real bug shipped where
+    relying on Postgres's ORDER BY for this sorted 'Ski Trips' after
+    'Skiing / Snowboarding' due to locale-aware collation comparing
+    punctuation/spaces differently than plain codepoint order - fixed by
+    sorting in application code instead. The fixture inserts interests
+    out of alphabetical order specifically to catch a regression back to
+    relying on DB ordering."""
+    response = client.get("/api/catalog/interests")
+    names = [i["name"] for i in response.json()]
+    assert names == sorted(names)
+
+
 def test_interests_requires_auth():
     assert client.get("/api/profile/interests").status_code == 401
     assert client.put("/api/profile/interests", json={"interest_ids": []}).status_code == 401
@@ -160,6 +174,13 @@ def test_setting_interests_replaces_previous_selection(test_user):
 
 def test_activities_requires_auth():
     assert client.get("/api/profile/activities").status_code == 401
+
+
+def test_activities_catalog_is_alphabetical():
+    """Same regression guard as interests - see that test's docstring."""
+    response = client.get("/api/catalog/activities")
+    names = [a["name"] for a in response.json()]
+    assert names == sorted(names)
 
 
 def test_set_and_get_activities_with_context(test_user):
