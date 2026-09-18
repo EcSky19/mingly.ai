@@ -62,6 +62,24 @@ class EducationEntryOut(BaseModel):
         from_attributes = True
 
 
+class LanguageEntryCreate(BaseModel):
+    language: str
+    proficiency: Optional[str] = None
+    visible_on_profile: bool = False
+    usable_for_matching: bool = True
+
+
+class LanguageEntryOut(BaseModel):
+    id: UUID
+    language: str
+    proficiency: Optional[str] = None
+    visible_on_profile: bool
+    usable_for_matching: bool
+
+    class Config:
+        from_attributes = True
+
+
 class AutocompleteSuggestion(BaseModel):
     value: str
     subtitle: Optional[str] = None  # e.g. domain for companies, country for schools

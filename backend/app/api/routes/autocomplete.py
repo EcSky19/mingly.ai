@@ -50,6 +50,11 @@ def industries_autocomplete(q: str = Query(default="", max_length=100)):
     return autocomplete.autocomplete_industries(q)
 
 
+@router.get("/languages/autocomplete", response_model=list[AutocompleteSuggestion])
+def languages_autocomplete(q: str = Query(default="", max_length=100)):
+    return autocomplete.autocomplete_languages(q)
+
+
 @router.get("/job-titles/autocomplete", response_model=list[AutocompleteSuggestion])
 def job_titles_autocomplete(q: str = Query(default="", max_length=100), db: Session = Depends(get_db)):
     return autocomplete.autocomplete_job_titles(db, q)

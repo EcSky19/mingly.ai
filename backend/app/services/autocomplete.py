@@ -22,6 +22,7 @@ DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 _degrees_cache: list[str] | None = None
 _fields_of_study_cache: list[str] | None = None
 _industries_cache: list[str] | None = None
+_languages_cache: list[str] | None = None
 
 
 def _load_json_list(filename: str) -> list[str]:
@@ -193,6 +194,21 @@ def autocomplete_industries(query: str) -> list[AutocompleteSuggestion]:
     q = query.lower()
     matches = [i for i in _industries_cache if q in i.lower()]
     return [AutocompleteSuggestion(value=i) for i in matches[:10]]
+
+
+def autocomplete_languages(query: str) -> list[AutocompleteSuggestion]:
+    """Static, bundled list - the complete official ISO 639-1 standard
+    (184 languages), not a curated subset. See app/data/languages_starter.json."""
+    global _languages_cache
+    if _languages_cache is None:
+        _languages_cache = _load_json_list("languages_starter.json")
+
+    if not query:
+        return [AutocompleteSuggestion(value=l) for l in _languages_cache[:10]]
+
+    q = query.lower()
+    matches = [l for l in _languages_cache if q in l.lower()]
+    return [AutocompleteSuggestion(value=l) for l in matches[:10]]
 
 
 def autocomplete_job_titles(db: Session, query: str) -> list[AutocompleteSuggestion]:
