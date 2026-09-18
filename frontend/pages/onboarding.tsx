@@ -51,6 +51,31 @@ const CAREER_STAGES: { value: string; label: string }[] = [
   { value: "other", label: "Other" },
 ];
 
+type LanguageEntry = {
+  id: string; // client-side temp id, or real id once saved
+  savedId?: string; // set once persisted to the backend
+  language: string;
+  proficiency: string;
+  visibleOnProfile: boolean;
+  usableForMatching: boolean;
+};
+
+const emptyLanguageEntry = (): LanguageEntry => ({
+  id: `local-${Math.random().toString(36).slice(2)}`,
+  language: "",
+  proficiency: "",
+  visibleOnProfile: false,
+  usableForMatching: true,
+});
+
+const PROFICIENCY_LEVELS: { value: string; label: string }[] = [
+  { value: "", label: "Prefer not to say" },
+  { value: "native", label: "Native" },
+  { value: "fluent", label: "Fluent" },
+  { value: "conversational", label: "Conversational" },
+  { value: "learning", label: "Learning" },
+];
+
 type LocationEntry = {
   id: string;
   savedId?: string;
@@ -84,6 +109,8 @@ export default function Onboarding() {
   const [industry, setIndustry] = useState<FieldState>(emptyField());
   const [careerStage, setCareerStage] = useState("");
   const [education, setEducation] = useState<EducationEntry[]>([emptyEducationEntry()]);
+
+  const [languages, setLanguages] = useState<LanguageEntry[]>([emptyLanguageEntry()]);
 
   const [locations, setLocations] = useState<LocationEntry[]>([emptyLocationEntry(true)]);
 
@@ -156,6 +183,33 @@ export default function Onboarding() {
               degree: r.degree || "",
               fieldOfStudy: r.field_of_study || "",
               graduationYear: r.graduation_year ? String(r.graduation_year) : "",
+              visibleOnProfile: r.visible_on_profile,
+              usableForMatching: r.usable_for_matching,
+            }))
+          );
+        }
+      )
+      .catch(() => {});
+
+    fetch(`${API_URL}/api/profile/languages`, { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : []))
+      .then(
+        (
+          rows: {
+            id: string;
+            language: string;
+            proficiency?: string;
+            visible_on_profile: boolean;
+            usable_for_matching: boolean;
+          }[]
+        ) => {
+          if (rows.length === 0) return;
+          setLanguages(
+            rows.map((r) => ({
+              id: r.id,
+              savedId: r.id,
+              language: r.language,
+              proficiency: r.proficiency || "",
               visibleOnProfile: r.visible_on_profile,
               usableForMatching: r.usable_for_matching,
             }))
@@ -253,6 +307,49 @@ export default function Onboarding() {
     }
   }
 
+  function updateLanguage(id: string, patch: Partial<LanguageEntry>) {
+    setLanguages((prev) => prev.map((l) => (l.id === id ? { ...l, ...patch } : l)));
+  }
+
+  function addLanguageEntry() {
+    setLanguages((prev) => [...prev, emptyLanguageEntry()]);
+  }
+
+  async function removeLanguageEntry(entry: LanguageEntry) {
+    setLanguages((prev) => prev.filter((l) => l.id !== entry.id));
+    if (entry.savedId) {
+      try {
+        await fetch(`${API_URL}/api/profile/languages/${entry.savedId}`, {
+          method: "DELETE",
+          credentials: "include",
+        });
+      } catch {
+        // Fails open - same as education/location deletion.
+      }
+    }
+  }
+
+  async function saveLanguageEntries() {
+    const toSave = languages.filter((l) => !l.savedId && l.language);
+    for (const entry of toSave) {
+      try {
+        await fetch(`${API_URL}/api/profile/languages`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            language: entry.language,
+            proficiency: entry.proficiency || undefined,
+            visible_on_profile: entry.visibleOnProfile,
+            usable_for_matching: entry.usableForMatching,
+          }),
+        });
+      } catch {
+        // Fails open.
+      }
+    }
+  }
+
   function updateLocation(id: string, patch: Partial<LocationEntry>) {
     setLocations((prev) => prev.map((l) => (l.id === id ? { ...l, ...patch } : l)));
   }
@@ -318,6 +415,7 @@ export default function Onboarding() {
         body: JSON.stringify(body),
       });
       await saveEducationEntries();
+      await saveLanguageEntries();
       await saveLocationEntries();
       setSaved(true);
       router.push("/onboarding/interests");
@@ -519,6 +617,59 @@ export default function Onboarding() {
             ))}
             <button type="button" className="add-entry" onClick={addEducationEntry}>
               + Add another degree
+            </button>
+          </section>
+
+          <section className="section">
+            <h2 className="section-title">Languages</h2>
+            {languages.map((entry, index) => (
+              <div className="education-entry" key={entry.id}>
+                {languages.length > 1 && (
+                  <div className="education-entry-header">
+                    <span className="education-entry-label">
+                      {index === 0 ? "First language" : `Language ${index + 1}`}
+                    </span>
+                    <button
+                      type="button"
+                      className="remove-entry"
+                      onClick={() => removeLanguageEntry(entry)}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+                <AutocompleteField
+                  label="Language"
+                  placeholder="e.g. Spanish"
+                  value={entry.language}
+                  onChange={(v) => updateLanguage(entry.id, { language: v })}
+                  endpoint="/api/languages/autocomplete"
+                  emptyHint="Not listed? What you've typed will be saved as-is."
+                />
+                <div className="field">
+                  <label className="field-label">Proficiency</label>
+                  <select
+                    className="field-input"
+                    value={entry.proficiency}
+                    onChange={(e) => updateLanguage(entry.id, { proficiency: e.target.value })}
+                  >
+                    {PROFICIENCY_LEVELS.map((p) => (
+                      <option key={p.value} value={p.value}>
+                        {p.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <PrivacyToggles
+                  visibleOnProfile={entry.visibleOnProfile}
+                  usableForMatching={entry.usableForMatching}
+                  onChangeVisible={(v) => updateLanguage(entry.id, { visibleOnProfile: v })}
+                  onChangeMatching={(v) => updateLanguage(entry.id, { usableForMatching: v })}
+                />
+              </div>
+            ))}
+            <button type="button" className="add-entry" onClick={addLanguageEntry}>
+              + Add another language
             </button>
           </section>
 
