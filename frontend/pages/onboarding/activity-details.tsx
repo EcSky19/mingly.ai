@@ -11,7 +11,6 @@ type ActivityRow = {
   category: string;
   isTopPick: boolean;
   interestStrength: string;
-  skillLevel: string;
   activityStyle: string;
   desiredFrequency: string;
   preferredGroupSize: string;
@@ -68,7 +67,6 @@ export default function ActivityDetails() {
             category: string;
             is_top_pick: boolean;
             interest_strength?: string;
-            skill_level?: string;
             activity_style?: string;
             desired_frequency?: string;
             preferred_group_size?: string;
@@ -82,7 +80,6 @@ export default function ActivityDetails() {
             category: r.category,
             isTopPick: r.is_top_pick,
             interestStrength: r.interest_strength || "",
-            skillLevel: r.skill_level || "",
             activityStyle: r.activity_style || "",
             desiredFrequency: r.desired_frequency || "",
             preferredGroupSize: r.preferred_group_size || "",
@@ -118,7 +115,6 @@ export default function ActivityDetails() {
           activities: activities.map((a) => ({
             activity_id: a.activityId,
             interest_strength: a.interestStrength || undefined,
-            skill_level: a.skillLevel || undefined,
             activity_style: a.activityStyle || undefined,
             desired_frequency: a.desiredFrequency || undefined,
             preferred_group_size: a.preferredGroupSize || undefined,
@@ -187,22 +183,6 @@ export default function ActivityDetails() {
               <div className="education-entry" key={activity.activityId}>
                 <div className="education-entry-header">
                   <span className="education-entry-label">{activity.name}</span>
-                </div>
-                <div className="field">
-                  <label className="field-label">Skill level</label>
-                  <select
-                    className="field-input"
-                    value={activity.skillLevel}
-                    onChange={(e) =>
-                      updateActivity(activity.activityId, { skillLevel: e.target.value })
-                    }
-                  >
-                    <option value="">Select one</option>
-                    <option value="beginner">Beginner</option>
-                    <option value="intermediate">Intermediate</option>
-                    <option value="advanced">Advanced</option>
-                    <option value="competitive">Competitive</option>
-                  </select>
                 </div>
                 <div className="field">
                   <label className="field-label">Style</label>
