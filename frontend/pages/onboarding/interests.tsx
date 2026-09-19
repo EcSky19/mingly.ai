@@ -27,7 +27,7 @@ const emptyActivityContext = (): ActivityContext => ({
 });
 
 const TARGET_TIMEFRAMES: { value: string; label: string }[] = [
-  { value: "", label: "Prefer not to say" },
+  { value: "", label: "Select one" },
   { value: "ready_now", label: "Ready now" },
   { value: "sometime_soon", label: "Sometime soon" },
   { value: "when_season_right", label: "When the season's right" },
@@ -322,7 +322,7 @@ export default function OnboardingInterests() {
                           value={ctx.skillLevel}
                           onChange={(e) => updateActivityContext(id, { skillLevel: e.target.value })}
                         >
-                          <option value="">Prefer not to say</option>
+                          <option value="">Select one</option>
                           <option value="beginner">Beginner</option>
                           <option value="intermediate">Intermediate</option>
                           <option value="advanced">Advanced</option>
@@ -336,7 +336,7 @@ export default function OnboardingInterests() {
                           value={ctx.activityStyle}
                           onChange={(e) => updateActivityContext(id, { activityStyle: e.target.value })}
                         >
-                          <option value="">Prefer not to say</option>
+                          <option value="">Select one</option>
                           <option value="casual_social">Casual / social</option>
                           <option value="fitness_focused">Fitness-focused</option>
                           <option value="competitive">Competitive</option>
@@ -352,7 +352,7 @@ export default function OnboardingInterests() {
                             updateActivityContext(id, { desiredFrequency: e.target.value })
                           }
                         >
-                          <option value="">Prefer not to say</option>
+                          <option value="">Select one</option>
                           <option value="rarely">Rarely</option>
                           <option value="monthly">Monthly</option>
                           <option value="weekly">Weekly</option>
@@ -368,7 +368,7 @@ export default function OnboardingInterests() {
                             updateActivityContext(id, { preferredGroupSize: e.target.value })
                           }
                         >
-                          <option value="">Prefer not to say</option>
+                          <option value="">Select one</option>
                           <option value="one_on_one">1-on-1</option>
                           <option value="small_group">Small group</option>
                           <option value="either">Either</option>
