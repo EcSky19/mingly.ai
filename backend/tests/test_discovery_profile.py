@@ -204,7 +204,6 @@ def test_set_and_get_activities_with_context(test_user):
                     "interest_strength": "high",
                     "desired_frequency": "weekly",
                     "is_top_pick": True,
-                    "target_timeframe": "sometime_soon",
                 }
             ]
         },
@@ -216,26 +215,6 @@ def test_set_and_get_activities_with_context(test_user):
     assert len(fetched) == 1
     assert fetched[0]["category"] == "sports"
     assert fetched[0]["is_top_pick"] is True
-    assert fetched[0]["target_timeframe"] == "sometime_soon"
-
-
-def test_activity_all_four_target_timeframes_accepted(test_user):
-    """Confirms all four friendly timeframe options are valid, not just
-    the one used in the main round-trip test above."""
-    cookies = _cookie_for(str(test_user.id))
-    catalog = client.get("/api/catalog/activities").json()
-
-    for timeframe, activity in zip(
-        ["ready_now", "sometime_soon", "when_season_right", "no_rush"], catalog
-    ):
-        response = client.put(
-            "/api/profile/activities",
-            json={"activities": [{"activity_id": activity["id"], "target_timeframe": timeframe}]},
-            cookies=cookies,
-        )
-        assert response.status_code == 200, f"{timeframe} should be accepted"
-        fetched = client.get("/api/profile/activities", cookies=cookies).json()
-        assert fetched[0]["target_timeframe"] == timeframe
 
 
 def test_activities_too_many_top_picks_rejected(test_user):

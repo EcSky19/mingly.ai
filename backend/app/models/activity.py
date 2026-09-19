@@ -39,18 +39,6 @@ class InterestStrength(str, enum.Enum):
     high = "high"
 
 
-class TargetTimeframe(str, enum.Enum):
-    """When a user wants to do one of their top-pick activities. Replaced
-    a simple wants_to_do_now boolean after feedback that a single yes/no
-    loses real information - a top pick for skiing genuinely means
-    "this winter," while a top pick for coffee might mean "this week."
-    Friendly wording matches the product's overall voice."""
-    ready_now = "ready_now"  # "Ready now" - this week
-    sometime_soon = "sometime_soon"  # "Sometime soon" - this month
-    when_season_right = "when_season_right"  # "When the season's right" - this season
-    no_rush = "no_rush"  # "No rush, just excited" - flexible, still a real top pick
-
-
 class Activity(Base):
     """Catalog of selectable activities. Seeded via migration - see
     app/data/activities_starter.json."""
@@ -108,7 +96,6 @@ class UserActivity(Base):
     desired_frequency = Column(Enum(DesiredFrequency), nullable=True)
 
     is_top_pick = Column(Boolean, nullable=False, default=False)  # top 3 this month, per root PRD
-    target_timeframe = Column(Enum(TargetTimeframe), nullable=True)
 
     visible_on_profile = Column(Boolean, nullable=False, default=True)
 

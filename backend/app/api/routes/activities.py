@@ -24,7 +24,6 @@ def _to_out(row: UserActivity) -> UserActivityOut:
         interest_strength=row.interest_strength,
         desired_frequency=row.desired_frequency,
         is_top_pick=row.is_top_pick,
-        target_timeframe=row.target_timeframe,
         visible_on_profile=row.visible_on_profile,
     )
 
@@ -73,7 +72,6 @@ def set_user_activities(body: UserActivitySet, request: Request, db: Session = D
                 interest_strength=a.interest_strength,
                 desired_frequency=a.desired_frequency,
                 is_top_pick=a.is_top_pick,
-                target_timeframe=a.target_timeframe,
                 visible_on_profile=a.visible_on_profile,
             )
         )
