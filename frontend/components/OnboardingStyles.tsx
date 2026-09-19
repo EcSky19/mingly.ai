@@ -258,24 +258,24 @@ export default function OnboardingStyles() {
       }
 
       .chip-liked {
-        background: rgba(124, 107, 175, 0.18);
-        border-color: #7c6baf;
+        background: rgba(74, 222, 128, 0.15);
+        border-color: #4ade80;
         color: #f6f1e7;
       }
 
       .chip-loved {
-        background: rgba(232, 165, 72, 0.18);
-        border-color: #e8a548;
+        background: rgba(244, 114, 182, 0.15);
+        border-color: #f472b6;
         color: #f6f1e7;
       }
 
       .chip-heart {
-        color: #e8a548;
+        color: #f472b6;
         font-size: 0.85rem;
       }
 
       .chip-check {
-        color: #7c6baf;
+        color: #4ade80;
         font-size: 0.8rem;
       }
 
