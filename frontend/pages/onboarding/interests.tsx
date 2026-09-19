@@ -26,13 +26,6 @@ const emptyActivityContext = (): ActivityContext => ({
   targetTimeframe: "",
 });
 
-const TARGET_TIMEFRAMES: { value: string; label: string }[] = [
-  { value: "", label: "Select one" },
-  { value: "ready_now", label: "Ready now" },
-  { value: "sometime_soon", label: "Sometime soon" },
-  { value: "when_season_right", label: "When the season's right" },
-  { value: "no_rush", label: "No rush, just excited" },
-];
 
 const MAX_TOP_INTERESTS = 5;
 const MAX_TOP_ACTIVITIES = 10;
@@ -223,9 +216,12 @@ export default function OnboardingInterests() {
       await saveInterests();
       await saveActivities();
       setSaved(true);
-      router.push("/home");
+      // Only the third step (activity details) is worth visiting if the
+      // user actually loved something - otherwise there's nothing to
+      // configure there, so skip straight to /home.
+      router.push(topActivityIds.length > 0 ? "/onboarding/activity-details" : "/home");
     } catch {
-      router.push("/home");
+      router.push(topActivityIds.length > 0 ? "/onboarding/activity-details" : "/home");
     } finally {
       setSaving(false);
     }
@@ -301,105 +297,11 @@ export default function OnboardingInterests() {
               onCycle={cycleActivity}
             />
 
-            {topActivityIds.length > 0 && (
-              <div className="top-activity-context">
-                <p className="section-hint">
-                  A bit more about your loved activities helps us suggest the right plan:
-                </p>
-                {topActivityIds.map((id) => {
-                  const activity = activityCatalog.find((a) => a.id === id);
-                  const ctx = activityContext[id] || emptyActivityContext();
-                  if (!activity) return null;
-                  return (
-                    <div className="education-entry" key={id}>
-                      <div className="education-entry-header">
-                        <span className="education-entry-label">{activity.name}</span>
-                      </div>
-                      <div className="field">
-                        <label className="field-label">Skill level</label>
-                        <select
-                          className="field-input"
-                          value={ctx.skillLevel}
-                          onChange={(e) => updateActivityContext(id, { skillLevel: e.target.value })}
-                        >
-                          <option value="">Select one</option>
-                          <option value="beginner">Beginner</option>
-                          <option value="intermediate">Intermediate</option>
-                          <option value="advanced">Advanced</option>
-                          <option value="competitive">Competitive</option>
-                        </select>
-                      </div>
-                      <div className="field">
-                        <label className="field-label">Style</label>
-                        <select
-                          className="field-input"
-                          value={ctx.activityStyle}
-                          onChange={(e) => updateActivityContext(id, { activityStyle: e.target.value })}
-                        >
-                          <option value="">Select one</option>
-                          <option value="casual_social">Casual / social</option>
-                          <option value="fitness_focused">Fitness-focused</option>
-                          <option value="competitive">Competitive</option>
-                          <option value="exploratory">Exploratory (trying new things)</option>
-                        </select>
-                      </div>
-                      <div className="field">
-                        <label className="field-label">How often would you like to do this?</label>
-                        <select
-                          className="field-input"
-                          value={ctx.desiredFrequency}
-                          onChange={(e) =>
-                            updateActivityContext(id, { desiredFrequency: e.target.value })
-                          }
-                        >
-                          <option value="">Select one</option>
-                          <option value="rarely">Rarely</option>
-                          <option value="monthly">Monthly</option>
-                          <option value="weekly">Weekly</option>
-                          <option value="multiple_times_per_week">Multiple times a week</option>
-                        </select>
-                      </div>
-                      <div className="field">
-                        <label className="field-label">Preferred group size</label>
-                        <select
-                          className="field-input"
-                          value={ctx.preferredGroupSize}
-                          onChange={(e) =>
-                            updateActivityContext(id, { preferredGroupSize: e.target.value })
-                          }
-                        >
-                          <option value="">Select one</option>
-                          <option value="one_on_one">1-on-1</option>
-                          <option value="small_group">Small group</option>
-                          <option value="either">Either</option>
-                        </select>
-                      </div>
-                      <div className="field">
-                        <label className="field-label">When would you like to do this?</label>
-                        <select
-                          className="field-input"
-                          value={ctx.targetTimeframe}
-                          onChange={(e) =>
-                            updateActivityContext(id, { targetTimeframe: e.target.value })
-                          }
-                        >
-                          {TARGET_TIMEFRAMES.map((t) => (
-                            <option key={t.value} value={t.value}>
-                              {t.label}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
           </section>
 
           <div className="actions">
             <button type="button" className="cta" disabled={saving} onClick={handleSave}>
-              {saving ? "Saving…" : "Finish"}
+              {saving ? "Saving…" : topActivityIds.length > 0 ? "Continue" : "Finish"}
             </button>
             <button type="button" className="skip" onClick={() => router.push("/home")}>
               Skip for now
