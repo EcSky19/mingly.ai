@@ -12,7 +12,6 @@ type ActivityRow = {
   isTopPick: boolean;
   interestStrength: string;
   desiredFrequency: string;
-  preferredGroupSize: string;
   targetTimeframe: string;
   visibleOnProfile: boolean;
 };
@@ -67,7 +66,6 @@ export default function ActivityDetails() {
             is_top_pick: boolean;
             interest_strength?: string;
             desired_frequency?: string;
-            preferred_group_size?: string;
             target_timeframe?: string;
             visible_on_profile: boolean;
           }[]
@@ -79,7 +77,6 @@ export default function ActivityDetails() {
             isTopPick: r.is_top_pick,
             interestStrength: r.interest_strength || "",
             desiredFrequency: r.desired_frequency || "",
-            preferredGroupSize: r.preferred_group_size || "",
             targetTimeframe: r.target_timeframe || "",
             visibleOnProfile: r.visible_on_profile,
           }));
@@ -113,7 +110,6 @@ export default function ActivityDetails() {
             activity_id: a.activityId,
             interest_strength: a.interestStrength || undefined,
             desired_frequency: a.desiredFrequency || undefined,
-            preferred_group_size: a.preferredGroupSize || undefined,
             is_top_pick: a.isTopPick,
             target_timeframe: a.targetTimeframe || undefined,
             visible_on_profile: a.visibleOnProfile,
@@ -194,21 +190,6 @@ export default function ActivityDetails() {
                     <option value="monthly">Monthly</option>
                     <option value="weekly">Weekly</option>
                     <option value="multiple_times_per_week">Multiple times a week</option>
-                  </select>
-                </div>
-                <div className="field">
-                  <label className="field-label">Preferred group size</label>
-                  <select
-                    className="field-input"
-                    value={activity.preferredGroupSize}
-                    onChange={(e) =>
-                      updateActivity(activity.activityId, { preferredGroupSize: e.target.value })
-                    }
-                  >
-                    <option value="">Select one</option>
-                    <option value="one_on_one">1-on-1</option>
-                    <option value="small_group">Small group</option>
-                    <option value="either">Either</option>
                   </select>
                 </div>
                 <div className="field">
