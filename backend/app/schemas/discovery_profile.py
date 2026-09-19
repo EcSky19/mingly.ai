@@ -11,7 +11,6 @@ from app.models.activity import (
     DesiredFrequency,
     InterestStrength,
     TargetTimeframe,
-    PreferredGroupSize,
 )
 
 
@@ -85,7 +84,6 @@ class UserActivityUpsert(BaseModel):
     activity_id: UUID
     interest_strength: Optional[InterestStrength] = None
     desired_frequency: Optional[DesiredFrequency] = None
-    preferred_group_size: Optional[PreferredGroupSize] = None
     is_top_pick: bool = False
     target_timeframe: Optional[TargetTimeframe] = None
     visible_on_profile: bool = True
@@ -103,7 +101,6 @@ class UserActivityOut(BaseModel):
     category: ActivityCategory
     interest_strength: Optional[InterestStrength] = None
     desired_frequency: Optional[DesiredFrequency] = None
-    preferred_group_size: Optional[PreferredGroupSize] = None
     is_top_pick: bool
     target_timeframe: Optional[TargetTimeframe] = None
     visible_on_profile: bool

@@ -203,7 +203,6 @@ def test_set_and_get_activities_with_context(test_user):
                     "activity_id": running["id"],
                     "interest_strength": "high",
                     "desired_frequency": "weekly",
-                    "preferred_group_size": "either",
                     "is_top_pick": True,
                     "target_timeframe": "sometime_soon",
                 }

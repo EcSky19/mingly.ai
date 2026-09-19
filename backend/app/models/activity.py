@@ -51,12 +51,6 @@ class TargetTimeframe(str, enum.Enum):
     no_rush = "no_rush"  # "No rush, just excited" - flexible, still a real top pick
 
 
-class PreferredGroupSize(str, enum.Enum):
-    one_on_one = "one_on_one"
-    small_group = "small_group"
-    either = "either"
-
-
 class Activity(Base):
     """Catalog of selectable activities. Seeded via migration - see
     app/data/activities_starter.json."""
@@ -112,7 +106,6 @@ class UserActivity(Base):
 
     interest_strength = Column(Enum(InterestStrength), nullable=True)
     desired_frequency = Column(Enum(DesiredFrequency), nullable=True)
-    preferred_group_size = Column(Enum(PreferredGroupSize), nullable=True)
 
     is_top_pick = Column(Boolean, nullable=False, default=False)  # top 3 this month, per root PRD
     target_timeframe = Column(Enum(TargetTimeframe), nullable=True)
