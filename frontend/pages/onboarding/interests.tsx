@@ -10,7 +10,6 @@ type CatalogItem = { id: string; name: string; category?: string };
 
 type ActivityContext = {
   interestStrength: string;
-  activityStyle: string;
   desiredFrequency: string;
   preferredGroupSize: string;
   targetTimeframe: string;
@@ -18,7 +17,6 @@ type ActivityContext = {
 
 const emptyActivityContext = (): ActivityContext => ({
   interestStrength: "",
-  activityStyle: "",
   desiredFrequency: "",
   preferredGroupSize: "",
   targetTimeframe: "",
@@ -93,7 +91,6 @@ export default function OnboardingInterests() {
             activity_id: string;
             is_top_pick: boolean;
             interest_strength?: string;
-            activity_style?: string;
             desired_frequency?: string;
             preferred_group_size?: string;
             target_timeframe?: string;
@@ -106,7 +103,6 @@ export default function OnboardingInterests() {
           rows.forEach((r) => {
             ctx[r.activity_id] = {
               interestStrength: r.interest_strength || "",
-              activityStyle: r.activity_style || "",
               desiredFrequency: r.desired_frequency || "",
               preferredGroupSize: r.preferred_group_size || "",
               targetTimeframe: r.target_timeframe || "",
@@ -190,7 +186,6 @@ export default function OnboardingInterests() {
             return {
               activity_id: id,
               interest_strength: ctx.interestStrength || undefined,
-              activity_style: ctx.activityStyle || undefined,
               desired_frequency: ctx.desiredFrequency || undefined,
               preferred_group_size: ctx.preferredGroupSize || undefined,
               is_top_pick: topActivityIds.includes(id),

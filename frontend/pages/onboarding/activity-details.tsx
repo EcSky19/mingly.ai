@@ -11,7 +11,6 @@ type ActivityRow = {
   category: string;
   isTopPick: boolean;
   interestStrength: string;
-  activityStyle: string;
   desiredFrequency: string;
   preferredGroupSize: string;
   targetTimeframe: string;
@@ -67,7 +66,6 @@ export default function ActivityDetails() {
             category: string;
             is_top_pick: boolean;
             interest_strength?: string;
-            activity_style?: string;
             desired_frequency?: string;
             preferred_group_size?: string;
             target_timeframe?: string;
@@ -80,7 +78,6 @@ export default function ActivityDetails() {
             category: r.category,
             isTopPick: r.is_top_pick,
             interestStrength: r.interest_strength || "",
-            activityStyle: r.activity_style || "",
             desiredFrequency: r.desired_frequency || "",
             preferredGroupSize: r.preferred_group_size || "",
             targetTimeframe: r.target_timeframe || "",
@@ -115,7 +112,6 @@ export default function ActivityDetails() {
           activities: activities.map((a) => ({
             activity_id: a.activityId,
             interest_strength: a.interestStrength || undefined,
-            activity_style: a.activityStyle || undefined,
             desired_frequency: a.desiredFrequency || undefined,
             preferred_group_size: a.preferredGroupSize || undefined,
             is_top_pick: a.isTopPick,
@@ -183,22 +179,6 @@ export default function ActivityDetails() {
               <div className="education-entry" key={activity.activityId}>
                 <div className="education-entry-header">
                   <span className="education-entry-label">{activity.name}</span>
-                </div>
-                <div className="field">
-                  <label className="field-label">Style</label>
-                  <select
-                    className="field-input"
-                    value={activity.activityStyle}
-                    onChange={(e) =>
-                      updateActivity(activity.activityId, { activityStyle: e.target.value })
-                    }
-                  >
-                    <option value="">Select one</option>
-                    <option value="casual_social">Casual / social</option>
-                    <option value="fitness_focused">Fitness-focused</option>
-                    <option value="competitive">Competitive</option>
-                    <option value="exploratory">Exploratory (trying new things)</option>
-                  </select>
                 </div>
                 <div className="field">
                   <label className="field-label">How often would you like to do this?</label>
