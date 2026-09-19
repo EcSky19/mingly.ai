@@ -11,13 +11,11 @@ type CatalogItem = { id: string; name: string; category?: string };
 type ActivityContext = {
   interestStrength: string;
   desiredFrequency: string;
-  targetTimeframe: string;
 };
 
 const emptyActivityContext = (): ActivityContext => ({
   interestStrength: "",
   desiredFrequency: "",
-  targetTimeframe: "",
 });
 
 
@@ -90,7 +88,6 @@ export default function OnboardingInterests() {
             is_top_pick: boolean;
             interest_strength?: string;
             desired_frequency?: string;
-            target_timeframe?: string;
           }[]
         ) => {
           if (rows.length === 0) return;
@@ -101,7 +98,6 @@ export default function OnboardingInterests() {
             ctx[r.activity_id] = {
               interestStrength: r.interest_strength || "",
               desiredFrequency: r.desired_frequency || "",
-              targetTimeframe: r.target_timeframe || "",
             };
           });
           setActivityContext(ctx);
@@ -184,7 +180,6 @@ export default function OnboardingInterests() {
               interest_strength: ctx.interestStrength || undefined,
               desired_frequency: ctx.desiredFrequency || undefined,
               is_top_pick: topActivityIds.includes(id),
-              target_timeframe: ctx.targetTimeframe || undefined,
               visible_on_profile: true,
             };
           }),

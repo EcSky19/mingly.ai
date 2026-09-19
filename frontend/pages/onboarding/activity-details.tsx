@@ -12,17 +12,8 @@ type ActivityRow = {
   isTopPick: boolean;
   interestStrength: string;
   desiredFrequency: string;
-  targetTimeframe: string;
   visibleOnProfile: boolean;
 };
-
-const TARGET_TIMEFRAMES: { value: string; label: string }[] = [
-  { value: "", label: "Select one" },
-  { value: "ready_now", label: "Ready now" },
-  { value: "sometime_soon", label: "Sometime soon" },
-  { value: "when_season_right", label: "When the season's right" },
-  { value: "no_rush", label: "No rush, just excited" },
-];
 
 // Third onboarding step: details for "loved" activities only (the top
 // picks from /onboarding/interests). Split into its own page since
@@ -66,7 +57,6 @@ export default function ActivityDetails() {
             is_top_pick: boolean;
             interest_strength?: string;
             desired_frequency?: string;
-            target_timeframe?: string;
             visible_on_profile: boolean;
           }[]
         ) => {
@@ -77,7 +67,6 @@ export default function ActivityDetails() {
             isTopPick: r.is_top_pick,
             interestStrength: r.interest_strength || "",
             desiredFrequency: r.desired_frequency || "",
-            targetTimeframe: r.target_timeframe || "",
             visibleOnProfile: r.visible_on_profile,
           }));
           setActivities(mapped);
@@ -111,7 +100,6 @@ export default function ActivityDetails() {
             interest_strength: a.interestStrength || undefined,
             desired_frequency: a.desiredFrequency || undefined,
             is_top_pick: a.isTopPick,
-            target_timeframe: a.targetTimeframe || undefined,
             visible_on_profile: a.visibleOnProfile,
           })),
         }),
@@ -190,22 +178,6 @@ export default function ActivityDetails() {
                     <option value="monthly">Monthly</option>
                     <option value="weekly">Weekly</option>
                     <option value="multiple_times_per_week">Multiple times a week</option>
-                  </select>
-                </div>
-                <div className="field">
-                  <label className="field-label">When would you like to do this?</label>
-                  <select
-                    className="field-input"
-                    value={activity.targetTimeframe}
-                    onChange={(e) =>
-                      updateActivity(activity.activityId, { targetTimeframe: e.target.value })
-                    }
-                  >
-                    {TARGET_TIMEFRAMES.map((t) => (
-                      <option key={t.value} value={t.value}>
-                        {t.label}
-                      </option>
-                    ))}
                   </select>
                 </div>
               </div>
