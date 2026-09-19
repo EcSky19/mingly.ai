@@ -202,7 +202,6 @@ def test_set_and_get_activities_with_context(test_user):
                 {
                     "activity_id": running["id"],
                     "interest_strength": "high",
-                    "activity_style": "fitness_focused",
                     "desired_frequency": "weekly",
                     "preferred_group_size": "either",
                     "is_top_pick": True,

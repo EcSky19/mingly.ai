@@ -8,7 +8,6 @@ from pydantic import BaseModel
 
 from app.models.activity import (
     ActivityCategory,
-    ActivityStyle,
     DesiredFrequency,
     InterestStrength,
     TargetTimeframe,
@@ -85,7 +84,6 @@ class ActivityCatalogOut(BaseModel):
 class UserActivityUpsert(BaseModel):
     activity_id: UUID
     interest_strength: Optional[InterestStrength] = None
-    activity_style: Optional[ActivityStyle] = None
     desired_frequency: Optional[DesiredFrequency] = None
     preferred_group_size: Optional[PreferredGroupSize] = None
     is_top_pick: bool = False
@@ -104,7 +102,6 @@ class UserActivityOut(BaseModel):
     name: str
     category: ActivityCategory
     interest_strength: Optional[InterestStrength] = None
-    activity_style: Optional[ActivityStyle] = None
     desired_frequency: Optional[DesiredFrequency] = None
     preferred_group_size: Optional[PreferredGroupSize] = None
     is_top_pick: bool
