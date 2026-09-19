@@ -202,7 +202,6 @@ def test_set_and_get_activities_with_context(test_user):
                 {
                     "activity_id": running["id"],
                     "interest_strength": "high",
-                    "skill_level": "intermediate",
                     "activity_style": "fitness_focused",
                     "desired_frequency": "weekly",
                     "preferred_group_size": "either",
@@ -217,7 +216,6 @@ def test_set_and_get_activities_with_context(test_user):
 
     fetched = client.get("/api/profile/activities", cookies=cookies).json()
     assert len(fetched) == 1
-    assert fetched[0]["skill_level"] == "intermediate"
     assert fetched[0]["category"] == "sports"
     assert fetched[0]["is_top_pick"] is True
     assert fetched[0]["target_timeframe"] == "sometime_soon"

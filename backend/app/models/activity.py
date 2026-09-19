@@ -25,14 +25,6 @@ class ActivityCategory(str, enum.Enum):
     nightlife = "nightlife"
 
 
-class SkillLevel(str, enum.Enum):
-    beginner = "beginner"
-    intermediate = "intermediate"
-    advanced = "advanced"
-    competitive = "competitive"
-    not_applicable = "not_applicable"
-
-
 class ActivityStyle(str, enum.Enum):
     casual_social = "casual_social"
     fitness_focused = "fitness_focused"
@@ -48,8 +40,7 @@ class DesiredFrequency(str, enum.Enum):
 
 
 class InterestStrength(str, enum.Enum):
-    """How much a user wants to do this activity, distinct from how
-    skilled they are at it (see SkillLevel) - per root PRD section 20."""
+    """How much a user wants to do this activity - per root PRD section 20."""
     casual = "casual"
     moderate = "moderate"
     high = "high"
@@ -127,7 +118,6 @@ class UserActivity(Base):
     activity_id = Column(UUID(as_uuid=True), ForeignKey("activities.id", ondelete="CASCADE"), nullable=False)
 
     interest_strength = Column(Enum(InterestStrength), nullable=True)
-    skill_level = Column(Enum(SkillLevel), nullable=True)
     activity_style = Column(Enum(ActivityStyle), nullable=True)
     desired_frequency = Column(Enum(DesiredFrequency), nullable=True)
     preferred_group_size = Column(Enum(PreferredGroupSize), nullable=True)
