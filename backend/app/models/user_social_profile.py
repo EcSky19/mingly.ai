@@ -106,9 +106,8 @@ SOCIAL_ENVIRONMENTS = [
 ]
 
 SOCIAL_GOALS = [
-    "regular_friends", "activity_partners", "broader_social_circle", "explore_the_city",
-    "new_close_friends", "people_with_similar_lifestyles", "people_outside_current_circle",
-    "professional_peers",
+    "regular_friends", "activity_partners", "broader_social_circle",
+    "people_with_similar_lifestyles", "professional_peers",
 ]
 
 
