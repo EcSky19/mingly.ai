@@ -107,7 +107,7 @@ const SOCIAL_ENVIRONMENTS = [
 ];
 
 const SOCIAL_GOALS = [
-  { value: "regular_friends", label: "Regular friends" },
+  { value: "regular_friends", label: "Friends" },
   { value: "activity_partners", label: "Activity partners" },
   { value: "broader_social_circle", label: "A broader social circle" },
   { value: "explore_the_city", label: "People to explore the city with" },
@@ -115,7 +115,6 @@ const SOCIAL_GOALS = [
   { value: "people_with_similar_lifestyles", label: "People with similar lifestyles" },
   { value: "people_outside_current_circle", label: "People outside my current circle" },
   { value: "professional_peers", label: "Social connections with professional peers" },
-  { value: "open_to_whatever", label: "Open to whatever happens naturally" },
 ];
 
 // Final onboarding step: lifestyle, career/life orientation, and social
