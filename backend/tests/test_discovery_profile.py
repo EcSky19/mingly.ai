@@ -104,6 +104,40 @@ def test_interests_catalog_is_alphabetical():
     assert names == sorted(names)
 
 
+def test_submit_interest_requires_auth():
+    assert client.post("/api/catalog/interests", json={"name": "Custom Thing"}).status_code == 401
+
+
+def test_submit_new_interest_creates_entry(test_user):
+    cookies = _cookie_for(str(test_user.id))
+    response = client.post(
+        "/api/catalog/interests", json={"name": "Underwater Basket Weaving"}, cookies=cookies
+    )
+    assert response.status_code == 201
+    body = response.json()
+    assert body["name"] == "Underwater Basket Weaving"
+
+    catalog = client.get("/api/catalog/interests").json()
+    assert any(i["name"] == "Underwater Basket Weaving" for i in catalog)
+
+
+def test_submit_interest_deduplicates_case_insensitively(test_user):
+    cookies = _cookie_for(str(test_user.id))
+    r1 = client.post("/api/catalog/interests", json={"name": "Falconry"}, cookies=cookies)
+    r2 = client.post("/api/catalog/interests", json={"name": "falconry"}, cookies=cookies)
+    assert r1.json()["id"] == r2.json()["id"], "Case-insensitive duplicate should return the same entry"
+
+    catalog = client.get("/api/catalog/interests").json()
+    falconry_count = sum(1 for i in catalog if i["name"].lower() == "falconry")
+    assert falconry_count == 1
+
+
+def test_submit_interest_rejects_empty_name(test_user):
+    cookies = _cookie_for(str(test_user.id))
+    response = client.post("/api/catalog/interests", json={"name": "   "}, cookies=cookies)
+    assert response.status_code == 400
+
+
 def test_interests_requires_auth():
     assert client.get("/api/profile/interests").status_code == 401
     assert client.put("/api/profile/interests", json={"interest_ids": []}).status_code == 401
@@ -190,6 +224,28 @@ def test_activities_catalog_is_alphabetical():
     assert names == sorted(names)
 
 
+def test_submit_activity_requires_auth():
+    assert client.post("/api/catalog/activities", json={"name": "Custom Thing"}).status_code == 401
+
+
+def test_submit_new_activity_lands_in_other_category(test_user):
+    cookies = _cookie_for(str(test_user.id))
+    response = client.post(
+        "/api/catalog/activities", json={"name": "Competitive Napping"}, cookies=cookies
+    )
+    assert response.status_code == 201
+    body = response.json()
+    assert body["name"] == "Competitive Napping"
+    assert body["category"] == "other"
+
+
+def test_submit_activity_deduplicates_case_insensitively(test_user):
+    cookies = _cookie_for(str(test_user.id))
+    r1 = client.post("/api/catalog/activities", json={"name": "Extreme Ironing"}, cookies=cookies)
+    r2 = client.post("/api/catalog/activities", json={"name": "extreme ironing"}, cookies=cookies)
+    assert r1.json()["id"] == r2.json()["id"]
+
+
 def test_set_and_get_activities_with_context(test_user):
     cookies = _cookie_for(str(test_user.id))
     catalog = client.get("/api/catalog/activities").json()
@@ -220,11 +276,16 @@ def test_set_and_get_activities_with_context(test_user):
 def test_activities_too_many_top_picks_rejected(test_user):
     cookies = _cookie_for(str(test_user.id))
     catalog = client.get("/api/catalog/activities").json()
-    assert len(catalog) == 11, "test assumes 11 seeded activities so marking all of them exceeds the max of 10"
+    # Not hardcoding an exact catalog count here - other tests in this
+    # module (submit_activity tests) genuinely add catalog rows via a
+    # shared module-scoped fixture, so the total count can legitimately
+    # grow. Just need enough to exceed MAX_TOP_PICKS (10).
+    assert len(catalog) >= 11, "need at least 11 seeded activities to test exceeding the max of 10"
+    eleven = catalog[:11]
 
     response = client.put(
         "/api/profile/activities",
-        json={"activities": [{"activity_id": a["id"], "is_top_pick": True} for a in catalog]},
+        json={"activities": [{"activity_id": a["id"], "is_top_pick": True} for a in eleven]},
         cookies=cookies,
     )
     assert response.status_code == 400
