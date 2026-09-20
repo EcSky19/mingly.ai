@@ -1,0 +1,140 @@
+"""
+Lifestyle, career/life orientation, and social preferences - all
+single-value-per-user fields (one row, not multi-entry like education
+or languages). Privacy is one group-level pair, same reasoning as
+UserInterest/UserActivity: per-field toggles for ~13 fields would be
+an unreasonable amount of onboarding UI.
+
+Multi-select fields (career_qualities, social_environment, social_goals)
+use a JSON column (storing a plain list) rather than full catalog+join
+tables, since each is a small, genuinely fixed list (not an open/growing
+taxonomy the way Interests or Activities are) - a join table would be
+over-engineering for ~6-9 fixed options. JSON was chosen over Postgres's
+native ARRAY type specifically because ARRAY has no SQLite equivalent
+(confirmed: SQLite's compiler has no visit_ARRAY method at all), and the
+test suite runs against SQLite - JSON works natively on both.
+"""
+import enum
+import uuid
+
+from sqlalchemy import Column, String, Boolean, ForeignKey, Enum, JSON
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
+
+from app.db.session import Base
+
+
+class CareerOrientation(str, enum.Enum):
+    career_focused_building_life_outside = "career_focused_building_life_outside"
+    very_career_driven = "very_career_driven"
+    entrepreneurial = "entrepreneurial"
+    grad_or_professional_school = "grad_or_professional_school"
+    established_expanding_social_life = "established_expanding_social_life"
+    balanced = "balanced"
+
+
+class EarlyBirdNightOwl(str, enum.Enum):
+    early_bird = "early_bird"
+    night_owl = "night_owl"
+    either = "either"
+
+
+class ActivityLevel(str, enum.Enum):
+    active = "active"
+    moderate = "moderate"
+    relaxed = "relaxed"
+
+
+class DrinkingPreference(str, enum.Enum):
+    non_drinker = "non_drinker"
+    social_drinker = "social_drinker"
+    regular_drinker = "regular_drinker"
+    prefer_not_to_say = "prefer_not_to_say"
+
+
+class GoingOutFrequency(str, enum.Enum):
+    rarely = "rarely"
+    sometimes = "sometimes"
+    often = "often"
+    very_often = "very_often"
+
+
+class IndoorOutdoorPreference(str, enum.Enum):
+    indoor = "indoor"
+    outdoor = "outdoor"
+    either = "either"
+
+
+class WeekdayWeekendPreference(str, enum.Enum):
+    weekdays = "weekdays"
+    weekends = "weekends"
+    either = "either"
+
+
+class SocialCadence(str, enum.Enum):
+    multiple_times_per_week = "multiple_times_per_week"
+    about_once_per_week = "about_once_per_week"
+    a_few_times_per_month = "a_few_times_per_month"
+    occasionally = "occasionally"
+
+
+class PlanningStyle(str, enum.Enum):
+    spontaneous = "spontaneous"
+    a_day_or_two_ahead = "a_day_or_two_ahead"
+    several_days_ahead = "several_days_ahead"
+    about_a_week_ahead = "about_a_week_ahead"
+    flexible = "flexible"
+
+
+class MeetingPreference(str, enum.Enum):
+    one_on_one = "one_on_one"
+    small_groups = "small_groups"
+    either = "either"
+    prefer_bringing_someone_known = "prefer_bringing_someone_known"
+
+
+# Valid values for the array fields - enforced at the API layer (Pydantic),
+# not as a Postgres enum, since these are arrays of a fixed vocabulary
+# rather than a single enum column.
+CAREER_QUALITIES = [
+    "ambitious", "curious", "active", "creative", "entrepreneurial",
+    "intellectually_engaged", "laid_back", "adventurous",
+]
+
+SOCIAL_ENVIRONMENTS = [
+    "conversation_focused", "activity_focused", "low_key", "lively", "outdoors", "anything",
+]
+
+SOCIAL_GOALS = [
+    "regular_friends", "activity_partners", "broader_social_circle", "explore_the_city",
+    "new_close_friends", "people_with_similar_lifestyles", "people_outside_current_circle",
+    "professional_peers", "open_to_whatever",
+]
+
+
+class UserSocialProfile(Base):
+    __tablename__ = "user_social_profiles"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True, index=True)
+
+    career_orientation = Column(Enum(CareerOrientation), nullable=True)
+    career_qualities = Column(JSON, nullable=True)
+
+    early_bird_night_owl = Column(Enum(EarlyBirdNightOwl), nullable=True)
+    activity_level = Column(Enum(ActivityLevel), nullable=True)
+    drinking_preference = Column(Enum(DrinkingPreference), nullable=True)
+    going_out_frequency = Column(Enum(GoingOutFrequency), nullable=True)
+    indoor_outdoor_preference = Column(Enum(IndoorOutdoorPreference), nullable=True)
+    weekday_weekend_preference = Column(Enum(WeekdayWeekendPreference), nullable=True)
+
+    social_cadence = Column(Enum(SocialCadence), nullable=True)
+    planning_style = Column(Enum(PlanningStyle), nullable=True)
+    meeting_preference = Column(Enum(MeetingPreference), nullable=True)
+    social_environment = Column(JSON, nullable=True)
+    social_goals = Column(JSON, nullable=True)
+
+    visible_on_profile = Column(Boolean, nullable=False, default=False)
+    usable_for_matching = Column(Boolean, nullable=False, default=True)
+
+    user = relationship("User", backref="social_profile", uselist=False)
