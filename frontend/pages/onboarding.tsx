@@ -82,7 +82,6 @@ type LocationEntry = {
   city: string;
   cityLat?: number;
   cityLon?: number;
-  neighborhood: string;
   label: string;
   isPrimary: boolean;
 };
@@ -90,7 +89,6 @@ type LocationEntry = {
 const emptyLocationEntry = (isPrimary: boolean): LocationEntry => ({
   id: `local-${Math.random().toString(36).slice(2)}`,
   city: "",
-  neighborhood: "",
   label: "",
   isPrimary,
 });
@@ -225,7 +223,6 @@ export default function Onboarding() {
           rows: {
             id: string;
             city?: string;
-            neighborhood?: string;
             latitude?: number;
             longitude?: number;
             label?: string;
@@ -240,7 +237,6 @@ export default function Onboarding() {
               city: r.city || "",
               cityLat: r.latitude,
               cityLon: r.longitude,
-              neighborhood: r.neighborhood || "",
               label: r.label || "",
               isPrimary: r.is_primary,
             }))
@@ -377,7 +373,7 @@ export default function Onboarding() {
   }
 
   async function saveLocationEntries() {
-    const toSave = locations.filter((l) => !l.savedId && (l.city || l.neighborhood));
+    const toSave = locations.filter((l) => !l.savedId && l.city);
     for (const entry of toSave) {
       try {
         await fetch(`${API_URL}/api/profile/locations`, {
@@ -386,7 +382,6 @@ export default function Onboarding() {
           credentials: "include",
           body: JSON.stringify({
             city: entry.city || undefined,
-            neighborhood: entry.neighborhood || undefined,
             latitude: entry.cityLat,
             longitude: entry.cityLon,
             label: entry.label || undefined,
@@ -704,17 +699,6 @@ export default function Onboarding() {
                     })
                   }
                   endpoint="/api/cities/autocomplete"
-                  emptyHint="Not listed? What you've typed will be saved as-is."
-                />
-                <AutocompleteField
-                  label="Neighborhood (optional)"
-                  placeholder="e.g. Brooklyn"
-                  value={entry.neighborhood}
-                  onChange={(v) => updateLocation(entry.id, { neighborhood: v })}
-                  endpoint="/api/neighborhoods/autocomplete"
-                  extraQueryParams={{ near_lat: entry.cityLat, near_lon: entry.cityLon }}
-                  disabled={!entry.city}
-                  disabledHint="Enter a city first"
                   emptyHint="Not listed? What you've typed will be saved as-is."
                 />
                 <div className="field">
