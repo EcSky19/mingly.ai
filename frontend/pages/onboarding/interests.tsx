@@ -36,11 +36,15 @@ export default function OnboardingInterests() {
   const [interestCatalog, setInterestCatalog] = useState<CatalogItem[]>([]);
   const [selectedInterestIds, setSelectedInterestIds] = useState<string[]>([]);
   const [topInterestIds, setTopInterestIds] = useState<string[]>([]);
+  const [customInterestInput, setCustomInterestInput] = useState("");
+  const [submittingInterest, setSubmittingInterest] = useState(false);
 
   const [activityCatalog, setActivityCatalog] = useState<CatalogItem[]>([]);
   const [selectedActivityIds, setSelectedActivityIds] = useState<string[]>([]);
   const [topActivityIds, setTopActivityIds] = useState<string[]>([]);
   const [activityContext, setActivityContext] = useState<Record<string, ActivityContext>>({});
+  const [customActivityInput, setCustomActivityInput] = useState("");
+  const [submittingActivity, setSubmittingActivity] = useState(false);
 
   useEffect(() => {
     fetch(`${API_URL}/api/auth/me`, { credentials: "include" })
@@ -124,6 +128,32 @@ export default function OnboardingInterests() {
     }
   }
 
+  async function submitCustomInterest() {
+    const name = customInterestInput.trim();
+    if (!name) return;
+    setSubmittingInterest(true);
+    try {
+      const res = await fetch(`${API_URL}/api/catalog/interests`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ name }),
+      });
+      if (res.ok) {
+        const created: { id: string; name: string } = await res.json();
+        setInterestCatalog((prev) =>
+          prev.some((i) => i.id === created.id) ? prev : [...prev, created]
+        );
+        setSelectedInterestIds((prev) => (prev.includes(created.id) ? prev : [...prev, created.id]));
+        setCustomInterestInput("");
+      }
+    } catch {
+      // Fails open - the field just stays filled in, user can retry.
+    } finally {
+      setSubmittingInterest(false);
+    }
+  }
+
   async function saveInterests() {
     if (selectedInterestIds.length === 0) return;
     try {
@@ -155,6 +185,37 @@ export default function OnboardingInterests() {
     } else {
       setSelectedActivityIds((prev) => [...prev, id]);
       setActivityContext((prev) => (prev[id] ? prev : { ...prev, [id]: emptyActivityContext() }));
+    }
+  }
+
+  async function submitCustomActivity() {
+    const name = customActivityInput.trim();
+    if (!name) return;
+    setSubmittingActivity(true);
+    try {
+      const res = await fetch(`${API_URL}/api/catalog/activities`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ name }),
+      });
+      if (res.ok) {
+        const created: { id: string; name: string; category: string } = await res.json();
+        setActivityCatalog((prev) =>
+          prev.some((a) => a.id === created.id) ? prev : [...prev, created]
+        );
+        setSelectedActivityIds((prev) =>
+          prev.includes(created.id) ? prev : [...prev, created.id]
+        );
+        setActivityContext((prev) =>
+          prev[created.id] ? prev : { ...prev, [created.id]: emptyActivityContext() }
+        );
+        setCustomActivityInput("");
+      }
+    } catch {
+      // Fails open.
+    } finally {
+      setSubmittingActivity(false);
     }
   }
 
@@ -260,6 +321,29 @@ export default function OnboardingInterests() {
               maxLoved={MAX_TOP_INTERESTS}
               onCycle={cycleInterest}
             />
+            <div className="other-entry-row">
+              <input
+                className="field-input"
+                type="text"
+                placeholder="Other — type your own interest"
+                value={customInterestInput}
+                onChange={(e) => setCustomInterestInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    submitCustomInterest();
+                  }
+                }}
+              />
+              <button
+                type="button"
+                className="add-entry other-add-btn"
+                disabled={submittingInterest || !customInterestInput.trim()}
+                onClick={submitCustomInterest}
+              >
+                {submittingInterest ? "Adding…" : "Add"}
+              </button>
+            </div>
           </section>
 
           <section className="section">
@@ -276,6 +360,29 @@ export default function OnboardingInterests() {
               maxLoved={MAX_TOP_ACTIVITIES}
               onCycle={cycleActivity}
             />
+            <div className="other-entry-row">
+              <input
+                className="field-input"
+                type="text"
+                placeholder="Other — type your own activity"
+                value={customActivityInput}
+                onChange={(e) => setCustomActivityInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    submitCustomActivity();
+                  }
+                }}
+              />
+              <button
+                type="button"
+                className="add-entry other-add-btn"
+                disabled={submittingActivity || !customActivityInput.trim()}
+                onClick={submitCustomActivity}
+              >
+                {submittingActivity ? "Adding…" : "Add"}
+              </button>
+            </div>
 
           </section>
 

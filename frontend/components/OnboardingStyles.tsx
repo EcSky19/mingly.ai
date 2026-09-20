@@ -242,6 +242,24 @@ export default function OnboardingStyles() {
         gap: 0.6rem;
       }
 
+      .other-entry-row {
+        display: flex;
+        gap: 0.6rem;
+        margin-top: 1rem;
+      }
+      .other-entry-row .field-input {
+        flex: 1;
+      }
+      .other-add-btn {
+        width: auto;
+        padding: 0.7rem 1.25rem;
+        white-space: nowrap;
+      }
+      .other-add-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
       .chip {
         display: flex;
         align-items: center;
