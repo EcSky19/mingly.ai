@@ -73,7 +73,7 @@ export default function ActivityDetails() {
 
           // Nothing loved - nothing to configure here, skip straight ahead.
           if (!mapped.some((a) => a.isTopPick)) {
-            router.push("/home");
+            router.push("/onboarding/social");
           }
         }
       )
@@ -104,10 +104,10 @@ export default function ActivityDetails() {
           })),
         }),
       });
-      router.push("/home");
+      router.push("/onboarding/social");
     } catch {
       // Fails open - not a validation gate.
-      router.push("/home");
+      router.push("/onboarding/social");
     } finally {
       setSaving(false);
     }
@@ -188,7 +188,7 @@ export default function ActivityDetails() {
             <button type="button" className="cta" disabled={saving} onClick={handleFinish}>
               {saving ? "Saving…" : "Finish"}
             </button>
-            <button type="button" className="skip" onClick={() => router.push("/home")}>
+            <button type="button" className="skip" onClick={() => router.push("/onboarding/social")}>
               Skip for now
             </button>
           </div>

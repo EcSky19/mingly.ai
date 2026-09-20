@@ -199,9 +199,9 @@ export default function OnboardingInterests() {
       // Only the third step (activity details) is worth visiting if the
       // user actually loved something - otherwise there's nothing to
       // configure there, so skip straight to /home.
-      router.push(topActivityIds.length > 0 ? "/onboarding/activity-details" : "/home");
+      router.push(topActivityIds.length > 0 ? "/onboarding/activity-details" : "/onboarding/social");
     } catch {
-      router.push(topActivityIds.length > 0 ? "/onboarding/activity-details" : "/home");
+      router.push(topActivityIds.length > 0 ? "/onboarding/activity-details" : "/onboarding/social");
     } finally {
       setSaving(false);
     }
@@ -283,7 +283,7 @@ export default function OnboardingInterests() {
             <button type="button" className="cta" disabled={saving} onClick={handleSave}>
               {saving ? "Saving…" : topActivityIds.length > 0 ? "Continue" : "Finish"}
             </button>
-            <button type="button" className="skip" onClick={() => router.push("/home")}>
+            <button type="button" className="skip" onClick={() => router.push("/onboarding/social")}>
               Skip for now
             </button>
           </div>
