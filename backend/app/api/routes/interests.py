@@ -3,11 +3,17 @@ Endpoints for browsing the interests catalog and setting a user's
 selected interests.
 """
 from fastapi import APIRouter, Depends, HTTPException, Request
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.models.interest import Interest, UserInterest
-from app.schemas.discovery_profile import InterestCatalogOut, UserInterestOut, UserInterestSet
+from app.schemas.discovery_profile import (
+    InterestCatalogOut,
+    InterestSubmit,
+    UserInterestOut,
+    UserInterestSet,
+)
 from app.services.session_auth import get_current_user
 
 router = APIRouter(prefix="/api/profile/interests", tags=["interests"])
@@ -23,6 +29,30 @@ def list_interest_catalog(db: Session = Depends(get_db)):
     # ordering.
     interests = db.query(Interest).all()
     return sorted(interests, key=lambda i: i.name)
+
+
+@catalog_router.post("", response_model=InterestCatalogOut, status_code=201)
+def submit_interest(body: InterestSubmit, request: Request, db: Session = Depends(get_db)):
+    """"Other - type your own": finds a case-insensitive match in the
+    existing catalog first (so "Pottery" and "pottery" don't become two
+    rows), otherwise creates a new entry flagged is_user_submitted for
+    later review. Requires auth so submissions aren't fully anonymous,
+    but the catalog entry itself isn't tied to a specific user."""
+    get_current_user(request, db)  # just requires auth, doesn't need the user object
+
+    name = body.name.strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="Name cannot be empty")
+
+    existing = db.query(Interest).filter(func.lower(Interest.name) == name.lower()).first()
+    if existing:
+        return existing
+
+    interest = Interest(name=name, is_user_submitted=True)
+    db.add(interest)
+    db.commit()
+    db.refresh(interest)
+    return interest
 
 
 @router.get("", response_model=list[UserInterestOut])

@@ -53,6 +53,12 @@ class InterestCatalogOut(BaseModel):
         from_attributes = True
 
 
+class InterestSubmit(BaseModel):
+    """Body for user-submitted custom interests - see
+    app/models/interest.py's is_user_submitted docstring."""
+    name: str
+
+
 class UserInterestSet(BaseModel):
     """Request body for setting a user's full interest selection at
     once - simpler than incremental add/remove for a multi-select UI."""
@@ -77,6 +83,12 @@ class ActivityCatalogOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class ActivitySubmit(BaseModel):
+    """Body for user-submitted custom activities - see
+    app/models/activity.py's is_user_submitted docstring."""
+    name: str
 
 
 class UserActivityUpsert(BaseModel):

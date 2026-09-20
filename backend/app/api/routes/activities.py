@@ -3,11 +3,17 @@ Endpoints for browsing the activities catalog and setting a user's
 selected activities with per-activity context.
 """
 from fastapi import APIRouter, Depends, HTTPException, Request
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.models.activity import Activity, UserActivity
-from app.schemas.discovery_profile import ActivityCatalogOut, UserActivityOut, UserActivitySet
+from app.schemas.discovery_profile import (
+    ActivityCatalogOut,
+    ActivitySubmit,
+    UserActivityOut,
+    UserActivitySet,
+)
 from app.services.session_auth import get_current_user
 
 router = APIRouter(prefix="/api/profile/activities", tags=["activities"])
@@ -38,6 +44,29 @@ def list_activity_catalog(db: Session = Depends(get_db)):
     # of the database's locale settings.
     activities = db.query(Activity).all()
     return sorted(activities, key=lambda a: a.name)
+
+
+@catalog_router.post("", response_model=ActivityCatalogOut, status_code=201)
+def submit_activity(body: ActivitySubmit, request: Request, db: Session = Depends(get_db)):
+    """"Other - type your own": same pattern as submit_interest - finds
+    a case-insensitive match first, otherwise creates a new entry in the
+    'other' category, flagged is_user_submitted for later review/
+    recategorization."""
+    get_current_user(request, db)
+
+    name = body.name.strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="Name cannot be empty")
+
+    existing = db.query(Activity).filter(func.lower(Activity.name) == name.lower()).first()
+    if existing:
+        return existing
+
+    activity = Activity(name=name, category="other", is_user_submitted=True)
+    db.add(activity)
+    db.commit()
+    db.refresh(activity)
+    return activity
 
 
 @router.get("", response_model=list[UserActivityOut])
