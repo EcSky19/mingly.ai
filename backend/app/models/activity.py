@@ -23,6 +23,7 @@ class ActivityCategory(str, enum.Enum):
     casual = "casual"
     pets = "pets"
     nightlife = "nightlife"
+    other = "other"  # user-submitted activities land here until categorized
 
 
 class DesiredFrequency(str, enum.Enum):
@@ -41,12 +42,17 @@ class InterestStrength(str, enum.Enum):
 
 class Activity(Base):
     """Catalog of selectable activities. Seeded via migration - see
-    app/data/activities_starter.json."""
+    app/data/activities_starter.json.
+
+    is_user_submitted flags entries created through the "Other - type
+    your own" flow (see app/api/routes/interests.py and activities.py)
+    rather than the seeded catalog, for later review/curation."""
     __tablename__ = "activities"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String, nullable=False, unique=True, index=True)
     category = Column(Enum(ActivityCategory), nullable=False)
+    is_user_submitted = Column(Boolean, nullable=False, default=False)
 
 
 class ActivitySubtag(Base):

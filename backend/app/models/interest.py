@@ -17,11 +17,16 @@ from app.db.session import Base
 class Interest(Base):
     """Catalog of selectable interests. Seeded via migration, not
     user-editable - see app/data/interests_starter.json for the source
-    list and its honestly-scoped status."""
+    list and its honestly-scoped status.
+
+    is_user_submitted flags entries created through the "Other - type
+    your own" flow rather than the seeded catalog, so they can be
+    reviewed/cleaned up/promoted later rather than trusted blindly."""
     __tablename__ = "interests"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String, nullable=False, unique=True, index=True)
+    is_user_submitted = Column(Boolean, nullable=False, default=False)
 
 
 class UserInterest(Base):
