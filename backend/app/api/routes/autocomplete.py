@@ -16,15 +16,6 @@ async def cities_autocomplete(q: str = Query(default="", max_length=100)):
     return await autocomplete.autocomplete_cities(q)
 
 
-@router.get("/neighborhoods/autocomplete", response_model=list[AutocompleteSuggestion])
-async def neighborhoods_autocomplete(
-    q: str = Query(default="", max_length=100),
-    near_lat: float | None = Query(default=None),
-    near_lon: float | None = Query(default=None),
-):
-    return await autocomplete.autocomplete_neighborhoods(q, near_lat, near_lon)
-
-
 @router.get("/companies/autocomplete", response_model=list[AutocompleteSuggestion])
 async def companies_autocomplete(q: str = Query(default="", max_length=100)):
     return await autocomplete.autocomplete_companies(q)

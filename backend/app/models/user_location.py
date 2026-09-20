@@ -19,7 +19,6 @@ class UserLocation(Base):
 
     city = Column(String, nullable=True)
     metro = Column(String, nullable=True)
-    neighborhood = Column(String, nullable=True)
     latitude = Column(Float, nullable=True)
     longitude = Column(Float, nullable=True)
     travel_radius_miles = Column(Integer, nullable=True)

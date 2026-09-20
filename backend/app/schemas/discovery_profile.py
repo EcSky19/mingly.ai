@@ -18,7 +18,6 @@ from app.models.activity import (
 class LocationCreate(BaseModel):
     city: Optional[str] = None
     metro: Optional[str] = None
-    neighborhood: Optional[str] = None
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     travel_radius_miles: Optional[int] = None
@@ -31,7 +30,6 @@ class LocationOut(BaseModel):
     id: UUID
     city: Optional[str] = None
     metro: Optional[str] = None
-    neighborhood: Optional[str] = None
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     travel_radius_miles: Optional[int] = None
