@@ -328,3 +328,80 @@ def test_education_delete_is_scoped_to_owner(test_user):
     assert any(e["id"] == other_entry_id for e in still_there)
 
     other_user_db.close()
+    client.cookies.clear()
+
+
+def test_pets_requires_auth():
+    assert client.get("/api/profile/pets").status_code == 401
+    assert client.post("/api/profile/pets", json={"pet_type": "dog"}).status_code == 401
+
+
+def test_add_multiple_pets_with_dog_specific_fields(test_user):
+    cookie = _session_cookie_for(str(test_user.id))
+    client.cookies.set(settings.SESSION_COOKIE_NAME, cookie)
+
+    r1 = client.post(
+        "/api/profile/pets",
+        json={
+            "pet_type": "dog",
+            "name": "Milo",
+            "size": "medium",
+            "activity_level": "high",
+            "comfortable_with_other_dogs": True,
+            "visible_on_profile": True,
+        },
+    )
+    assert r1.status_code == 201
+    dog_id = r1.json()["id"]
+
+    r2 = client.post("/api/profile/pets", json={"pet_type": "cat", "name": "Whiskers"})
+    assert r2.status_code == 201
+
+    listing = client.get("/api/profile/pets").json()
+    assert len(listing) == 2
+    dog = next(p for p in listing if p["pet_type"] == "dog")
+    assert dog["name"] == "Milo"
+    assert dog["size"] == "medium"
+    assert dog["comfortable_with_other_dogs"] is True
+    cat = next(p for p in listing if p["pet_type"] == "cat")
+    assert cat["name"] == "Whiskers"
+    assert cat["size"] is None  # dog-specific field correctly stays empty for a cat
+
+    delete_resp = client.delete(f"/api/profile/pets/{dog_id}")
+    assert delete_resp.status_code == 204
+    remaining = client.get("/api/profile/pets").json()
+    assert len(remaining) == 1
+    assert remaining[0]["pet_type"] == "cat"
+
+    client.cookies.clear()
+
+
+def test_pet_delete_scoped_to_owner(test_user):
+    cookie = _session_cookie_for(str(test_user.id))
+
+    other_db = SessionLocal()
+    other_user = User(
+        linkedin_sub=f"test-other-pet-{uuid.uuid4()}",
+        email=f"test-other-pet-{uuid.uuid4()}@example.com",
+        first_name="Other",
+        last_name="User",
+    )
+    other_db.add(other_user)
+    other_db.commit()
+    other_db.refresh(other_user)
+    other_cookie = _session_cookie_for(str(other_user.id))
+    cookie_name = settings.SESSION_COOKIE_NAME
+
+    create_resp = client.post(
+        "/api/profile/pets", json={"pet_type": "dog", "name": "Not Yours"}, cookies={cookie_name: other_cookie}
+    )
+    other_pet_id = create_resp.json()["id"]
+
+    delete_resp = client.delete(f"/api/profile/pets/{other_pet_id}", cookies={cookie_name: cookie})
+    assert delete_resp.status_code == 404
+
+    still_there = client.get("/api/profile/pets", cookies={cookie_name: other_cookie}).json()
+    assert any(p["id"] == other_pet_id for p in still_there)
+
+    other_db.close()
+    client.cookies.clear()
