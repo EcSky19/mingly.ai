@@ -85,3 +85,27 @@ class AutocompleteSuggestion(BaseModel):
     subtitle: Optional[str] = None  # e.g. domain for companies, country for schools
     latitude: Optional[float] = None  # for city/neighborhood results
     longitude: Optional[float] = None
+
+
+class PetCreate(BaseModel):
+    pet_type: str
+    name: Optional[str] = None
+    size: Optional[str] = None
+    activity_level: Optional[str] = None
+    comfortable_with_other_dogs: Optional[bool] = None
+    visible_on_profile: bool = False
+    usable_for_matching: bool = True
+
+
+class PetOut(BaseModel):
+    id: UUID
+    pet_type: str
+    name: Optional[str] = None
+    size: Optional[str] = None
+    activity_level: Optional[str] = None
+    comfortable_with_other_dogs: Optional[bool] = None
+    visible_on_profile: bool
+    usable_for_matching: bool
+
+    class Config:
+        from_attributes = True
