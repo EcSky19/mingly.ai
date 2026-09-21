@@ -93,6 +93,21 @@ class MeetingPreference(str, enum.Enum):
     prefer_bringing_someone_known = "prefer_bringing_someone_known"
 
 
+class SpendingPreference(str, enum.Enum):
+    inexpensive = "inexpensive"
+    moderate = "moderate"
+    occasional_splurge = "occasional_splurge"
+    premium = "premium"
+    depends_on_activity = "depends_on_activity"
+
+
+class CityCircleStatus(str, enum.Enum):
+    new_here = "new_here"
+    know_some_want_to_expand = "know_some_want_to_expand"
+    have_circle_want_more = "have_circle_want_more"
+    mainly_activity_partners = "mainly_activity_partners"
+
+
 # Valid values for the array fields - enforced at the API layer (Pydantic),
 # not as a Postgres enum, since these are arrays of a fixed vocabulary
 # rather than a single enum column.
@@ -132,6 +147,11 @@ class UserSocialProfile(Base):
     meeting_preference = Column(Enum(MeetingPreference), nullable=True)
     social_environment = Column(JSON, nullable=True)
     social_goals = Column(JSON, nullable=True)
+
+    # Stage B additions
+    spending_preference = Column(Enum(SpendingPreference), nullable=True)
+    city_circle_status = Column(Enum(CityCircleStatus), nullable=True)
+    comfortable_with_dogs = Column(Boolean, nullable=True)  # for non-owners, per docs/pets-design.md
 
     visible_on_profile = Column(Boolean, nullable=False, default=False)
     usable_for_matching = Column(Boolean, nullable=False, default=True)
