@@ -16,6 +16,8 @@ from app.models.user_social_profile import (
     SocialCadence,
     PlanningStyle,
     MeetingPreference,
+    SpendingPreference,
+    CityCircleStatus,
     CAREER_QUALITIES,
     SOCIAL_ENVIRONMENTS,
     SOCIAL_GOALS,
@@ -38,6 +40,10 @@ class SocialProfileUpdate(BaseModel):
     meeting_preference: Optional[MeetingPreference] = None
     social_environment: Optional[list[str]] = None
     social_goals: Optional[list[str]] = None
+
+    spending_preference: Optional[SpendingPreference] = None
+    city_circle_status: Optional[CityCircleStatus] = None
+    comfortable_with_dogs: Optional[bool] = None
 
     visible_on_profile: bool = False
     usable_for_matching: bool = True
@@ -87,6 +93,9 @@ class SocialProfileOut(BaseModel):
     meeting_preference: Optional[MeetingPreference] = None
     social_environment: Optional[list[str]] = None
     social_goals: Optional[list[str]] = None
+    spending_preference: Optional[SpendingPreference] = None
+    city_circle_status: Optional[CityCircleStatus] = None
+    comfortable_with_dogs: Optional[bool] = None
     visible_on_profile: bool = False
     usable_for_matching: bool = True
 
