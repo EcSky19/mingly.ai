@@ -84,6 +84,9 @@ def test_social_profile_full_round_trip(test_user):
         "meeting_preference": "small_groups",
         "social_environment": ["activity_focused", "outdoors"],
         "social_goals": ["activity_partners", "broader_social_circle"],
+        "spending_preference": "moderate",
+        "city_circle_status": "know_some_want_to_expand",
+        "comfortable_with_dogs": True,
         "visible_on_profile": True,
         "usable_for_matching": True,
     }
@@ -95,6 +98,9 @@ def test_social_profile_full_round_trip(test_user):
     assert fetched["career_qualities"] == ["ambitious", "curious"]
     assert fetched["social_environment"] == ["activity_focused", "outdoors"]
     assert fetched["social_goals"] == ["activity_partners", "broader_social_circle"]
+    assert fetched["spending_preference"] == "moderate"
+    assert fetched["city_circle_status"] == "know_some_want_to_expand"
+    assert fetched["comfortable_with_dogs"] is True
     assert fetched["visible_on_profile"] is True
 
 
