@@ -114,6 +114,23 @@ const SOCIAL_GOALS = [
   { value: "professional_peers", label: "Social connections with professional peers" },
 ];
 
+const SPENDING_PREFERENCES = [
+  { value: "", label: "Select one" },
+  { value: "inexpensive", label: "Prefer inexpensive plans" },
+  { value: "moderate", label: "Moderate" },
+  { value: "occasional_splurge", label: "Occasionally like to splurge" },
+  { value: "premium", label: "Prefer premium experiences" },
+  { value: "depends_on_activity", label: "Depends on the activity" },
+];
+
+const CITY_CIRCLE_STATUSES = [
+  { value: "", label: "Select one" },
+  { value: "new_here", label: "I'm new here" },
+  { value: "know_some_want_to_expand", label: "I know some people but want to expand" },
+  { value: "have_circle_want_more", label: "I already have a social circle but want to meet more people" },
+  { value: "mainly_activity_partners", label: "I'm mainly looking for specific activity partners" },
+];
+
 // Final onboarding step: lifestyle, career/life orientation, and social
 // preferences. Everything here is optional, single-row-per-user data
 // (see docs and UserSocialProfile model) - one group-level privacy
@@ -139,6 +156,9 @@ export default function OnboardingSocial() {
   const [meetingPreference, setMeetingPreference] = useState("");
   const [socialEnvironment, setSocialEnvironment] = useState<string[]>([]);
   const [socialGoals, setSocialGoals] = useState<string[]>([]);
+  const [spendingPreference, setSpendingPreference] = useState("");
+  const [cityCircleStatus, setCityCircleStatus] = useState("");
+  const [comfortableWithDogs, setComfortableWithDogs] = useState(false);
   const [visibleOnProfile, setVisibleOnProfile] = useState(false);
   const [usableForMatching, setUsableForMatching] = useState(true);
 
@@ -178,6 +198,9 @@ export default function OnboardingSocial() {
             meeting_preference?: string;
             social_environment?: string[];
             social_goals?: string[];
+            spending_preference?: string;
+            city_circle_status?: string;
+            comfortable_with_dogs?: boolean;
             visible_on_profile?: boolean;
             usable_for_matching?: boolean;
           } | null
@@ -196,6 +219,9 @@ export default function OnboardingSocial() {
           setMeetingPreference(data.meeting_preference || "");
           setSocialEnvironment(data.social_environment || []);
           setSocialGoals(data.social_goals || []);
+          setSpendingPreference(data.spending_preference || "");
+          setCityCircleStatus(data.city_circle_status || "");
+          setComfortableWithDogs(data.comfortable_with_dogs || false);
           setVisibleOnProfile(data.visible_on_profile || false);
           setUsableForMatching(data.usable_for_matching ?? true);
         }
@@ -242,6 +268,9 @@ export default function OnboardingSocial() {
           meeting_preference: meetingPreference || undefined,
           social_environment: socialEnvironment.length ? socialEnvironment : undefined,
           social_goals: socialGoals.length ? socialGoals : undefined,
+          spending_preference: spendingPreference || undefined,
+          city_circle_status: cityCircleStatus || undefined,
+          comfortable_with_dogs: comfortableWithDogs,
           visible_on_profile: visibleOnProfile,
           usable_for_matching: usableForMatching,
         }),
@@ -452,6 +481,46 @@ export default function OnboardingSocial() {
               selectedValues={socialEnvironment}
               onToggle={toggleSocialEnvironment}
             />
+          </section>
+
+          <section className="section">
+            <h2 className="section-title">Your City</h2>
+            <div className="field">
+              <label className="field-label">Where are you at socially in the city?</label>
+              <select
+                className="field-input"
+                value={cityCircleStatus}
+                onChange={(e) => setCityCircleStatus(e.target.value)}
+              >
+                {CITY_CIRCLE_STATUSES.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="field">
+              <label className="field-label">Spending preference</label>
+              <select
+                className="field-input"
+                value={spendingPreference}
+                onChange={(e) => setSpendingPreference(e.target.value)}
+              >
+                {SPENDING_PREFERENCES.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <label className="privacy-toggle">
+              <input
+                type="checkbox"
+                checked={comfortableWithDogs}
+                onChange={(e) => setComfortableWithDogs(e.target.checked)}
+              />
+              I'm comfortable around dogs
+            </label>
           </section>
 
           <section className="section">
