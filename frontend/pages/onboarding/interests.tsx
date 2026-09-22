@@ -2,6 +2,7 @@ import Head from "next/head";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import ChipSelect from "../../components/ChipSelect";
+import MultiSelectChips from "../../components/MultiSelectChips";
 import OnboardingStyles from "../../components/OnboardingStyles";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -34,6 +35,7 @@ export default function OnboardingInterests() {
   const [saved, setSaved] = useState(false);
 
   const [interestCatalog, setInterestCatalog] = useState<CatalogItem[]>([]);
+  const [conversationInterestIds, setConversationInterestIds] = useState<string[]>([]);
   const [selectedInterestIds, setSelectedInterestIds] = useState<string[]>([]);
   const [topInterestIds, setTopInterestIds] = useState<string[]>([]);
   const [customInterestInput, setCustomInterestInput] = useState("");
@@ -80,6 +82,14 @@ export default function OnboardingInterests() {
         if (rows.length === 0) return;
         setSelectedInterestIds(rows.map((r) => r.interest_id));
         setTopInterestIds(rows.filter((r) => r.is_top_pick).map((r) => r.interest_id));
+      })
+      .catch(() => {});
+
+    fetch(`${API_URL}/api/profile/conversation-interests`, { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((rows: { interest_id: string }[]) => {
+        if (rows.length === 0) return;
+        setConversationInterestIds(rows.map((r) => r.interest_id));
       })
       .catch(() => {});
 
@@ -172,6 +182,29 @@ export default function OnboardingInterests() {
     }
   }
 
+  function toggleConversationInterest(id: string) {
+    setConversationInterestIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  }
+
+  async function saveConversationInterests() {
+    if (conversationInterestIds.length === 0) return;
+    try {
+      await fetch(`${API_URL}/api/profile/conversation-interests`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          interest_ids: conversationInterestIds,
+          visible_on_profile: true,
+        }),
+      });
+    } catch {
+      // Fails open.
+    }
+  }
+
   function cycleActivity(id: string) {
     const isLoved = topActivityIds.includes(id);
     const isLiked = !isLoved && selectedActivityIds.includes(id);
@@ -255,6 +288,7 @@ export default function OnboardingInterests() {
     setSaving(true);
     try {
       await saveInterests();
+      await saveConversationInterests();
       await saveActivities();
       setSaved(true);
       // Only the third step (activity details) is worth visiting if the
@@ -344,6 +378,18 @@ export default function OnboardingInterests() {
                 {submittingInterest ? "Adding…" : "Add"}
               </button>
             </div>
+          </section>
+
+          <section className="section">
+            <h2 className="section-title">Conversation Topics</h2>
+            <p className="section-hint">
+              Different from what you're into — what do you actually enjoy talking about?
+            </p>
+            <MultiSelectChips
+              options={interestCatalog.map((i) => ({ value: i.id, label: i.name }))}
+              selectedValues={conversationInterestIds}
+              onToggle={toggleConversationInterest}
+            />
           </section>
 
           <section className="section">
