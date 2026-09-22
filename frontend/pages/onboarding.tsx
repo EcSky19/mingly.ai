@@ -93,6 +93,50 @@ const emptyLocationEntry = (isPrimary: boolean): LocationEntry => ({
   isPrimary,
 });
 
+type PetEntry = {
+  id: string;
+  savedId?: string;
+  petType: string;
+  name: string;
+  size: string;
+  activityLevel: string;
+  comfortableWithOtherDogs: boolean;
+  visibleOnProfile: boolean;
+  usableForMatching: boolean;
+};
+
+const emptyPetEntry = (): PetEntry => ({
+  id: `local-${Math.random().toString(36).slice(2)}`,
+  petType: "",
+  name: "",
+  size: "",
+  activityLevel: "",
+  comfortableWithOtherDogs: false,
+  visibleOnProfile: false,
+  usableForMatching: true,
+});
+
+const PET_TYPES = [
+  { value: "", label: "Select one" },
+  { value: "dog", label: "Dog" },
+  { value: "cat", label: "Cat" },
+  { value: "other", label: "Other" },
+];
+
+const PET_SIZES = [
+  { value: "", label: "Select one" },
+  { value: "small", label: "Small" },
+  { value: "medium", label: "Medium" },
+  { value: "large", label: "Large" },
+];
+
+const PET_ACTIVITY_LEVELS = [
+  { value: "", label: "Select one" },
+  { value: "low", label: "Low" },
+  { value: "moderate", label: "Moderate" },
+  { value: "high", label: "High" },
+];
+
 
 export default function Onboarding() {
   const router = useRouter();
@@ -111,6 +155,8 @@ export default function Onboarding() {
   const [languages, setLanguages] = useState<LanguageEntry[]>([emptyLanguageEntry()]);
 
   const [locations, setLocations] = useState<LocationEntry[]>([emptyLocationEntry(true)]);
+
+  const [pets, setPets] = useState<PetEntry[]>([]);
 
   useEffect(() => {
     fetch(`${API_URL}/api/auth/me`, { credentials: "include" })
@@ -239,6 +285,39 @@ export default function Onboarding() {
               cityLon: r.longitude,
               label: r.label || "",
               isPrimary: r.is_primary,
+            }))
+          );
+        }
+      )
+      .catch(() => {});
+
+    fetch(`${API_URL}/api/profile/pets`, { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : []))
+      .then(
+        (
+          rows: {
+            id: string;
+            pet_type: string;
+            name?: string;
+            size?: string;
+            activity_level?: string;
+            comfortable_with_other_dogs?: boolean;
+            visible_on_profile: boolean;
+            usable_for_matching: boolean;
+          }[]
+        ) => {
+          if (rows.length === 0) return;
+          setPets(
+            rows.map((r) => ({
+              id: r.id,
+              savedId: r.id,
+              petType: r.pet_type,
+              name: r.name || "",
+              size: r.size || "",
+              activityLevel: r.activity_level || "",
+              comfortableWithOtherDogs: r.comfortable_with_other_dogs || false,
+              visibleOnProfile: r.visible_on_profile,
+              usableForMatching: r.usable_for_matching,
             }))
           );
         }
@@ -394,6 +473,53 @@ export default function Onboarding() {
     }
   }
 
+  function updatePet(id: string, patch: Partial<PetEntry>) {
+    setPets((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)));
+  }
+
+  function addPetEntry() {
+    setPets((prev) => [...prev, emptyPetEntry()]);
+  }
+
+  async function removePetEntry(entry: PetEntry) {
+    setPets((prev) => prev.filter((p) => p.id !== entry.id));
+    if (entry.savedId) {
+      try {
+        await fetch(`${API_URL}/api/profile/pets/${entry.savedId}`, {
+          method: "DELETE",
+          credentials: "include",
+        });
+      } catch {
+        // Fails open.
+      }
+    }
+  }
+
+  async function savePetEntries() {
+    const toSave = pets.filter((p) => !p.savedId && p.petType);
+    for (const entry of toSave) {
+      try {
+        await fetch(`${API_URL}/api/profile/pets`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            pet_type: entry.petType,
+            name: entry.name || undefined,
+            size: entry.petType === "dog" ? entry.size || undefined : undefined,
+            activity_level: entry.petType === "dog" ? entry.activityLevel || undefined : undefined,
+            comfortable_with_other_dogs:
+              entry.petType === "dog" ? entry.comfortableWithOtherDogs : undefined,
+            visible_on_profile: entry.visibleOnProfile,
+            usable_for_matching: entry.usableForMatching,
+          }),
+        });
+      } catch {
+        // Fails open.
+      }
+    }
+  }
+
   async function handleSave() {
     setSaving(true);
     try {
@@ -412,6 +538,7 @@ export default function Onboarding() {
       await saveEducationEntries();
       await saveLanguageEntries();
       await saveLocationEntries();
+      await savePetEntries();
       setSaved(true);
       router.push("/onboarding/interests");
     } catch {
@@ -729,6 +856,104 @@ export default function Onboarding() {
               Frequently visit a second city for work or lifestyle reasons? Add it — this is free
               and helps us match you accurately wherever you actually spend time.
             </p>
+          </section>
+
+          <section className="section">
+            <h2 className="section-title">Pets</h2>
+            <p className="section-hint">
+              Pet compatibility can be a real part of finding the right people to spend time with.
+            </p>
+            {pets.map((entry, index) => (
+              <div className="education-entry" key={entry.id}>
+                <div className="education-entry-header">
+                  <span className="education-entry-label">
+                    {entry.name || `Pet ${index + 1}`}
+                  </span>
+                  <button
+                    type="button"
+                    className="remove-entry"
+                    onClick={() => removePetEntry(entry)}
+                  >
+                    Remove
+                  </button>
+                </div>
+                <div className="field">
+                  <label className="field-label">Type</label>
+                  <select
+                    className="field-input"
+                    value={entry.petType}
+                    onChange={(e) => updatePet(entry.id, { petType: e.target.value })}
+                  >
+                    {PET_TYPES.map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="field">
+                  <label className="field-label">Name (optional)</label>
+                  <input
+                    className="field-input"
+                    type="text"
+                    placeholder="e.g. Milo"
+                    value={entry.name}
+                    onChange={(e) => updatePet(entry.id, { name: e.target.value })}
+                  />
+                </div>
+                {entry.petType === "dog" && (
+                  <>
+                    <div className="field">
+                      <label className="field-label">Size</label>
+                      <select
+                        className="field-input"
+                        value={entry.size}
+                        onChange={(e) => updatePet(entry.id, { size: e.target.value })}
+                      >
+                        {PET_SIZES.map((o) => (
+                          <option key={o.value} value={o.value}>
+                            {o.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="field">
+                      <label className="field-label">Activity level</label>
+                      <select
+                        className="field-input"
+                        value={entry.activityLevel}
+                        onChange={(e) => updatePet(entry.id, { activityLevel: e.target.value })}
+                      >
+                        {PET_ACTIVITY_LEVELS.map((o) => (
+                          <option key={o.value} value={o.value}>
+                            {o.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <label className="privacy-toggle">
+                      <input
+                        type="checkbox"
+                        checked={entry.comfortableWithOtherDogs}
+                        onChange={(e) =>
+                          updatePet(entry.id, { comfortableWithOtherDogs: e.target.checked })
+                        }
+                      />
+                      Comfortable with other dogs
+                    </label>
+                  </>
+                )}
+                <PrivacyToggles
+                  visibleOnProfile={entry.visibleOnProfile}
+                  usableForMatching={entry.usableForMatching}
+                  onChangeVisible={(v) => updatePet(entry.id, { visibleOnProfile: v })}
+                  onChangeMatching={(v) => updatePet(entry.id, { usableForMatching: v })}
+                />
+              </div>
+            ))}
+            <button type="button" className="add-entry" onClick={addPetEntry}>
+              + Add a pet
+            </button>
           </section>
 
           <div className="actions">
