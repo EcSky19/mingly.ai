@@ -75,4 +75,5 @@ async def me(request: Request, db: Session = Depends(get_db)):
         "email": user.email,
         "onboarding_completed": user.onboarding_completed,
         "account_status": user.account_status,
+        "profile_photo_url": user.profile_photo_url,
     }
