@@ -338,6 +338,47 @@ export default function OnboardingStyles() {
       }
       .saved-hint { color: #8f84ad; font-size: 0.85rem; margin-top: 1rem; }
 
+      .profile-linkedin-photo {
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid rgba(232, 165, 72, 0.4);
+      }
+
+      .photo-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 1rem;
+      }
+      .photo-slot {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+      }
+      .photo-thumb {
+        width: 100%;
+        aspect-ratio: 1;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 1px solid rgba(185, 175, 209, 0.25);
+      }
+      .photo-tag-label {
+        font-size: 0.8rem;
+        color: #e8a548;
+      }
+      .photo-remove-btn {
+        background: transparent;
+        border: none;
+        color: #b9afd1;
+        font-size: 0.8rem;
+        cursor: pointer;
+        text-decoration: underline;
+        text-align: left;
+        padding: 0;
+      }
+
       @media (max-width: 420px) {
         .headline {
           font-size: 1.15rem;
