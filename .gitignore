@@ -19,3 +19,6 @@ next-env.d.ts
 # misc
 .DS_Store
 *.log
+
+# User-uploaded content - lives on the server's disk, not in git
+backend/uploads/
