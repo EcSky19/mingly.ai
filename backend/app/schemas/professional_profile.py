@@ -32,9 +32,17 @@ class ProfessionalProfileUpdate(BaseModel):
 
 class ProfessionalProfileOut(BaseModel):
     current_role: Optional[str] = None
+    current_role_visible_on_profile: bool = False
+    current_role_usable_for_matching: bool = True
     company: Optional[str] = None
+    company_visible_on_profile: bool = False
+    company_usable_for_matching: bool = True
     industry: Optional[str] = None
+    industry_visible_on_profile: bool = False
+    industry_usable_for_matching: bool = True
     career_stage: Optional[CareerStage] = None
+    career_stage_visible_on_profile: bool = False
+    career_stage_usable_for_matching: bool = True
 
     class Config:
         from_attributes = True
