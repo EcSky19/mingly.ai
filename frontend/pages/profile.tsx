@@ -2,9 +2,19 @@ import Head from "next/head";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import OnboardingStyles from "../components/OnboardingStyles";
+import PrivacyTag from "../components/PrivacyTag";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const MAX_PHOTOS = 4;
+
+// Converts a snake_case enum value into a readable label, e.g.
+// "mid_career" -> "Mid career". A reasonable general-purpose fallback
+// rather than hand-duplicating every label map already defined on the
+// various onboarding pages.
+function humanize(value?: string | null): string {
+  if (!value) return "";
+  return value.charAt(0).toUpperCase() + value.slice(1).replace(/_/g, " ");
+}
 
 type Photo = {
   id: string;
@@ -17,11 +27,35 @@ type Photo = {
 
 type LovedOption = { id: string; name: string; kind: "activity" | "interest" };
 
+type ProfessionalData = {
+  current_role?: string | null;
+  current_role_visible_on_profile: boolean;
+  company?: string | null;
+  company_visible_on_profile: boolean;
+  industry?: string | null;
+  industry_visible_on_profile: boolean;
+  career_stage?: string | null;
+  career_stage_visible_on_profile: boolean;
+};
+
+type EducationEntry = {
+  id: string;
+  school?: string | null;
+  degree?: string | null;
+  field_of_study?: string | null;
+  graduation_year?: number | null;
+  visible_on_profile: boolean;
+};
+
+type LanguageEntry = {
+  id: string;
+  language: string;
+  proficiency?: string | null;
+  visible_on_profile: boolean;
+};
+
 // "My Profile" - a read-only view of everything collected during
-// onboarding, plus the photo upload feature. This first version covers
-// the LinkedIn photo + up to 4 additional tagged photos; the full
-// data-aggregation sections (professional, education, etc.) are a
-// separate, larger follow-up piece.
+// onboarding, plus the photo upload feature.
 export default function Profile() {
   const router = useRouter();
   const [checkingAuth, setCheckingAuth] = useState(true);
@@ -36,6 +70,10 @@ export default function Profile() {
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [pendingPreviewUrl, setPendingPreviewUrl] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [professional, setProfessional] = useState<ProfessionalData | null>(null);
+  const [education, setEducation] = useState<EducationEntry[]>([]);
+  const [languages, setLanguages] = useState<LanguageEntry[]>([]);
 
   useEffect(() => {
     fetch(`${API_URL}/api/auth/me`, { credentials: "include" })
@@ -79,6 +117,21 @@ export default function Profile() {
           .map((r) => ({ id: r.interest_id, name: r.name, kind: "interest" as const }));
         setLovedOptions((prev) => [...prev.filter((o) => o.kind !== "interest"), ...loved]);
       })
+      .catch(() => {});
+
+    fetch(`${API_URL}/api/profile/professional`, { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => setProfessional(data))
+      .catch(() => {});
+
+    fetch(`${API_URL}/api/profile/education`, { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : []))
+      .then(setEducation)
+      .catch(() => {});
+
+    fetch(`${API_URL}/api/profile/languages`, { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : []))
+      .then(setLanguages)
       .catch(() => {});
   }, [checkingAuth]);
 
@@ -280,6 +333,88 @@ export default function Profile() {
 
                 {uploadError && <p className="section-hint" style={{ color: "#f472b6" }}>{uploadError}</p>}
               </>
+            )}
+          </section>
+
+          <section className="section">
+            <div className="section-header-row">
+              <h2 className="section-title">Professional</h2>
+              <button type="button" className="edit-link" onClick={() => router.push("/onboarding")}>
+                Edit
+              </button>
+            </div>
+            {professional &&
+            (professional.current_role || professional.company || professional.industry || professional.career_stage) ? (
+              <>
+                {professional.current_role && (
+                  <p className="profile-item">
+                    <span className="profile-item-label">Role:</span> {professional.current_role}
+                    <PrivacyTag visible={professional.current_role_visible_on_profile} />
+                  </p>
+                )}
+                {professional.company && (
+                  <p className="profile-item">
+                    <span className="profile-item-label">Company:</span> {professional.company}
+                    <PrivacyTag visible={professional.company_visible_on_profile} />
+                  </p>
+                )}
+                {professional.industry && (
+                  <p className="profile-item">
+                    <span className="profile-item-label">Industry:</span> {professional.industry}
+                    <PrivacyTag visible={professional.industry_visible_on_profile} />
+                  </p>
+                )}
+                {professional.career_stage && (
+                  <p className="profile-item">
+                    <span className="profile-item-label">Career stage:</span>{" "}
+                    {humanize(professional.career_stage)}
+                    <PrivacyTag visible={professional.career_stage_visible_on_profile} />
+                  </p>
+                )}
+              </>
+            ) : (
+              <p className="profile-empty-hint">Nothing added yet.</p>
+            )}
+          </section>
+
+          <section className="section">
+            <div className="section-header-row">
+              <h2 className="section-title">Education</h2>
+              <button type="button" className="edit-link" onClick={() => router.push("/onboarding")}>
+                Edit
+              </button>
+            </div>
+            {education.length > 0 ? (
+              education.map((entry) => (
+                <p className="profile-item" key={entry.id}>
+                  {[entry.degree, entry.field_of_study, entry.school].filter(Boolean).join(", ") ||
+                    "Entry"}
+                  {entry.graduation_year && <> · {entry.graduation_year}</>}
+                  <PrivacyTag visible={entry.visible_on_profile} />
+                </p>
+              ))
+            ) : (
+              <p className="profile-empty-hint">Nothing added yet.</p>
+            )}
+          </section>
+
+          <section className="section">
+            <div className="section-header-row">
+              <h2 className="section-title">Languages</h2>
+              <button type="button" className="edit-link" onClick={() => router.push("/onboarding")}>
+                Edit
+              </button>
+            </div>
+            {languages.length > 0 ? (
+              languages.map((entry) => (
+                <p className="profile-item" key={entry.id}>
+                  {entry.language}
+                  {entry.proficiency && <> — {humanize(entry.proficiency)}</>}
+                  <PrivacyTag visible={entry.visible_on_profile} />
+                </p>
+              ))
+            ) : (
+              <p className="profile-empty-hint">Nothing added yet.</p>
             )}
           </section>
         </div>
