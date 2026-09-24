@@ -1,27 +1,27 @@
-# My Profile page — known issues (flagged, not yet diagnosed)
+# My Profile page — known issues
 
-Flagged after the first real click-through of `/profile` in production. Specifics not yet
-gathered — next session should start by walking through the page together to pin down exactly
-what's wrong before touching code.
+## 1. Photo tagging flow — RESOLVED
+Was: tag chosen before file selection, upload happened automatically on file select, no
+explicit "don't tag this" option.
+Fixed: photo is selected first, then a preview + tag dropdown (with an explicit "Prefer not to
+tag" option) appears, then an explicit "Upload photo" button confirms. A "Cancel" option
+discards the pending selection. See commit `1252788`.
 
-## 1. Photo tagging to activities
-Something is off in how a photo's tag (to a loved activity or interest) is working or
-displaying. Not yet clear whether this is: the tag not saving correctly, the wrong tag showing,
-the tag dropdown not behaving as expected, or something else. Needs a live walkthrough to
-reproduce.
+## 2. Photo cropping — RESOLVED
+Was: `object-fit: cover` on the photo grid was cropping non-square photos to fill a square
+frame - backend resizing was always correct (`.thumbnail()` preserves aspect ratio and never
+crops), this was purely a frontend display bug.
+Fixed: `object-fit: contain` with a background fill, so the full image always shows. See
+commit `acb4c02`.
 
-## 2. Photo cropping
-Uploaded photos aren't cropping/displaying correctly - possibly the grid's `object-fit: cover`
-treatment doesn't look right for certain photo aspect ratios, or the resize-on-upload step
-(max 1600px, see `app/services/photo_storage.py`) is producing unexpected results. Needs
-specific examples of what looks wrong.
-
-## 3. Overall visual design of the Profile page
-The page currently reuses the plain onboarding-style CSS (`OnboardingStyles.tsx`) rather than
-having its own considered design. This was a deliberate "get it working first" choice for the
-first version, but the page likely needs a real design pass - this isn't a form to fill out,
-it's meant to be the user's own reference view of themselves.
+## 3. Overall visual design of the Profile page — STILL OPEN
+The page still reuses the plain onboarding-style CSS (`OnboardingStyles.tsx`) rather than
+having its own considered design. Today's fixes addressed specific functional/UX bugs (the
+tagging flow, the ugly native file input, the cropping bug) but not a real design pass for the
+page as a whole. This isn't a form to fill out - it's meant to be the user's own reference view
+of themselves, and the visual treatment should probably reflect that.
 
 ## Status
-None of these are diagnosed yet, let alone fixed. Revisit with a live walkthrough of the actual
-page before making changes.
+2 of the original 3 flagged issues are fixed and deployed. The visual design pass is still
+open - revisit when ready to think through what this page should actually look and feel like,
+not just function correctly.
