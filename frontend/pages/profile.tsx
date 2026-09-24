@@ -33,6 +33,7 @@ export default function Profile() {
   const [selectedTag, setSelectedTag] = useState(""); // "" = no tag, else "activity:<id>" or "interest:<id>"
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
+  const [selectedFileName, setSelectedFileName] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -83,6 +84,7 @@ export default function Profile() {
   async function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    setSelectedFileName(file.name);
     setUploadError("");
     setUploading(true);
 
@@ -112,6 +114,7 @@ export default function Profile() {
       setUploadError("Couldn't upload that photo.");
     } finally {
       setUploading(false);
+      setSelectedFileName("");
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   }
@@ -216,9 +219,19 @@ export default function Profile() {
                   accept="image/*"
                   onChange={handleFileSelected}
                   disabled={uploading}
-                  style={{ marginTop: "0.5rem" }}
+                  style={{ display: "none" }}
                 />
-                {uploading && <p className="section-hint">Uploading…</p>}
+                <button
+                  type="button"
+                  className="add-entry"
+                  disabled={uploading}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {uploading ? "Uploading…" : "+ Choose a photo"}
+                </button>
+                {selectedFileName && !uploading && (
+                  <p className="section-hint">Selected: {selectedFileName}</p>
+                )}
                 {uploadError && <p className="section-hint" style={{ color: "#f472b6" }}>{uploadError}</p>}
               </>
             )}
