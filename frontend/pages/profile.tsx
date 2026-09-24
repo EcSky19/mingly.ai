@@ -30,10 +30,11 @@ export default function Profile() {
 
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [lovedOptions, setLovedOptions] = useState<LovedOption[]>([]);
-  const [selectedTag, setSelectedTag] = useState(""); // "" = no tag, else "activity:<id>" or "interest:<id>"
+  const [selectedTag, setSelectedTag] = useState(""); // "" = prefer not to tag, else "activity:<id>" or "interest:<id>"
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
-  const [selectedFileName, setSelectedFileName] = useState("");
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [pendingPreviewUrl, setPendingPreviewUrl] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -81,15 +82,33 @@ export default function Profile() {
       .catch(() => {});
   }, [checkingAuth]);
 
-  async function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    setSelectedFileName(file.name);
+    setUploadError("");
+    // Just stage the file and show a preview - the actual upload only
+    // happens once the person picks a tag (or explicitly skips) and
+    // confirms, not immediately on file selection.
+    setPendingFile(file);
+    setPendingPreviewUrl(URL.createObjectURL(file));
+  }
+
+  function cancelPendingUpload() {
+    if (pendingPreviewUrl) URL.revokeObjectURL(pendingPreviewUrl);
+    setPendingFile(null);
+    setPendingPreviewUrl("");
+    setSelectedTag("");
+    setUploadError("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  async function confirmUpload() {
+    if (!pendingFile) return;
     setUploadError("");
     setUploading(true);
 
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", pendingFile);
     if (selectedTag.startsWith("activity:")) {
       formData.append("tagged_activity_id", selectedTag.replace("activity:", ""));
     } else if (selectedTag.startsWith("interest:")) {
@@ -105,6 +124,9 @@ export default function Profile() {
       if (res.ok) {
         const created: Photo = await res.json();
         setPhotos((prev) => [...prev, created]);
+        if (pendingPreviewUrl) URL.revokeObjectURL(pendingPreviewUrl);
+        setPendingFile(null);
+        setPendingPreviewUrl("");
         setSelectedTag("");
       } else {
         const err = await res.json().catch(() => null);
@@ -114,7 +136,6 @@ export default function Profile() {
       setUploadError("Couldn't upload that photo.");
     } finally {
       setUploading(false);
-      setSelectedFileName("");
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   }
@@ -198,21 +219,6 @@ export default function Profile() {
 
             {photos.length < MAX_PHOTOS && (
               <>
-                <div className="field" style={{ marginTop: "1.25rem" }}>
-                  <label className="field-label">Tag this photo to (optional)</label>
-                  <select
-                    className="field-input"
-                    value={selectedTag}
-                    onChange={(e) => setSelectedTag(e.target.value)}
-                  >
-                    <option value="">No tag</option>
-                    {lovedOptions.map((o) => (
-                      <option key={`${o.kind}:${o.id}`} value={`${o.kind}:${o.id}`}>
-                        {o.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -221,17 +227,57 @@ export default function Profile() {
                   disabled={uploading}
                   style={{ display: "none" }}
                 />
-                <button
-                  type="button"
-                  className="add-entry"
-                  disabled={uploading}
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  {uploading ? "Uploading…" : "+ Choose a photo"}
-                </button>
-                {selectedFileName && !uploading && (
-                  <p className="section-hint">Selected: {selectedFileName}</p>
+
+                {!pendingFile && (
+                  <button
+                    type="button"
+                    className="add-entry"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    + Choose a photo
+                  </button>
                 )}
+
+                {pendingFile && (
+                  <div className="pending-photo-upload">
+                    <img src={pendingPreviewUrl} alt="" className="photo-thumb" />
+                    <div className="field">
+                      <label className="field-label">Tag this photo to</label>
+                      <select
+                        className="field-input"
+                        value={selectedTag}
+                        onChange={(e) => setSelectedTag(e.target.value)}
+                        disabled={uploading}
+                      >
+                        <option value="">Prefer not to tag</option>
+                        {lovedOptions.map((o) => (
+                          <option key={`${o.kind}:${o.id}`} value={`${o.kind}:${o.id}`}>
+                            {o.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="actions">
+                      <button
+                        type="button"
+                        className="cta"
+                        disabled={uploading}
+                        onClick={confirmUpload}
+                      >
+                        {uploading ? "Uploading…" : "Upload photo"}
+                      </button>
+                      <button
+                        type="button"
+                        className="skip"
+                        disabled={uploading}
+                        onClick={cancelPendingUpload}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {uploadError && <p className="section-hint" style={{ color: "#f472b6" }}>{uploadError}</p>}
               </>
             )}
