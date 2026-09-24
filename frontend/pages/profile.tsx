@@ -83,6 +83,26 @@ type ActivityEntry = {
   visible_on_profile: boolean;
 };
 
+type SocialData = {
+  career_orientation?: string | null;
+  career_qualities?: string[] | null;
+  early_bird_night_owl?: string | null;
+  activity_level?: string | null;
+  drinking_preference?: string | null;
+  going_out_frequency?: string | null;
+  indoor_outdoor_preference?: string | null;
+  weekday_weekend_preference?: string | null;
+  social_cadence?: string | null;
+  planning_style?: string | null;
+  meeting_preference?: string | null;
+  social_environment?: string[] | null;
+  social_goals?: string[] | null;
+  spending_preference?: string | null;
+  city_circle_status?: string | null;
+  comfortable_with_dogs?: boolean | null;
+  visible_on_profile: boolean;
+};
+
 // "My Profile" - a read-only view of everything collected during
 // onboarding, plus the photo upload feature.
 export default function Profile() {
@@ -108,6 +128,7 @@ export default function Profile() {
   const [interests, setInterests] = useState<InterestEntry[]>([]);
   const [conversationInterests, setConversationInterests] = useState<ConversationInterestEntry[]>([]);
   const [activities, setActivities] = useState<ActivityEntry[]>([]);
+  const [social, setSocial] = useState<SocialData | null>(null);
 
   useEffect(() => {
     fetch(`${API_URL}/api/auth/me`, { credentials: "include" })
@@ -183,6 +204,11 @@ export default function Profile() {
     fetch(`${API_URL}/api/profile/pets`, { credentials: "include" })
       .then((r) => (r.ok ? r.json() : []))
       .then(setPets)
+      .catch(() => {});
+
+    fetch(`${API_URL}/api/profile/social`, { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then(setSocial)
       .catch(() => {});
   }, [checkingAuth]);
 
@@ -586,6 +612,135 @@ export default function Profile() {
                   </span>
                 ))}
               </div>
+            ) : (
+              <p className="profile-empty-hint">Nothing added yet.</p>
+            )}
+          </section>
+
+          <section className="section">
+            <div className="section-header-row">
+              <h2 className="section-title">
+                Lifestyle & Social
+                {social && <PrivacyTag visible={social.visible_on_profile} />}
+              </h2>
+              <button
+                type="button"
+                className="edit-link"
+                onClick={() => router.push("/onboarding/social")}
+              >
+                Edit
+              </button>
+            </div>
+            {social &&
+            (social.career_orientation ||
+              social.early_bird_night_owl ||
+              social.activity_level ||
+              social.social_cadence ||
+              (social.social_goals && social.social_goals.length > 0)) ? (
+              <>
+                {social.career_orientation && (
+                  <p className="profile-item">
+                    <span className="profile-item-label">Career orientation:</span>{" "}
+                    {humanize(social.career_orientation)}
+                  </p>
+                )}
+                {social.career_qualities && social.career_qualities.length > 0 && (
+                  <div className="profile-chip-row">
+                    {social.career_qualities.map((q) => (
+                      <span className="profile-chip" key={q}>
+                        {humanize(q)}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {social.early_bird_night_owl && (
+                  <p className="profile-item">
+                    <span className="profile-item-label">Early bird / night owl:</span>{" "}
+                    {humanize(social.early_bird_night_owl)}
+                  </p>
+                )}
+                {social.activity_level && (
+                  <p className="profile-item">
+                    <span className="profile-item-label">Activity level:</span>{" "}
+                    {humanize(social.activity_level)}
+                  </p>
+                )}
+                {social.drinking_preference && (
+                  <p className="profile-item">
+                    <span className="profile-item-label">Drinking:</span>{" "}
+                    {humanize(social.drinking_preference)}
+                  </p>
+                )}
+                {social.going_out_frequency && (
+                  <p className="profile-item">
+                    <span className="profile-item-label">Going out:</span>{" "}
+                    {humanize(social.going_out_frequency)}
+                  </p>
+                )}
+                {social.indoor_outdoor_preference && (
+                  <p className="profile-item">
+                    <span className="profile-item-label">Indoor / outdoor:</span>{" "}
+                    {humanize(social.indoor_outdoor_preference)}
+                  </p>
+                )}
+                {social.weekday_weekend_preference && (
+                  <p className="profile-item">
+                    <span className="profile-item-label">Weekdays / weekends:</span>{" "}
+                    {humanize(social.weekday_weekend_preference)}
+                  </p>
+                )}
+                {social.social_cadence && (
+                  <p className="profile-item">
+                    <span className="profile-item-label">How often they'd like to make plans:</span>{" "}
+                    {humanize(social.social_cadence)}
+                  </p>
+                )}
+                {social.planning_style && (
+                  <p className="profile-item">
+                    <span className="profile-item-label">Planning style:</span>{" "}
+                    {humanize(social.planning_style)}
+                  </p>
+                )}
+                {social.meeting_preference && (
+                  <p className="profile-item">
+                    <span className="profile-item-label">Meeting preference:</span>{" "}
+                    {humanize(social.meeting_preference)}
+                  </p>
+                )}
+                {social.social_environment && social.social_environment.length > 0 && (
+                  <div className="profile-chip-row">
+                    {social.social_environment.map((e) => (
+                      <span className="profile-chip" key={e}>
+                        {humanize(e)}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {social.social_goals && social.social_goals.length > 0 && (
+                  <div className="profile-chip-row">
+                    {social.social_goals.map((g) => (
+                      <span className="profile-chip" key={g}>
+                        {humanize(g)}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {social.spending_preference && (
+                  <p className="profile-item">
+                    <span className="profile-item-label">Spending preference:</span>{" "}
+                    {humanize(social.spending_preference)}
+                  </p>
+                )}
+                {social.city_circle_status && (
+                  <p className="profile-item">
+                    <span className="profile-item-label">City / circle status:</span>{" "}
+                    {humanize(social.city_circle_status)}
+                  </p>
+                )}
+                {social.comfortable_with_dogs && (
+                  <p className="profile-item">Comfortable around dogs</p>
+                )}
+              </>
             ) : (
               <p className="profile-empty-hint">Nothing added yet.</p>
             )}
