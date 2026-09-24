@@ -380,6 +380,20 @@ export default function OnboardingStyles() {
         padding: 0;
       }
 
+      .pending-photo-upload {
+        margin-top: 1.25rem;
+        padding: 1.25rem;
+        border: 1px dashed rgba(185, 175, 209, 0.3);
+        border-radius: 8px;
+      }
+      .pending-photo-upload .photo-thumb {
+        max-width: 220px;
+        margin-bottom: 1rem;
+      }
+      .pending-photo-upload .actions {
+        margin-top: 1rem;
+      }
+
       @media (max-width: 420px) {
         .headline {
           font-size: 1.15rem;
