@@ -54,6 +54,23 @@ type LanguageEntry = {
   visible_on_profile: boolean;
 };
 
+type LocationEntry = {
+  id: string;
+  city?: string | null;
+  label?: string | null;
+  is_primary: boolean;
+};
+
+type PetEntry = {
+  id: string;
+  pet_type: string;
+  name?: string | null;
+  size?: string | null;
+  activity_level?: string | null;
+  comfortable_with_other_dogs?: boolean | null;
+  visible_on_profile: boolean;
+};
+
 // "My Profile" - a read-only view of everything collected during
 // onboarding, plus the photo upload feature.
 export default function Profile() {
@@ -74,6 +91,8 @@ export default function Profile() {
   const [professional, setProfessional] = useState<ProfessionalData | null>(null);
   const [education, setEducation] = useState<EducationEntry[]>([]);
   const [languages, setLanguages] = useState<LanguageEntry[]>([]);
+  const [locations, setLocations] = useState<LocationEntry[]>([]);
+  const [pets, setPets] = useState<PetEntry[]>([]);
 
   useEffect(() => {
     fetch(`${API_URL}/api/auth/me`, { credentials: "include" })
@@ -132,6 +151,16 @@ export default function Profile() {
     fetch(`${API_URL}/api/profile/languages`, { credentials: "include" })
       .then((r) => (r.ok ? r.json() : []))
       .then(setLanguages)
+      .catch(() => {});
+
+    fetch(`${API_URL}/api/profile/locations`, { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : []))
+      .then(setLocations)
+      .catch(() => {});
+
+    fetch(`${API_URL}/api/profile/pets`, { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : []))
+      .then(setPets)
       .catch(() => {});
   }, [checkingAuth]);
 
@@ -410,6 +439,47 @@ export default function Profile() {
                 <p className="profile-item" key={entry.id}>
                   {entry.language}
                   {entry.proficiency && <> — {humanize(entry.proficiency)}</>}
+                  <PrivacyTag visible={entry.visible_on_profile} />
+                </p>
+              ))
+            ) : (
+              <p className="profile-empty-hint">Nothing added yet.</p>
+            )}
+          </section>
+
+          <section className="section">
+            <div className="section-header-row">
+              <h2 className="section-title">Location</h2>
+              <button type="button" className="edit-link" onClick={() => router.push("/onboarding")}>
+                Edit
+              </button>
+            </div>
+            {locations.length > 0 ? (
+              locations.map((entry) => (
+                <p className="profile-item" key={entry.id}>
+                  {entry.city || "Unnamed location"}
+                  {entry.label && <> ({entry.label})</>}
+                  {entry.is_primary && <> · Primary</>}
+                </p>
+              ))
+            ) : (
+              <p className="profile-empty-hint">Nothing added yet.</p>
+            )}
+          </section>
+
+          <section className="section">
+            <div className="section-header-row">
+              <h2 className="section-title">Pets</h2>
+              <button type="button" className="edit-link" onClick={() => router.push("/onboarding")}>
+                Edit
+              </button>
+            </div>
+            {pets.length > 0 ? (
+              pets.map((entry) => (
+                <p className="profile-item" key={entry.id}>
+                  {entry.name || humanize(entry.pet_type)} ({humanize(entry.pet_type)})
+                  {entry.size && <> · {humanize(entry.size)}</>}
+                  {entry.activity_level && <> · {humanize(entry.activity_level)} activity</>}
                   <PrivacyTag visible={entry.visible_on_profile} />
                 </p>
               ))
