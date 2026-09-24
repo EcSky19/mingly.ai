@@ -71,6 +71,18 @@ type PetEntry = {
   visible_on_profile: boolean;
 };
 
+type InterestEntry = { interest_id: string; name: string; is_top_pick: boolean; visible_on_profile: boolean };
+type ConversationInterestEntry = { interest_id: string; name: string; visible_on_profile: boolean };
+type ActivityEntry = {
+  activity_id: string;
+  name: string;
+  category: string;
+  interest_strength?: string | null;
+  desired_frequency?: string | null;
+  is_top_pick: boolean;
+  visible_on_profile: boolean;
+};
+
 // "My Profile" - a read-only view of everything collected during
 // onboarding, plus the photo upload feature.
 export default function Profile() {
@@ -93,6 +105,9 @@ export default function Profile() {
   const [languages, setLanguages] = useState<LanguageEntry[]>([]);
   const [locations, setLocations] = useState<LocationEntry[]>([]);
   const [pets, setPets] = useState<PetEntry[]>([]);
+  const [interests, setInterests] = useState<InterestEntry[]>([]);
+  const [conversationInterests, setConversationInterests] = useState<ConversationInterestEntry[]>([]);
+  const [activities, setActivities] = useState<ActivityEntry[]>([]);
 
   useEffect(() => {
     fetch(`${API_URL}/api/auth/me`, { credentials: "include" })
@@ -120,7 +135,8 @@ export default function Profile() {
 
     fetch(`${API_URL}/api/profile/activities`, { credentials: "include" })
       .then((r) => (r.ok ? r.json() : []))
-      .then((rows: { activity_id: string; name: string; is_top_pick: boolean }[]) => {
+      .then((rows: ActivityEntry[]) => {
+        setActivities(rows);
         const loved = rows
           .filter((r) => r.is_top_pick)
           .map((r) => ({ id: r.activity_id, name: r.name, kind: "activity" as const }));
@@ -130,12 +146,18 @@ export default function Profile() {
 
     fetch(`${API_URL}/api/profile/interests`, { credentials: "include" })
       .then((r) => (r.ok ? r.json() : []))
-      .then((rows: { interest_id: string; name: string; is_top_pick: boolean }[]) => {
+      .then((rows: InterestEntry[]) => {
+        setInterests(rows);
         const loved = rows
           .filter((r) => r.is_top_pick)
           .map((r) => ({ id: r.interest_id, name: r.name, kind: "interest" as const }));
         setLovedOptions((prev) => [...prev.filter((o) => o.kind !== "interest"), ...loved]);
       })
+      .catch(() => {});
+
+    fetch(`${API_URL}/api/profile/conversation-interests`, { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : []))
+      .then(setConversationInterests)
       .catch(() => {});
 
     fetch(`${API_URL}/api/profile/professional`, { credentials: "include" })
@@ -483,6 +505,87 @@ export default function Profile() {
                   <PrivacyTag visible={entry.visible_on_profile} />
                 </p>
               ))
+            ) : (
+              <p className="profile-empty-hint">Nothing added yet.</p>
+            )}
+          </section>
+
+          <section className="section">
+            <div className="section-header-row">
+              <h2 className="section-title">Interests</h2>
+              <button
+                type="button"
+                className="edit-link"
+                onClick={() => router.push("/onboarding/interests")}
+              >
+                Edit
+              </button>
+            </div>
+            {interests.length > 0 ? (
+              <div className="profile-chip-row">
+                {interests.map((entry) => (
+                  <span
+                    key={entry.interest_id}
+                    className={entry.is_top_pick ? "profile-chip profile-chip-loved" : "profile-chip"}
+                  >
+                    {entry.name}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="profile-empty-hint">Nothing added yet.</p>
+            )}
+          </section>
+
+          <section className="section">
+            <div className="section-header-row">
+              <h2 className="section-title">Conversation Topics</h2>
+              <button
+                type="button"
+                className="edit-link"
+                onClick={() => router.push("/onboarding/interests")}
+              >
+                Edit
+              </button>
+            </div>
+            {conversationInterests.length > 0 ? (
+              <div className="profile-chip-row">
+                {conversationInterests.map((entry) => (
+                  <span key={entry.interest_id} className="profile-chip">
+                    {entry.name}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="profile-empty-hint">Nothing added yet.</p>
+            )}
+          </section>
+
+          <section className="section">
+            <div className="section-header-row">
+              <h2 className="section-title">Activities</h2>
+              <button
+                type="button"
+                className="edit-link"
+                onClick={() => router.push("/onboarding/interests")}
+              >
+                Edit
+              </button>
+            </div>
+            {activities.length > 0 ? (
+              <div className="profile-chip-row">
+                {activities.map((entry) => (
+                  <span
+                    key={entry.activity_id}
+                    className={entry.is_top_pick ? "profile-chip profile-chip-loved" : "profile-chip"}
+                  >
+                    {entry.name}
+                    {entry.is_top_pick && entry.desired_frequency && (
+                      <> · {humanize(entry.desired_frequency)}</>
+                    )}
+                  </span>
+                ))}
+              </div>
             ) : (
               <p className="profile-empty-hint">Nothing added yet.</p>
             )}
