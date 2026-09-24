@@ -360,7 +360,8 @@ export default function OnboardingStyles() {
       .photo-thumb {
         width: 100%;
         aspect-ratio: 1;
-        object-fit: cover;
+        object-fit: contain;
+        background: #2c2650;
         border-radius: 8px;
         border: 1px solid rgba(185, 175, 209, 0.25);
       }
