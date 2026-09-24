@@ -394,6 +394,54 @@ export default function OnboardingStyles() {
         margin-top: 1rem;
       }
 
+      .privacy-tag {
+        display: inline-block;
+        font-size: 0.75rem;
+        color: #8f84ad;
+        margin-left: 0.5rem;
+      }
+
+      .profile-item {
+        margin-bottom: 0.75rem;
+        line-height: 1.5;
+      }
+      .profile-item-label {
+        color: #b9afd1;
+        font-size: 0.85rem;
+      }
+      .profile-empty-hint {
+        color: #8f84ad;
+        font-size: 0.85rem;
+        font-style: italic;
+      }
+      .edit-link {
+        background: transparent;
+        border: none;
+        color: #e8a548;
+        font-size: 0.85rem;
+        cursor: pointer;
+        text-decoration: underline;
+        padding: 0;
+      }
+      .profile-chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+      }
+      .profile-chip {
+        background: #2c2650;
+        border: 1px solid rgba(185, 175, 209, 0.25);
+        color: #f6f1e7;
+        font-size: 0.85rem;
+        padding: 0.35rem 0.75rem;
+        border-radius: 999px;
+      }
+      .profile-chip-loved {
+        border-color: #f472b6;
+        color: #f472b6;
+      }
+
       @media (max-width: 420px) {
         .headline {
           font-size: 1.15rem;
