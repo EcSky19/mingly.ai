@@ -670,17 +670,17 @@ export default function Profile() {
             )}
           </CollapsibleSection>
 
-          <section className="section">
-            <div className="section-header-row">
-              <h2 className="section-title">Interests</h2>
-              <button
-                type="button"
-                className="edit-link"
-                onClick={() => router.push("/onboarding/interests")}
-              >
-                Edit
-              </button>
-            </div>
+          <CollapsibleSection
+            title="Interests"
+            summary={interests.length > 0 ? `${interests.length} selected` : undefined}
+          >
+            <button
+              type="button"
+              className="edit-link"
+              onClick={() => router.push("/onboarding/interests")}
+            >
+              Edit
+            </button>
             {interests.length > 0 ? (
               <div className="profile-chip-row">
                 {interests.map((entry) => (
@@ -695,19 +695,19 @@ export default function Profile() {
             ) : (
               <p className="profile-empty-hint">Nothing added yet.</p>
             )}
-          </section>
+          </CollapsibleSection>
 
-          <section className="section">
-            <div className="section-header-row">
-              <h2 className="section-title">Conversation Topics</h2>
-              <button
-                type="button"
-                className="edit-link"
-                onClick={() => router.push("/onboarding/interests")}
-              >
-                Edit
-              </button>
-            </div>
+          <CollapsibleSection
+            title="Conversation Topics"
+            summary={conversationInterests.length > 0 ? `${conversationInterests.length} selected` : undefined}
+          >
+            <button
+              type="button"
+              className="edit-link"
+              onClick={() => router.push("/onboarding/interests")}
+            >
+              Edit
+            </button>
             {conversationInterests.length > 0 ? (
               <div className="profile-chip-row">
                 {conversationInterests.map((entry) => (
@@ -719,19 +719,19 @@ export default function Profile() {
             ) : (
               <p className="profile-empty-hint">Nothing added yet.</p>
             )}
-          </section>
+          </CollapsibleSection>
 
-          <section className="section">
-            <div className="section-header-row">
-              <h2 className="section-title">Activities</h2>
-              <button
-                type="button"
-                className="edit-link"
-                onClick={() => router.push("/onboarding/interests")}
-              >
-                Edit
-              </button>
-            </div>
+          <CollapsibleSection
+            title="Activities"
+            summary={activities.length > 0 ? `${activities.length} selected` : undefined}
+          >
+            <button
+              type="button"
+              className="edit-link"
+              onClick={() => router.push("/onboarding/interests")}
+            >
+              Edit
+            </button>
             {activities.length > 0 ? (
               <div className="profile-chip-row">
                 {activities.map((entry) => (
@@ -749,22 +749,20 @@ export default function Profile() {
             ) : (
               <p className="profile-empty-hint">Nothing added yet.</p>
             )}
-          </section>
+          </CollapsibleSection>
 
-          <section className="section">
-            <div className="section-header-row">
-              <h2 className="section-title">
-                Lifestyle & Social
-                {social && <PrivacyTag visible={social.visible_on_profile} />}
-              </h2>
-              <button
-                type="button"
-                className="edit-link"
-                onClick={() => router.push("/onboarding/social")}
-              >
-                Edit
-              </button>
-            </div>
+          <CollapsibleSection
+            title="Lifestyle & Social"
+            summary={social?.career_orientation ? humanize(social.career_orientation) : undefined}
+          >
+            <button
+              type="button"
+              className="edit-link"
+              onClick={() => router.push("/onboarding/social")}
+            >
+              Edit
+            </button>
+            {social && <PrivacyTag visible={social.visible_on_profile} />}
             {social &&
             (social.career_orientation ||
               social.early_bird_night_owl ||
@@ -878,10 +876,13 @@ export default function Profile() {
             ) : (
               <p className="profile-empty-hint">Nothing added yet.</p>
             )}
-          </section>
+          </CollapsibleSection>
 
-          <section className="section">
-            <h2 className="section-title">Recurring Routines</h2>
+          <CollapsibleSection
+            title="Recurring Routines"
+            defaultOpen
+            summary={routines.length > 0 ? `${routines.length} added` : undefined}
+          >
             <p className="section-hint">
               Things you already do regularly — we can find compatible people to join in, rather
               than always starting from scratch.
@@ -991,7 +992,7 @@ export default function Profile() {
                 </div>
               </div>
             )}
-          </section>
+          </CollapsibleSection>
         </div>
       </main>
       <OnboardingStyles />
