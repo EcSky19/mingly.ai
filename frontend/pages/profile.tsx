@@ -5,6 +5,7 @@ import OnboardingStyles from "../components/OnboardingStyles";
 import PrivacyTag from "../components/PrivacyTag";
 import PrivacyToggles from "../components/PrivacyToggles";
 import MultiSelectChips from "../components/MultiSelectChips";
+import CollapsibleSection from "../components/CollapsibleSection";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const MAX_PHOTOS = 4;
@@ -450,8 +451,7 @@ export default function Profile() {
           <h1 className="headline">{firstName ? `${firstName}'s` : "My"} Profile</h1>
           <p className="subhead">Everything you've shared, in one place.</p>
 
-          <section className="section">
-            <h2 className="section-title">Photos</h2>
+          <CollapsibleSection title="Photos" defaultOpen summary={`${photos.length} of ${MAX_PHOTOS} added`}>
             {linkedinPhotoUrl && (
               <div className="field">
                 <label className="field-label">From LinkedIn</label>
@@ -548,15 +548,15 @@ export default function Profile() {
                 {uploadError && <p className="section-hint" style={{ color: "#f472b6" }}>{uploadError}</p>}
               </>
             )}
-          </section>
+          </CollapsibleSection>
 
-          <section className="section">
-            <div className="section-header-row">
-              <h2 className="section-title">Professional</h2>
-              <button type="button" className="edit-link" onClick={() => router.push("/onboarding")}>
-                Edit
-              </button>
-            </div>
+          <CollapsibleSection
+            title="Professional"
+            summary={professional?.current_role || professional?.company || undefined}
+          >
+            <button type="button" className="edit-link" onClick={() => router.push("/onboarding")}>
+              Edit
+            </button>
             {professional &&
             (professional.current_role || professional.company || professional.industry || professional.career_stage) ? (
               <>
@@ -589,15 +589,15 @@ export default function Profile() {
             ) : (
               <p className="profile-empty-hint">Nothing added yet.</p>
             )}
-          </section>
+          </CollapsibleSection>
 
-          <section className="section">
-            <div className="section-header-row">
-              <h2 className="section-title">Education</h2>
-              <button type="button" className="edit-link" onClick={() => router.push("/onboarding")}>
-                Edit
-              </button>
-            </div>
+          <CollapsibleSection
+            title="Education"
+            summary={education.length > 0 ? `${education.length} added` : undefined}
+          >
+            <button type="button" className="edit-link" onClick={() => router.push("/onboarding")}>
+              Edit
+            </button>
             {education.length > 0 ? (
               education.map((entry) => (
                 <p className="profile-item" key={entry.id}>
@@ -610,15 +610,15 @@ export default function Profile() {
             ) : (
               <p className="profile-empty-hint">Nothing added yet.</p>
             )}
-          </section>
+          </CollapsibleSection>
 
-          <section className="section">
-            <div className="section-header-row">
-              <h2 className="section-title">Languages</h2>
-              <button type="button" className="edit-link" onClick={() => router.push("/onboarding")}>
-                Edit
-              </button>
-            </div>
+          <CollapsibleSection
+            title="Languages"
+            summary={languages.length > 0 ? `${languages.length} added` : undefined}
+          >
+            <button type="button" className="edit-link" onClick={() => router.push("/onboarding")}>
+              Edit
+            </button>
             {languages.length > 0 ? (
               languages.map((entry) => (
                 <p className="profile-item" key={entry.id}>
@@ -630,15 +630,15 @@ export default function Profile() {
             ) : (
               <p className="profile-empty-hint">Nothing added yet.</p>
             )}
-          </section>
+          </CollapsibleSection>
 
-          <section className="section">
-            <div className="section-header-row">
-              <h2 className="section-title">Location</h2>
-              <button type="button" className="edit-link" onClick={() => router.push("/onboarding")}>
-                Edit
-              </button>
-            </div>
+          <CollapsibleSection
+            title="Location"
+            summary={locations.find((l) => l.is_primary)?.city || locations[0]?.city || undefined}
+          >
+            <button type="button" className="edit-link" onClick={() => router.push("/onboarding")}>
+              Edit
+            </button>
             {locations.length > 0 ? (
               locations.map((entry) => (
                 <p className="profile-item" key={entry.id}>
@@ -650,15 +650,12 @@ export default function Profile() {
             ) : (
               <p className="profile-empty-hint">Nothing added yet.</p>
             )}
-          </section>
+          </CollapsibleSection>
 
-          <section className="section">
-            <div className="section-header-row">
-              <h2 className="section-title">Pets</h2>
-              <button type="button" className="edit-link" onClick={() => router.push("/onboarding")}>
-                Edit
-              </button>
-            </div>
+          <CollapsibleSection title="Pets" summary={pets.length > 0 ? `${pets.length} added` : undefined}>
+            <button type="button" className="edit-link" onClick={() => router.push("/onboarding")}>
+              Edit
+            </button>
             {pets.length > 0 ? (
               pets.map((entry) => (
                 <p className="profile-item" key={entry.id}>
@@ -671,7 +668,7 @@ export default function Profile() {
             ) : (
               <p className="profile-empty-hint">Nothing added yet.</p>
             )}
-          </section>
+          </CollapsibleSection>
 
           <section className="section">
             <div className="section-header-row">
