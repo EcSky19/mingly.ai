@@ -13,7 +13,7 @@ export default function OnboardingStyles() {
         background: radial-gradient(120% 140% at 100% 0%, #241f3d 0%, #1b1730 55%), #1b1730;
         font-family: "Public Sans", sans-serif;
         color: #f6f1e7;
-        padding: 6vh 6vw 10vh;
+        padding: 4vh 6vw 5vh;
       }
 
       .loading { color: #b9afd1; font-family: "Public Sans", sans-serif; padding: 4vh 6vw; }
@@ -24,7 +24,7 @@ export default function OnboardingStyles() {
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        margin-bottom: 2.5rem;
+        margin-bottom: 1.5rem;
       }
       .mark { height: 1.4rem; width: auto; }
       .wordmark span:last-child {
@@ -47,12 +47,12 @@ export default function OnboardingStyles() {
         color: #b9afd1;
         line-height: 1.6;
         max-width: 42em;
-        margin: 0 0 3rem 0;
+        margin: 0 0 1.75rem 0;
       }
 
       .section {
-        margin-bottom: 2.75rem;
-        padding-bottom: 2.75rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1.5rem;
         border-bottom: 1px solid rgba(185, 175, 209, 0.15);
       }
       .section:last-of-type { border-bottom: none; }
@@ -70,7 +70,7 @@ export default function OnboardingStyles() {
         font-family: "Fraunces", serif;
         font-weight: 500;
         font-size: 1.15rem;
-        margin: 0 0 1.25rem 0;
+        margin: 0 0 0.85rem 0;
         color: #f6f1e7;
       }
       .section-header-row .section-title { margin-bottom: 0; }
@@ -175,8 +175,8 @@ export default function OnboardingStyles() {
       .privacy-toggle input { accent-color: #e8a548; }
 
       .education-entry {
-        margin-bottom: 1.75rem;
-        padding-bottom: 1.75rem;
+        margin-bottom: 1.25rem;
+        padding-bottom: 1.25rem;
         border-bottom: 1px dashed rgba(185, 175, 209, 0.2);
       }
       .education-entry:last-of-type { border-bottom: none; }
@@ -440,6 +440,52 @@ export default function OnboardingStyles() {
       .profile-chip-loved {
         border-color: #f472b6;
         color: #f472b6;
+      }
+
+      .collapsible-section {
+        margin-bottom: 0;
+        padding-bottom: 0;
+        border-bottom: none;
+      }
+      .collapsible-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        background: transparent;
+        border: none;
+        padding: 1rem 0;
+        margin: 0;
+        cursor: pointer;
+        text-align: left;
+        border-bottom: 1px solid rgba(185, 175, 209, 0.15);
+      }
+      .collapsible-header .section-title {
+        margin: 0;
+      }
+      .collapsible-header-right {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+      }
+      .collapsible-summary {
+        color: #8f84ad;
+        font-size: 0.85rem;
+      }
+      .collapsible-chevron {
+        color: #8f84ad;
+        font-size: 0.9rem;
+        transition: transform 150ms ease;
+      }
+      .collapsible-chevron-open {
+        transform: rotate(180deg);
+      }
+      .collapsible-body {
+        padding-top: 1.25rem;
+        padding-bottom: 0.5rem;
+      }
+      .collapsible-body:last-child {
+        padding-bottom: 0;
       }
 
       @media (max-width: 420px) {
