@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import PrivacyToggles from "../../components/PrivacyToggles";
 import MultiSelectChips from "../../components/MultiSelectChips";
 import OnboardingStyles from "../../components/OnboardingStyles";
+import CollapsibleSection from "../../components/CollapsibleSection";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -319,8 +320,11 @@ export default function OnboardingSocial() {
             optional, and you decide what's shared versus just used to find better matches.
           </p>
 
-          <section className="section">
-            <h2 className="section-title">Career & Life Orientation</h2>
+          <CollapsibleSection
+            title="Career & Life Orientation"
+            defaultOpen
+            summary={CAREER_ORIENTATIONS.find((o) => o.value === careerOrientation)?.label}
+          >
             <div className="field">
               <label className="field-label">How would you describe your current focus?</label>
               <select
@@ -341,10 +345,33 @@ export default function OnboardingSocial() {
               selectedValues={careerQualities}
               onToggle={toggleCareerQuality}
             />
-          </section>
+          </CollapsibleSection>
 
-          <section className="section">
-            <h2 className="section-title">Lifestyle</h2>
+          <CollapsibleSection
+            title="Lifestyle"
+            defaultOpen
+            summary={
+              [
+                earlyBirdNightOwl,
+                activityLevel,
+                drinkingPreference,
+                goingOutFrequency,
+                indoorOutdoorPreference,
+                weekdayWeekendPreference,
+              ].filter(Boolean).length > 0
+                ? `${
+                    [
+                      earlyBirdNightOwl,
+                      activityLevel,
+                      drinkingPreference,
+                      goingOutFrequency,
+                      indoorOutdoorPreference,
+                      weekdayWeekendPreference,
+                    ].filter(Boolean).length
+                  } of 6 set`
+                : undefined
+            }
+          >
             <div className="field">
               <label className="field-label">Early bird or night owl?</label>
               <select
@@ -429,10 +456,17 @@ export default function OnboardingSocial() {
                 ))}
               </select>
             </div>
-          </section>
+          </CollapsibleSection>
 
-          <section className="section">
-            <h2 className="section-title">Social Style</h2>
+          <CollapsibleSection
+            title="Social Style"
+            defaultOpen
+            summary={
+              [socialCadence, planningStyle, meetingPreference].filter(Boolean).length > 0
+                ? `${[socialCadence, planningStyle, meetingPreference].filter(Boolean).length} of 3 set`
+                : undefined
+            }
+          >
             <div className="field">
               <label className="field-label">How often would you like to make plans?</label>
               <select
@@ -481,10 +515,13 @@ export default function OnboardingSocial() {
               selectedValues={socialEnvironment}
               onToggle={toggleSocialEnvironment}
             />
-          </section>
+          </CollapsibleSection>
 
-          <section className="section">
-            <h2 className="section-title">Your City</h2>
+          <CollapsibleSection
+            title="Your City"
+            defaultOpen
+            summary={CITY_CIRCLE_STATUSES.find((o) => o.value === cityCircleStatus)?.label}
+          >
             <div className="field">
               <label className="field-label">Where are you at socially in the city?</label>
               <select
@@ -521,10 +558,13 @@ export default function OnboardingSocial() {
               />
               I'm comfortable around dogs
             </label>
-          </section>
+          </CollapsibleSection>
 
-          <section className="section">
-            <h2 className="section-title">What are you hoping to find?</h2>
+          <CollapsibleSection
+            title="What are you hoping to find?"
+            defaultOpen
+            summary={socialGoals.length > 0 ? `${socialGoals.length} selected` : undefined}
+          >
             <MultiSelectChips
               options={SOCIAL_GOALS}
               selectedValues={socialGoals}
@@ -538,7 +578,7 @@ export default function OnboardingSocial() {
                 onChangeMatching={setUsableForMatching}
               />
             </div>
-          </section>
+          </CollapsibleSection>
 
           <div className="actions">
             <button type="button" className="cta" disabled={saving} onClick={handleSave}>
