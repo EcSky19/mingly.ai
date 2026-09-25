@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import AutocompleteField from "../components/AutocompleteField";
 import PrivacyToggles from "../components/PrivacyToggles";
 import OnboardingStyles from "../components/OnboardingStyles";
+import CollapsibleSection from "../components/CollapsibleSection";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -586,8 +587,7 @@ export default function Onboarding() {
             connections.
           </p>
 
-          <section className="section">
-            <h2 className="section-title">Role</h2>
+          <CollapsibleSection title="Role" defaultOpen summary={currentRole.value || undefined}>
             <AutocompleteField
               label="Current role"
               placeholder="e.g. Software Engineer"
@@ -601,27 +601,28 @@ export default function Onboarding() {
               onChangeVisible={(v) => setCurrentRole({ ...currentRole, visibleOnProfile: v })}
               onChangeMatching={(v) => setCurrentRole({ ...currentRole, usableForMatching: v })}
             />
-          </section>
+          </CollapsibleSection>
 
-          <section className="section">
-            <div className="section-header-row">
-              <h2 className="section-title">Current Employment</h2>
-              <div className="toggle-pair">
-                <button
-                  type="button"
-                  className={shareCompany ? "toggle-btn active" : "toggle-btn"}
-                  onClick={() => setShareCompany(true)}
-                >
-                  Share Company
-                </button>
-                <button
-                  type="button"
-                  className={!shareCompany ? "toggle-btn active" : "toggle-btn"}
-                  onClick={() => setShareCompany(false)}
-                >
-                  Share Industry
-                </button>
-              </div>
+          <CollapsibleSection
+            title="Current Employment"
+            defaultOpen
+            summary={(shareCompany ? company.value : industry.value) || undefined}
+          >
+            <div className="toggle-pair" style={{ marginBottom: "1rem" }}>
+              <button
+                type="button"
+                className={shareCompany ? "toggle-btn active" : "toggle-btn"}
+                onClick={() => setShareCompany(true)}
+              >
+                Share Company
+              </button>
+              <button
+                type="button"
+                className={!shareCompany ? "toggle-btn active" : "toggle-btn"}
+                onClick={() => setShareCompany(false)}
+              >
+                Share Industry
+              </button>
             </div>
 
             {shareCompany ? (
@@ -657,10 +658,13 @@ export default function Onboarding() {
                 />
               </>
             )}
-          </section>
+          </CollapsibleSection>
 
-          <section className="section">
-            <h2 className="section-title">Career stage</h2>
+          <CollapsibleSection
+            title="Career stage"
+            defaultOpen
+            summary={CAREER_STAGES.find((s) => s.value === careerStage)?.label}
+          >
             <div className="field">
               <select
                 className="field-input"
@@ -675,10 +679,13 @@ export default function Onboarding() {
                 ))}
               </select>
             </div>
-          </section>
+          </CollapsibleSection>
 
-          <section className="section">
-            <h2 className="section-title">Education</h2>
+          <CollapsibleSection
+            title="Education"
+            defaultOpen
+            summary={education.length > 0 ? `${education.length} added` : undefined}
+          >
             {education.map((entry, index) => (
               <div className="education-entry" key={entry.id}>
                 {education.length > 1 && (
@@ -740,10 +747,13 @@ export default function Onboarding() {
             <button type="button" className="add-entry" onClick={addEducationEntry}>
               + Add another degree
             </button>
-          </section>
+          </CollapsibleSection>
 
-          <section className="section">
-            <h2 className="section-title">Languages</h2>
+          <CollapsibleSection
+            title="Languages"
+            defaultOpen
+            summary={languages.length > 0 ? `${languages.length} added` : undefined}
+          >
             {languages.map((entry, index) => (
               <div className="education-entry" key={entry.id}>
                 {languages.length > 1 && (
@@ -793,10 +803,13 @@ export default function Onboarding() {
             <button type="button" className="add-entry" onClick={addLanguageEntry}>
               + Add another language
             </button>
-          </section>
+          </CollapsibleSection>
 
-          <section className="section">
-            <h2 className="section-title">Location</h2>
+          <CollapsibleSection
+            title="Location"
+            defaultOpen
+            summary={locations.find((l) => l.isPrimary)?.city || locations[0]?.city || undefined}
+          >
             {locations.map((entry, index) => (
               <div className="education-entry" key={entry.id}>
                 {locations.length > 1 && (
@@ -856,10 +869,13 @@ export default function Onboarding() {
               Frequently visit a second city for work or lifestyle reasons? Add it — this is free
               and helps us match you accurately wherever you actually spend time.
             </p>
-          </section>
+          </CollapsibleSection>
 
-          <section className="section">
-            <h2 className="section-title">Pets</h2>
+          <CollapsibleSection
+            title="Pets"
+            defaultOpen
+            summary={pets.length > 0 ? `${pets.length} added` : undefined}
+          >
             <p className="section-hint">
               Pet compatibility can be a real part of finding the right people to spend time with.
             </p>
@@ -954,7 +970,7 @@ export default function Onboarding() {
             <button type="button" className="add-entry" onClick={addPetEntry}>
               + Add a pet
             </button>
-          </section>
+          </CollapsibleSection>
 
           <div className="actions">
             <button
