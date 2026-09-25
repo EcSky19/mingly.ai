@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import ChipSelect from "../../components/ChipSelect";
 import MultiSelectChips from "../../components/MultiSelectChips";
 import OnboardingStyles from "../../components/OnboardingStyles";
+import CollapsibleSection from "../../components/CollapsibleSection";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -342,8 +343,11 @@ export default function OnboardingInterests() {
             people who exist nearby.
           </p>
 
-          <section className="section">
-            <h2 className="section-title">Interests</h2>
+          <CollapsibleSection
+            title="Interests"
+            defaultOpen
+            summary={selectedInterestIds.length > 0 ? `${selectedInterestIds.length} selected` : undefined}
+          >
             <p className="section-hint">
               Click once to like something, again to love it (up to {MAX_TOP_INTERESTS}), a third
               time to clear it.
@@ -378,10 +382,15 @@ export default function OnboardingInterests() {
                 {submittingInterest ? "Adding…" : "Add"}
               </button>
             </div>
-          </section>
+          </CollapsibleSection>
 
-          <section className="section">
-            <h2 className="section-title">Conversation Topics</h2>
+          <CollapsibleSection
+            title="Conversation Topics"
+            defaultOpen
+            summary={
+              conversationInterestIds.length > 0 ? `${conversationInterestIds.length} selected` : undefined
+            }
+          >
             <p className="section-hint">
               Different from what you're into — what do you actually enjoy talking about?
             </p>
@@ -390,10 +399,13 @@ export default function OnboardingInterests() {
               selectedValues={conversationInterestIds}
               onToggle={toggleConversationInterest}
             />
-          </section>
+          </CollapsibleSection>
 
-          <section className="section">
-            <h2 className="section-title">Activities</h2>
+          <CollapsibleSection
+            title="Activities"
+            defaultOpen
+            summary={selectedActivityIds.length > 0 ? `${selectedActivityIds.length} selected` : undefined}
+          >
             <p className="section-hint">
               Things you'd actually do with someone — not just enjoy in theory. Click once to
               like, again to love (up to {MAX_TOP_ACTIVITIES}) — loved activities get the most
@@ -429,8 +441,7 @@ export default function OnboardingInterests() {
                 {submittingActivity ? "Adding…" : "Add"}
               </button>
             </div>
-
-          </section>
+          </CollapsibleSection>
 
           <div className="actions">
             <button type="button" className="cta" disabled={saving} onClick={handleSave}>
