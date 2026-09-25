@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import OnboardingStyles from "../components/OnboardingStyles";
 import PrivacyTag from "../components/PrivacyTag";
+import PrivacyToggles from "../components/PrivacyToggles";
+import MultiSelectChips from "../components/MultiSelectChips";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const MAX_PHOTOS = 4;
@@ -103,6 +105,39 @@ type SocialData = {
   visible_on_profile: boolean;
 };
 
+type CatalogActivity = { id: string; name: string };
+
+type Routine = {
+  id: string;
+  activity_id: string;
+  activity_name: string;
+  days_of_week?: string[] | null;
+  time_window?: string | null;
+  location_context?: string | null;
+  is_active: boolean;
+  visible_on_profile: boolean;
+  usable_for_matching: boolean;
+};
+
+const DAY_OPTIONS = [
+  { value: "monday", label: "Mon" },
+  { value: "tuesday", label: "Tue" },
+  { value: "wednesday", label: "Wed" },
+  { value: "thursday", label: "Thu" },
+  { value: "friday", label: "Fri" },
+  { value: "saturday", label: "Sat" },
+  { value: "sunday", label: "Sun" },
+];
+
+const TIME_WINDOWS = [
+  { value: "", label: "Select one" },
+  { value: "morning", label: "Morning" },
+  { value: "afternoon", label: "Afternoon" },
+  { value: "evening", label: "Evening" },
+  { value: "late_night", label: "Late night" },
+  { value: "flexible", label: "Flexible" },
+];
+
 // "My Profile" - a read-only view of everything collected during
 // onboarding, plus the photo upload feature.
 export default function Profile() {
@@ -129,6 +164,18 @@ export default function Profile() {
   const [conversationInterests, setConversationInterests] = useState<ConversationInterestEntry[]>([]);
   const [activities, setActivities] = useState<ActivityEntry[]>([]);
   const [social, setSocial] = useState<SocialData | null>(null);
+
+  const [routines, setRoutines] = useState<Routine[]>([]);
+  const [routineCatalog, setRoutineCatalog] = useState<CatalogActivity[]>([]);
+  const [addingRoutine, setAddingRoutine] = useState(false);
+  const [routineActivityId, setRoutineActivityId] = useState("");
+  const [routineDays, setRoutineDays] = useState<string[]>([]);
+  const [routineTimeWindow, setRoutineTimeWindow] = useState("");
+  const [routineLocation, setRoutineLocation] = useState("");
+  const [routineVisible, setRoutineVisible] = useState(false);
+  const [routineMatching, setRoutineMatching] = useState(true);
+  const [savingRoutine, setSavingRoutine] = useState(false);
+  const [routineError, setRoutineError] = useState("");
 
   useEffect(() => {
     fetch(`${API_URL}/api/auth/me`, { credentials: "include" })
@@ -210,6 +257,16 @@ export default function Profile() {
       .then((r) => (r.ok ? r.json() : null))
       .then(setSocial)
       .catch(() => {});
+
+    fetch(`${API_URL}/api/profile/routines`, { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : []))
+      .then(setRoutines)
+      .catch(() => {});
+
+    fetch(`${API_URL}/api/catalog/activities`, { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : []))
+      .then(setRoutineCatalog)
+      .catch(() => {});
   }, [checkingAuth]);
 
   function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
@@ -280,6 +337,86 @@ export default function Profile() {
     } catch {
       // Fails open - photo stays removed from view; a stale row server-side
       // isn't harmful and the user can retry the delete if it matters.
+    }
+  }
+
+  function toggleRoutineDay(day: string) {
+    setRoutineDays((prev) => (prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]));
+  }
+
+  function resetRoutineForm() {
+    setRoutineActivityId("");
+    setRoutineDays([]);
+    setRoutineTimeWindow("");
+    setRoutineLocation("");
+    setRoutineVisible(false);
+    setRoutineMatching(true);
+    setRoutineError("");
+    setAddingRoutine(false);
+  }
+
+  async function saveNewRoutine() {
+    if (!routineActivityId) {
+      setRoutineError("Choose an activity first.");
+      return;
+    }
+    setSavingRoutine(true);
+    setRoutineError("");
+    try {
+      const res = await fetch(`${API_URL}/api/profile/routines`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          activity_id: routineActivityId,
+          days_of_week: routineDays.length ? routineDays : undefined,
+          time_window: routineTimeWindow || undefined,
+          location_context: routineLocation || undefined,
+          visible_on_profile: routineVisible,
+          usable_for_matching: routineMatching,
+        }),
+      });
+      if (res.ok) {
+        const created: Routine = await res.json();
+        setRoutines((prev) => [...prev, created]);
+        resetRoutineForm();
+      } else {
+        const err = await res.json().catch(() => null);
+        setRoutineError(err?.detail || "Couldn't save that routine.");
+      }
+    } catch {
+      setRoutineError("Couldn't save that routine.");
+    } finally {
+      setSavingRoutine(false);
+    }
+  }
+
+  async function toggleRoutineActive(routine: Routine) {
+    const nextActive = !routine.is_active;
+    setRoutines((prev) =>
+      prev.map((r) => (r.id === routine.id ? { ...r, is_active: nextActive } : r))
+    );
+    try {
+      await fetch(`${API_URL}/api/profile/routines/${routine.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ is_active: nextActive }),
+      });
+    } catch {
+      // Fails open - the toggle stays as shown locally.
+    }
+  }
+
+  async function removeRoutine(id: string) {
+    setRoutines((prev) => prev.filter((r) => r.id !== id));
+    try {
+      await fetch(`${API_URL}/api/profile/routines/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+    } catch {
+      // Fails open.
     }
   }
 
@@ -743,6 +880,119 @@ export default function Profile() {
               </>
             ) : (
               <p className="profile-empty-hint">Nothing added yet.</p>
+            )}
+          </section>
+
+          <section className="section">
+            <h2 className="section-title">Recurring Routines</h2>
+            <p className="section-hint">
+              Things you already do regularly — we can find compatible people to join in, rather
+              than always starting from scratch.
+            </p>
+
+            {routines.map((routine) => (
+              <div className="education-entry" key={routine.id}>
+                <div className="education-entry-header">
+                  <span className="education-entry-label">
+                    {routine.activity_name}
+                    {!routine.is_active && " (paused)"}
+                  </span>
+                  <button type="button" className="remove-entry" onClick={() => removeRoutine(routine.id)}>
+                    Remove
+                  </button>
+                </div>
+                <p className="profile-item">
+                  {routine.days_of_week && routine.days_of_week.length > 0 && (
+                    <>{routine.days_of_week.map(humanize).join(", ")}</>
+                  )}
+                  {routine.time_window && <> · {humanize(routine.time_window)}</>}
+                  {routine.location_context && <> · {routine.location_context}</>}
+                  <PrivacyTag visible={routine.visible_on_profile} />
+                </p>
+                <button
+                  type="button"
+                  className="edit-link"
+                  onClick={() => toggleRoutineActive(routine)}
+                >
+                  {routine.is_active ? "Pause" : "Resume"}
+                </button>
+              </div>
+            ))}
+
+            {!addingRoutine && (
+              <button type="button" className="add-entry" onClick={() => setAddingRoutine(true)}>
+                + Add a routine
+              </button>
+            )}
+
+            {addingRoutine && (
+              <div className="pending-photo-upload">
+                <div className="field">
+                  <label className="field-label">Activity</label>
+                  <select
+                    className="field-input"
+                    value={routineActivityId}
+                    onChange={(e) => setRoutineActivityId(e.target.value)}
+                  >
+                    <option value="">Select one</option>
+                    {routineCatalog.map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <p className="section-hint">Which days?</p>
+                <MultiSelectChips
+                  options={DAY_OPTIONS}
+                  selectedValues={routineDays}
+                  onToggle={toggleRoutineDay}
+                />
+                <div className="field" style={{ marginTop: "1rem" }}>
+                  <label className="field-label">Time of day</label>
+                  <select
+                    className="field-input"
+                    value={routineTimeWindow}
+                    onChange={(e) => setRoutineTimeWindow(e.target.value)}
+                  >
+                    {TIME_WINDOWS.map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="field">
+                  <label className="field-label">Where (optional)</label>
+                  <input
+                    className="field-input"
+                    type="text"
+                    placeholder="e.g. Central Park, my usual gym"
+                    value={routineLocation}
+                    onChange={(e) => setRoutineLocation(e.target.value)}
+                  />
+                </div>
+                <PrivacyToggles
+                  visibleOnProfile={routineVisible}
+                  usableForMatching={routineMatching}
+                  onChangeVisible={setRoutineVisible}
+                  onChangeMatching={setRoutineMatching}
+                />
+                {routineError && <p className="section-hint" style={{ color: "#f472b6" }}>{routineError}</p>}
+                <div className="actions">
+                  <button
+                    type="button"
+                    className="cta"
+                    disabled={savingRoutine}
+                    onClick={saveNewRoutine}
+                  >
+                    {savingRoutine ? "Saving…" : "Add routine"}
+                  </button>
+                  <button type="button" className="skip" onClick={resetRoutineForm}>
+                    Cancel
+                  </button>
+                </div>
+              </div>
             )}
           </section>
         </div>
