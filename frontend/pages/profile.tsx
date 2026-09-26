@@ -103,6 +103,10 @@ type SocialData = {
   spending_preference?: string | null;
   city_circle_status?: string | null;
   comfortable_with_dogs?: boolean | null;
+  gender_identity?: string | null;
+  gender_identity_description?: string | null;
+  gender_identity_visible_on_profile: boolean;
+  mingle_preference?: string[] | null;
   visible_on_profile: boolean;
 };
 
@@ -139,6 +143,21 @@ const TIME_WINDOWS = [
   { value: "flexible", label: "Flexible" },
 ];
 
+const GENDER_IDENTITIES = [
+  { value: "", label: "Select one" },
+  { value: "woman", label: "Woman" },
+  { value: "man", label: "Man" },
+  { value: "non_binary", label: "Non-binary" },
+  { value: "self_describe", label: "Self-describe" },
+  { value: "prefer_not_to_say", label: "Prefer not to say" },
+];
+
+const MINGLE_OPTIONS = [
+  { value: "women", label: "Women" },
+  { value: "men", label: "Men" },
+  { value: "non_binary", label: "Non-binary people" },
+];
+
 // "My Profile" - a read-only view of everything collected during
 // onboarding, plus the photo upload feature.
 export default function Profile() {
@@ -165,6 +184,15 @@ export default function Profile() {
   const [conversationInterests, setConversationInterests] = useState<ConversationInterestEntry[]>([]);
   const [activities, setActivities] = useState<ActivityEntry[]>([]);
   const [social, setSocial] = useState<SocialData | null>(null);
+
+  const [editingAboutYou, setEditingAboutYou] = useState(false);
+  const [genderIdentity, setGenderIdentity] = useState("");
+  const [genderIdentityDescription, setGenderIdentityDescription] = useState("");
+  const [genderIdentityVisible, setGenderIdentityVisible] = useState(false);
+  const [genderIdentityMatching, setGenderIdentityMatching] = useState(true);
+  const [minglePreference, setMinglePreference] = useState<string[]>(["everyone"]);
+  const [savingAboutYou, setSavingAboutYou] = useState(false);
+  const [aboutYouError, setAboutYouError] = useState("");
 
   const [routines, setRoutines] = useState<Routine[]>([]);
   const [routineCatalog, setRoutineCatalog] = useState<CatalogActivity[]>([]);
@@ -256,7 +284,17 @@ export default function Profile() {
 
     fetch(`${API_URL}/api/profile/social`, { credentials: "include" })
       .then((r) => (r.ok ? r.json() : null))
-      .then(setSocial)
+      .then((data: SocialData | null) => {
+        setSocial(data);
+        if (data) {
+          setGenderIdentity(data.gender_identity || "");
+          setGenderIdentityDescription(data.gender_identity_description || "");
+          setGenderIdentityVisible(data.gender_identity_visible_on_profile || false);
+          if (data.mingle_preference && data.mingle_preference.length > 0) {
+            setMinglePreference(data.mingle_preference);
+          }
+        }
+      })
       .catch(() => {});
 
     fetch(`${API_URL}/api/profile/routines`, { credentials: "include" })
@@ -421,6 +459,59 @@ export default function Profile() {
     }
   }
 
+  function toggleMingleOption(value: string) {
+    setMinglePreference((prev) => {
+      if (prev.includes(value)) return prev.filter((v) => v !== value);
+      // "everyone" is mutually exclusive with specific groups - selecting
+      // any specific group clears "everyone", and vice versa.
+      const withoutEveryone = prev.filter((v) => v !== "everyone");
+      return [...withoutEveryone, value];
+    });
+  }
+
+  function selectEveryoneOnly() {
+    setMinglePreference(["everyone"]);
+  }
+
+  async function saveAboutYou() {
+    setSavingAboutYou(true);
+    setAboutYouError("");
+    try {
+      // /api/profile/social fully replaces the row - it was designed for
+      // /onboarding/social, which always sends its complete local state.
+      // Sending only the About You fields here would silently wipe out
+      // everything else already saved (career orientation, lifestyle,
+      // etc.), so the full previously-loaded `social` state is merged in
+      // underneath the new About You values.
+      const res = await fetch(`${API_URL}/api/profile/social`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          ...(social || {}),
+          gender_identity: genderIdentity || undefined,
+          gender_identity_description:
+            genderIdentity === "self_describe" ? genderIdentityDescription || undefined : undefined,
+          gender_identity_visible_on_profile: genderIdentityVisible,
+          gender_identity_usable_for_matching: genderIdentityMatching,
+          mingle_preference: minglePreference,
+        }),
+      });
+      if (res.ok) {
+        const updated: SocialData = await res.json();
+        setSocial(updated);
+        setEditingAboutYou(false);
+      } else {
+        const err = await res.json().catch(() => null);
+        setAboutYouError(err?.detail ? JSON.stringify(err.detail) : "Couldn't save that.");
+      }
+    } catch {
+      setAboutYouError("Couldn't save that.");
+    } finally {
+      setSavingAboutYou(false);
+    }
+  }
+
   if (checkingAuth) {
     return (
       <main className="page">
@@ -546,6 +637,117 @@ export default function Profile() {
                 )}
 
                 {uploadError && <p className="section-hint" style={{ color: "#f472b6" }}>{uploadError}</p>}
+              </>
+            )}
+          </CollapsibleSection>
+
+          <CollapsibleSection
+            title="About You"
+            summary={GENDER_IDENTITIES.find((g) => g.value === genderIdentity)?.label}
+          >
+            {!editingAboutYou ? (
+              <>
+                <button type="button" className="edit-link" onClick={() => setEditingAboutYou(true)}>
+                  Edit
+                </button>
+                {genderIdentity ? (
+                  <p className="profile-item">
+                    <span className="profile-item-label">Gender identity:</span>{" "}
+                    {genderIdentity === "self_describe"
+                      ? genderIdentityDescription || "Self-described"
+                      : GENDER_IDENTITIES.find((g) => g.value === genderIdentity)?.label}
+                    <PrivacyTag visible={genderIdentityVisible} />
+                  </p>
+                ) : (
+                  <p className="profile-empty-hint">Nothing added yet.</p>
+                )}
+                <p className="profile-item">
+                  <span className="profile-item-label">Who you'd like to mingle with:</span>{" "}
+                  {minglePreference.includes("everyone")
+                    ? "Everyone"
+                    : minglePreference.map((v) => MINGLE_OPTIONS.find((o) => o.value === v)?.label).join(", ")}
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="field">
+                  <label className="field-label">Gender identity</label>
+                  <select
+                    className="field-input"
+                    value={genderIdentity}
+                    onChange={(e) => setGenderIdentity(e.target.value)}
+                  >
+                    {GENDER_IDENTITIES.map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {genderIdentity === "self_describe" && (
+                  <div className="field">
+                    <label className="field-label">Describe your gender identity</label>
+                    <input
+                      className="field-input"
+                      type="text"
+                      value={genderIdentityDescription}
+                      onChange={(e) => setGenderIdentityDescription(e.target.value)}
+                    />
+                  </div>
+                )}
+                <PrivacyToggles
+                  visibleOnProfile={genderIdentityVisible}
+                  usableForMatching={genderIdentityMatching}
+                  onChangeVisible={setGenderIdentityVisible}
+                  onChangeMatching={setGenderIdentityMatching}
+                />
+
+                <p className="section-hint" style={{ marginTop: "1.5rem" }}>
+                  This helps us find people you'd feel most comfortable spending time with in a
+                  group or activity setting. Choose as many as you'd like — most people select
+                  Everyone. This is never shown to anyone; it's only ever used to help find your
+                  matches.
+                </p>
+                <div className="chip-grid">
+                  <button
+                    type="button"
+                    className={minglePreference.includes("everyone") ? "chip chip-liked" : "chip"}
+                    onClick={selectEveryoneOnly}
+                  >
+                    Everyone
+                  </button>
+                  {MINGLE_OPTIONS.map((o) => (
+                    <button
+                      key={o.value}
+                      type="button"
+                      className={minglePreference.includes(o.value) ? "chip chip-liked" : "chip"}
+                      onClick={() => toggleMingleOption(o.value)}
+                    >
+                      {o.label}
+                    </button>
+                  ))}
+                </div>
+
+                {aboutYouError && (
+                  <p className="section-hint" style={{ color: "#f472b6" }}>{aboutYouError}</p>
+                )}
+                <div className="actions">
+                  <button
+                    type="button"
+                    className="cta"
+                    disabled={savingAboutYou}
+                    onClick={saveAboutYou}
+                  >
+                    {savingAboutYou ? "Saving…" : "Save"}
+                  </button>
+                  <button
+                    type="button"
+                    className="skip"
+                    onClick={() => setEditingAboutYou(false)}
+                  >
+                    Cancel
+                  </button>
+                </div>
               </>
             )}
           </CollapsibleSection>
