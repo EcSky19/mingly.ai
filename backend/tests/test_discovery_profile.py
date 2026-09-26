@@ -211,56 +211,6 @@ def test_setting_interests_replaces_previous_selection(test_user):
     assert fetched[0]["name"] == catalog[2]["name"]
 
 
-# --- Conversation interests ---
-
-def test_conversation_interests_requires_auth():
-    assert client.get("/api/profile/conversation-interests").status_code == 401
-    assert client.put("/api/profile/conversation-interests", json={"interest_ids": []}).status_code == 401
-
-
-def test_conversation_interests_stored_separately_from_regular_interests(test_user):
-    """The whole point of this table - selecting conversation interests
-    must not affect, or be affected by, the user's regular interests."""
-    cookies = _cookie_for(str(test_user.id))
-    catalog = client.get("/api/catalog/interests").json()
-    ids = [c["id"] for c in catalog[:3]]
-
-    response = client.put(
-        "/api/profile/conversation-interests",
-        json={"interest_ids": ids, "visible_on_profile": True},
-        cookies=cookies,
-    )
-    assert response.status_code == 200
-
-    fetched = client.get("/api/profile/conversation-interests", cookies=cookies).json()
-    assert len(fetched) == 3
-
-    regular_interests = client.get("/api/profile/interests", cookies=cookies).json()
-    assert len(regular_interests) == 0, "conversation interests must not leak into regular interests"
-
-
-def test_conversation_interests_invalid_id_rejected(test_user):
-    cookies = _cookie_for(str(test_user.id))
-    response = client.put(
-        "/api/profile/conversation-interests",
-        json={"interest_ids": [str(uuid.uuid4())]},
-        cookies=cookies,
-    )
-    assert response.status_code == 400
-
-
-def test_conversation_interests_replace_on_second_put(test_user):
-    cookies = _cookie_for(str(test_user.id))
-    catalog = client.get("/api/catalog/interests").json()
-
-    client.put("/api/profile/conversation-interests", json={"interest_ids": [catalog[0]["id"], catalog[1]["id"]]}, cookies=cookies)
-    client.put("/api/profile/conversation-interests", json={"interest_ids": [catalog[2]["id"]]}, cookies=cookies)
-
-    fetched = client.get("/api/profile/conversation-interests", cookies=cookies).json()
-    assert len(fetched) == 1
-    assert fetched[0]["name"] == catalog[2]["name"]
-
-
 # --- Activities ---
 
 def test_activities_requires_auth():

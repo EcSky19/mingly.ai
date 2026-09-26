@@ -72,19 +72,6 @@ class UserInterestOut(BaseModel):
     visible_on_profile: bool
 
 
-class ConversationInterestSet(BaseModel):
-    """All-at-once selection, same pattern as UserInterestSet - no
-    top-pick concept needed here, just selected or not."""
-    interest_ids: list[UUID]
-    visible_on_profile: bool = False
-
-
-class ConversationInterestOut(BaseModel):
-    interest_id: UUID
-    name: str
-    visible_on_profile: bool
-
-
 # --- Activities ---
 
 class ActivityCatalogOut(BaseModel):
