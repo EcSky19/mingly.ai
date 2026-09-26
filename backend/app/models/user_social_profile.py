@@ -108,6 +108,21 @@ class CityCircleStatus(str, enum.Enum):
     mainly_activity_partners = "mainly_activity_partners"
 
 
+class GenderIdentity(str, enum.Enum):
+    woman = "woman"
+    man = "man"
+    non_binary = "non_binary"
+    self_describe = "self_describe"
+    prefer_not_to_say = "prefer_not_to_say"
+
+
+# Valid values for mingle_preference - a fixed vocabulary, not a DB
+# enum, same JSON-array approach as career_qualities/social_goals.
+# "everyone" is mutually exclusive with the specific groups - enforced
+# in the schema validator, not just the frontend UI.
+MINGLE_PREFERENCE_OPTIONS = ["women", "men", "non_binary", "everyone"]
+
+
 # Valid values for the array fields - enforced at the API layer (Pydantic),
 # not as a Postgres enum, since these are arrays of a fixed vocabulary
 # rather than a single enum column.
@@ -152,6 +167,21 @@ class UserSocialProfile(Base):
     spending_preference = Column(Enum(SpendingPreference), nullable=True)
     city_circle_status = Column(Enum(CityCircleStatus), nullable=True)
     comfortable_with_dogs = Column(Boolean, nullable=True)  # for non-owners, per docs/pets-design.md
+
+    # "About You" - gender identity gets its OWN dedicated privacy pair,
+    # independent of the group-level visible_on_profile/usable_for_matching
+    # above, since it's identity-sensitive and deserves control separate
+    # from the broader lifestyle/social block.
+    gender_identity = Column(Enum(GenderIdentity), nullable=True)
+    gender_identity_description = Column(String, nullable=True)  # free text, only used when self_describe
+    gender_identity_visible_on_profile = Column(Boolean, nullable=False, default=False)
+    gender_identity_usable_for_matching = Column(Boolean, nullable=False, default=True)
+
+    # mingle_preference deliberately has NO privacy columns at all - this
+    # is never shown to anyone, including the people it affects, by
+    # design, not just by UI choice. Structurally impossible to expose
+    # via the API since no such field exists to toggle.
+    mingle_preference = Column(JSON, nullable=True)  # list from MINGLE_PREFERENCE_OPTIONS
 
     visible_on_profile = Column(Boolean, nullable=False, default=False)
     usable_for_matching = Column(Boolean, nullable=False, default=True)
