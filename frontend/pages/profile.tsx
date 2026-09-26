@@ -75,7 +75,6 @@ type PetEntry = {
 };
 
 type InterestEntry = { interest_id: string; name: string; is_top_pick: boolean; visible_on_profile: boolean };
-type ConversationInterestEntry = { interest_id: string; name: string; visible_on_profile: boolean };
 type ActivityEntry = {
   activity_id: string;
   name: string;
@@ -181,7 +180,6 @@ export default function Profile() {
   const [locations, setLocations] = useState<LocationEntry[]>([]);
   const [pets, setPets] = useState<PetEntry[]>([]);
   const [interests, setInterests] = useState<InterestEntry[]>([]);
-  const [conversationInterests, setConversationInterests] = useState<ConversationInterestEntry[]>([]);
   const [activities, setActivities] = useState<ActivityEntry[]>([]);
   const [social, setSocial] = useState<SocialData | null>(null);
 
@@ -250,11 +248,6 @@ export default function Profile() {
           .map((r) => ({ id: r.interest_id, name: r.name, kind: "interest" as const }));
         setLovedOptions((prev) => [...prev.filter((o) => o.kind !== "interest"), ...loved]);
       })
-      .catch(() => {});
-
-    fetch(`${API_URL}/api/profile/conversation-interests`, { credentials: "include" })
-      .then((r) => (r.ok ? r.json() : []))
-      .then(setConversationInterests)
       .catch(() => {});
 
     fetch(`${API_URL}/api/profile/professional`, { credentials: "include" })
@@ -890,30 +883,6 @@ export default function Profile() {
                     key={entry.interest_id}
                     className={entry.is_top_pick ? "profile-chip profile-chip-loved" : "profile-chip"}
                   >
-                    {entry.name}
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <p className="profile-empty-hint">Nothing added yet.</p>
-            )}
-          </CollapsibleSection>
-
-          <CollapsibleSection
-            title="Conversation Topics"
-            summary={conversationInterests.length > 0 ? `${conversationInterests.length} selected` : undefined}
-          >
-            <button
-              type="button"
-              className="edit-link"
-              onClick={() => router.push("/onboarding/interests")}
-            >
-              Edit
-            </button>
-            {conversationInterests.length > 0 ? (
-              <div className="profile-chip-row">
-                {conversationInterests.map((entry) => (
-                  <span key={entry.interest_id} className="profile-chip">
                     {entry.name}
                   </span>
                 ))}
