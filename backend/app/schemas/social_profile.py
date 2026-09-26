@@ -18,9 +18,11 @@ from app.models.user_social_profile import (
     MeetingPreference,
     SpendingPreference,
     CityCircleStatus,
+    GenderIdentity,
     CAREER_QUALITIES,
     SOCIAL_ENVIRONMENTS,
     SOCIAL_GOALS,
+    MINGLE_PREFERENCE_OPTIONS,
 )
 
 
@@ -45,8 +47,26 @@ class SocialProfileUpdate(BaseModel):
     city_circle_status: Optional[CityCircleStatus] = None
     comfortable_with_dogs: Optional[bool] = None
 
+    gender_identity: Optional[GenderIdentity] = None
+    gender_identity_description: Optional[str] = None
+    gender_identity_visible_on_profile: bool = False
+    gender_identity_usable_for_matching: bool = True
+    mingle_preference: Optional[list[str]] = None
+
     visible_on_profile: bool = False
     usable_for_matching: bool = True
+
+    @field_validator("mingle_preference")
+    @classmethod
+    def validate_mingle_preference(cls, v):
+        if v is None:
+            return v
+        invalid = set(v) - set(MINGLE_PREFERENCE_OPTIONS)
+        if invalid:
+            raise ValueError(f"Invalid mingle_preference values: {invalid}")
+        if "everyone" in v and len(v) > 1:
+            raise ValueError("'everyone' can't be combined with specific groups")
+        return v
 
     @field_validator("career_qualities")
     @classmethod
@@ -96,6 +116,11 @@ class SocialProfileOut(BaseModel):
     spending_preference: Optional[SpendingPreference] = None
     city_circle_status: Optional[CityCircleStatus] = None
     comfortable_with_dogs: Optional[bool] = None
+    gender_identity: Optional[GenderIdentity] = None
+    gender_identity_description: Optional[str] = None
+    gender_identity_visible_on_profile: bool = False
+    gender_identity_usable_for_matching: bool = True
+    mingle_preference: Optional[list[str]] = None
     visible_on_profile: bool = False
     usable_for_matching: bool = True
 
