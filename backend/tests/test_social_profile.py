@@ -151,3 +151,77 @@ def test_invalid_enum_value_rejected(test_user):
         "/api/profile/social", json={"career_orientation": "not_a_real_value"}, cookies=cookies
     )
     assert response.status_code == 422
+
+
+def test_gender_identity_full_round_trip(test_user):
+    cookies = _cookie_for(str(test_user.id))
+    response = client.put(
+        "/api/profile/social",
+        json={
+            "gender_identity": "non_binary",
+            "gender_identity_visible_on_profile": True,
+            "gender_identity_usable_for_matching": True,
+        },
+        cookies=cookies,
+    )
+    assert response.status_code == 200
+    fetched = client.get("/api/profile/social", cookies=cookies).json()
+    assert fetched["gender_identity"] == "non_binary"
+    assert fetched["gender_identity_visible_on_profile"] is True
+
+
+def test_gender_identity_self_describe_text(test_user):
+    cookies = _cookie_for(str(test_user.id))
+    response = client.put(
+        "/api/profile/social",
+        json={"gender_identity": "self_describe", "gender_identity_description": "Genderfluid"},
+        cookies=cookies,
+    )
+    assert response.status_code == 200
+    fetched = client.get("/api/profile/social", cookies=cookies).json()
+    assert fetched["gender_identity_description"] == "Genderfluid"
+
+
+def test_mingle_preference_multiple_groups(test_user):
+    cookies = _cookie_for(str(test_user.id))
+    response = client.put(
+        "/api/profile/social", json={"mingle_preference": ["women", "non_binary"]}, cookies=cookies
+    )
+    assert response.status_code == 200
+    fetched = client.get("/api/profile/social", cookies=cookies).json()
+    assert fetched["mingle_preference"] == ["women", "non_binary"]
+
+
+def test_mingle_preference_everyone_alone_allowed(test_user):
+    cookies = _cookie_for(str(test_user.id))
+    response = client.put("/api/profile/social", json={"mingle_preference": ["everyone"]}, cookies=cookies)
+    assert response.status_code == 200
+
+
+def test_mingle_preference_everyone_combined_with_specific_rejected(test_user):
+    """The core validation rule: 'everyone' is mutually exclusive with
+    specific groups - selecting both doesn't make sense and should be
+    rejected server-side, not just prevented in the UI."""
+    cookies = _cookie_for(str(test_user.id))
+    response = client.put(
+        "/api/profile/social", json={"mingle_preference": ["everyone", "women"]}, cookies=cookies
+    )
+    assert response.status_code == 422
+
+
+def test_mingle_preference_invalid_value_rejected(test_user):
+    cookies = _cookie_for(str(test_user.id))
+    response = client.put("/api/profile/social", json={"mingle_preference": ["aliens"]}, cookies=cookies)
+    assert response.status_code == 422
+
+
+def test_mingle_preference_has_no_privacy_fields(test_user):
+    """Structural check: confirms there is genuinely no field to expose
+    mingle_preference's visibility - private by design, not just
+    unused. If someone ever added such a field by mistake, this test
+    would need explicit updating to still pass, which is the point."""
+    cookies = _cookie_for(str(test_user.id))
+    client.put("/api/profile/social", json={"mingle_preference": ["everyone"]}, cookies=cookies)
+    fetched = client.get("/api/profile/social", cookies=cookies).json()
+    assert "mingle_preference_visible_on_profile" not in fetched
+    assert "mingle_preference_usable_for_matching" not in fetched
