@@ -199,7 +199,14 @@ class UserSocialProfile(Base):
 
     # Same reasoning as gender_identity - own dedicated privacy pair,
     # not the group-level flag.
-    age_range = Column(Enum(AgeRange), nullable=True)
+    # values_callable is required here specifically: AgeRange's member
+    # names have an "age_" prefix (Python identifiers can't start with a
+    # digit, e.g. "25_29"), but the DB enum and the API should use the
+    # clean value strings ("25_29"), not the prefixed member names. Without
+    # this, SQLAlchemy defaults to inserting the member NAME - confirmed
+    # this breaks with a real INSERT error against Postgres before adding
+    # the fix.
+    age_range = Column(Enum(AgeRange, values_callable=lambda x: [e.value for e in x]), nullable=True)
     age_range_visible_on_profile = Column(Boolean, nullable=False, default=False)
     age_range_usable_for_matching = Column(Boolean, nullable=False, default=True)
 
