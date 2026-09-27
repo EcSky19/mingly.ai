@@ -19,10 +19,12 @@ from app.models.user_social_profile import (
     SpendingPreference,
     CityCircleStatus,
     GenderIdentity,
+    AgeRange,
     CAREER_QUALITIES,
     SOCIAL_ENVIRONMENTS,
     SOCIAL_GOALS,
     MINGLE_PREFERENCE_OPTIONS,
+    AGE_PREFERENCE_OPTIONS,
 )
 
 
@@ -53,6 +55,11 @@ class SocialProfileUpdate(BaseModel):
     gender_identity_usable_for_matching: bool = True
     mingle_preference: Optional[list[str]] = None
 
+    age_range: Optional[AgeRange] = None
+    age_range_visible_on_profile: bool = False
+    age_range_usable_for_matching: bool = True
+    age_preference: Optional[list[str]] = None
+
     visible_on_profile: bool = False
     usable_for_matching: bool = True
 
@@ -66,6 +73,18 @@ class SocialProfileUpdate(BaseModel):
             raise ValueError(f"Invalid mingle_preference values: {invalid}")
         if "everyone" in v and len(v) > 1:
             raise ValueError("'everyone' can't be combined with specific groups")
+        return v
+
+    @field_validator("age_preference")
+    @classmethod
+    def validate_age_preference(cls, v):
+        if v is None:
+            return v
+        invalid = set(v) - set(AGE_PREFERENCE_OPTIONS)
+        if invalid:
+            raise ValueError(f"Invalid age_preference values: {invalid}")
+        if "everyone" in v and len(v) > 1:
+            raise ValueError("'everyone' can't be combined with specific age ranges")
         return v
 
     @field_validator("career_qualities")
@@ -121,6 +140,10 @@ class SocialProfileOut(BaseModel):
     gender_identity_visible_on_profile: bool = False
     gender_identity_usable_for_matching: bool = True
     mingle_preference: Optional[list[str]] = None
+    age_range: Optional[AgeRange] = None
+    age_range_visible_on_profile: bool = False
+    age_range_usable_for_matching: bool = True
+    age_preference: Optional[list[str]] = None
     visible_on_profile: bool = False
     usable_for_matching: bool = True
 
