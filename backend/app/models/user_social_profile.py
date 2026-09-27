@@ -116,6 +116,26 @@ class GenderIdentity(str, enum.Enum):
     prefer_not_to_say = "prefer_not_to_say"
 
 
+class AgeRange(str, enum.Enum):
+    """Bucketed, not exact - more privacy-conscious than collecting an
+    exact birth date, and matches how the age PREFERENCE field works
+    below (bucket-to-bucket, since we never have an exact age to filter
+    numerically against)."""
+    age_18_24 = "18_24"
+    age_25_29 = "25_29"
+    age_30_34 = "30_34"
+    age_35_39 = "35_39"
+    age_40_49 = "40_49"
+    age_50_plus = "50_plus"
+    prefer_not_to_say = "prefer_not_to_say"
+
+
+# Valid values for the age_preference multi-select - "everyone" is
+# mutually exclusive with specific buckets, same rule as mingle
+# preference's "everyone" (matching that field's terminology exactly).
+AGE_PREFERENCE_OPTIONS = ["18_24", "25_29", "30_34", "35_39", "40_49", "50_plus", "everyone"]
+
+
 # Valid values for mingle_preference - a fixed vocabulary, not a DB
 # enum, same JSON-array approach as career_qualities/social_goals.
 # "everyone" is mutually exclusive with the specific groups - enforced
@@ -177,11 +197,20 @@ class UserSocialProfile(Base):
     gender_identity_visible_on_profile = Column(Boolean, nullable=False, default=False)
     gender_identity_usable_for_matching = Column(Boolean, nullable=False, default=True)
 
+    # Same reasoning as gender_identity - own dedicated privacy pair,
+    # not the group-level flag.
+    age_range = Column(Enum(AgeRange), nullable=True)
+    age_range_visible_on_profile = Column(Boolean, nullable=False, default=False)
+    age_range_usable_for_matching = Column(Boolean, nullable=False, default=True)
+
     # mingle_preference deliberately has NO privacy columns at all - this
     # is never shown to anyone, including the people it affects, by
     # design, not just by UI choice. Structurally impossible to expose
     # via the API since no such field exists to toggle.
     mingle_preference = Column(JSON, nullable=True)  # list from MINGLE_PREFERENCE_OPTIONS
+
+    # Same "never exposed" reasoning as mingle_preference.
+    age_preference = Column(JSON, nullable=True)  # list from AGE_PREFERENCE_OPTIONS
 
     visible_on_profile = Column(Boolean, nullable=False, default=False)
     usable_for_matching = Column(Boolean, nullable=False, default=True)
