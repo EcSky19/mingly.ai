@@ -225,3 +225,67 @@ def test_mingle_preference_has_no_privacy_fields(test_user):
     fetched = client.get("/api/profile/social", cookies=cookies).json()
     assert "mingle_preference_visible_on_profile" not in fetched
     assert "mingle_preference_usable_for_matching" not in fetched
+
+
+def test_age_range_full_round_trip(test_user):
+    cookies = _cookie_for(str(test_user.id))
+    response = client.put(
+        "/api/profile/social",
+        json={
+            "age_range": "25_29",
+            "age_range_visible_on_profile": True,
+            "age_range_usable_for_matching": True,
+        },
+        cookies=cookies,
+    )
+    assert response.status_code == 200
+    fetched = client.get("/api/profile/social", cookies=cookies).json()
+    assert fetched["age_range"] == "25_29"
+    assert fetched["age_range_visible_on_profile"] is True
+
+
+def test_age_range_prefer_not_to_say(test_user):
+    cookies = _cookie_for(str(test_user.id))
+    response = client.put("/api/profile/social", json={"age_range": "prefer_not_to_say"}, cookies=cookies)
+    assert response.status_code == 200
+    fetched = client.get("/api/profile/social", cookies=cookies).json()
+    assert fetched["age_range"] == "prefer_not_to_say"
+
+
+def test_age_preference_multiple_buckets(test_user):
+    cookies = _cookie_for(str(test_user.id))
+    response = client.put(
+        "/api/profile/social", json={"age_preference": ["25_29", "30_34"]}, cookies=cookies
+    )
+    assert response.status_code == 200
+    fetched = client.get("/api/profile/social", cookies=cookies).json()
+    assert fetched["age_preference"] == ["25_29", "30_34"]
+
+
+def test_age_preference_everyone_alone_allowed(test_user):
+    cookies = _cookie_for(str(test_user.id))
+    response = client.put("/api/profile/social", json={"age_preference": ["everyone"]}, cookies=cookies)
+    assert response.status_code == 200
+
+
+def test_age_preference_everyone_combined_with_specific_rejected(test_user):
+    cookies = _cookie_for(str(test_user.id))
+    response = client.put(
+        "/api/profile/social", json={"age_preference": ["everyone", "25_29"]}, cookies=cookies
+    )
+    assert response.status_code == 422
+
+
+def test_age_preference_invalid_value_rejected(test_user):
+    cookies = _cookie_for(str(test_user.id))
+    response = client.put("/api/profile/social", json={"age_preference": ["100_plus"]}, cookies=cookies)
+    assert response.status_code == 422
+
+
+def test_age_preference_has_no_privacy_fields(test_user):
+    """Same structural guard as mingle_preference above."""
+    cookies = _cookie_for(str(test_user.id))
+    client.put("/api/profile/social", json={"age_preference": ["everyone"]}, cookies=cookies)
+    fetched = client.get("/api/profile/social", cookies=cookies).json()
+    assert "age_preference_visible_on_profile" not in fetched
+    assert "age_preference_usable_for_matching" not in fetched
