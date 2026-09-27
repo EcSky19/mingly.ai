@@ -106,6 +106,9 @@ type SocialData = {
   gender_identity_description?: string | null;
   gender_identity_visible_on_profile: boolean;
   mingle_preference?: string[] | null;
+  age_range?: string | null;
+  age_range_visible_on_profile: boolean;
+  age_preference?: string[] | null;
   visible_on_profile: boolean;
 };
 
@@ -157,6 +160,26 @@ const MINGLE_OPTIONS = [
   { value: "non_binary", label: "Non-binary people" },
 ];
 
+const AGE_RANGES = [
+  { value: "", label: "Select one" },
+  { value: "18_24", label: "18-24" },
+  { value: "25_29", label: "25-29" },
+  { value: "30_34", label: "30-34" },
+  { value: "35_39", label: "35-39" },
+  { value: "40_49", label: "40-49" },
+  { value: "50_plus", label: "50+" },
+  { value: "prefer_not_to_say", label: "Prefer not to say" },
+];
+
+const AGE_PREFERENCE_OPTIONS = [
+  { value: "18_24", label: "18-24" },
+  { value: "25_29", label: "25-29" },
+  { value: "30_34", label: "30-34" },
+  { value: "35_39", label: "35-39" },
+  { value: "40_49", label: "40-49" },
+  { value: "50_plus", label: "50+" },
+];
+
 // "My Profile" - a read-only view of everything collected during
 // onboarding, plus the photo upload feature.
 export default function Profile() {
@@ -189,6 +212,10 @@ export default function Profile() {
   const [genderIdentityVisible, setGenderIdentityVisible] = useState(false);
   const [genderIdentityMatching, setGenderIdentityMatching] = useState(true);
   const [minglePreference, setMinglePreference] = useState<string[]>(["everyone"]);
+  const [ageRange, setAgeRange] = useState("");
+  const [ageRangeVisible, setAgeRangeVisible] = useState(false);
+  const [ageRangeMatching, setAgeRangeMatching] = useState(true);
+  const [agePreference, setAgePreference] = useState<string[]>(["everyone"]);
   const [savingAboutYou, setSavingAboutYou] = useState(false);
   const [aboutYouError, setAboutYouError] = useState("");
 
@@ -285,6 +312,11 @@ export default function Profile() {
           setGenderIdentityVisible(data.gender_identity_visible_on_profile || false);
           if (data.mingle_preference && data.mingle_preference.length > 0) {
             setMinglePreference(data.mingle_preference);
+          }
+          setAgeRange(data.age_range || "");
+          setAgeRangeVisible(data.age_range_visible_on_profile || false);
+          if (data.age_preference && data.age_preference.length > 0) {
+            setAgePreference(data.age_preference);
           }
         }
       })
@@ -466,6 +498,18 @@ export default function Profile() {
     setMinglePreference(["everyone"]);
   }
 
+  function toggleAgePreference(value: string) {
+    setAgePreference((prev) => {
+      if (prev.includes(value)) return prev.filter((v) => v !== value);
+      const withoutEveryone = prev.filter((v) => v !== "everyone");
+      return [...withoutEveryone, value];
+    });
+  }
+
+  function selectAnyAge() {
+    setAgePreference(["everyone"]);
+  }
+
   async function saveAboutYou() {
     setSavingAboutYou(true);
     setAboutYouError("");
@@ -488,6 +532,10 @@ export default function Profile() {
           gender_identity_visible_on_profile: genderIdentityVisible,
           gender_identity_usable_for_matching: genderIdentityMatching,
           mingle_preference: minglePreference,
+          age_range: ageRange || undefined,
+          age_range_visible_on_profile: ageRangeVisible,
+          age_range_usable_for_matching: ageRangeMatching,
+          age_preference: agePreference,
         }),
       });
       if (res.ok) {
@@ -660,6 +708,21 @@ export default function Profile() {
                     ? "Everyone"
                     : minglePreference.map((v) => MINGLE_OPTIONS.find((o) => o.value === v)?.label).join(", ")}
                 </p>
+                {ageRange && (
+                  <p className="profile-item">
+                    <span className="profile-item-label">Age range:</span>{" "}
+                    {AGE_RANGES.find((a) => a.value === ageRange)?.label}
+                    <PrivacyTag visible={ageRangeVisible} />
+                  </p>
+                )}
+                <p className="profile-item">
+                  <span className="profile-item-label">Age preference:</span>{" "}
+                  {agePreference.includes("everyone")
+                    ? "Any age"
+                    : agePreference
+                        .map((v) => AGE_PREFERENCE_OPTIONS.find((o) => o.value === v)?.label)
+                        .join(", ")}
+                </p>
               </>
             ) : (
               <>
@@ -715,6 +778,51 @@ export default function Profile() {
                       type="button"
                       className={minglePreference.includes(o.value) ? "chip chip-liked" : "chip"}
                       onClick={() => toggleMingleOption(o.value)}
+                    >
+                      {o.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="field" style={{ marginTop: "1.5rem" }}>
+                  <label className="field-label">Age range</label>
+                  <select
+                    className="field-input"
+                    value={ageRange}
+                    onChange={(e) => setAgeRange(e.target.value)}
+                  >
+                    {AGE_RANGES.map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <PrivacyToggles
+                  visibleOnProfile={ageRangeVisible}
+                  usableForMatching={ageRangeMatching}
+                  onChangeVisible={setAgeRangeVisible}
+                  onChangeMatching={setAgeRangeMatching}
+                />
+
+                <p className="section-hint" style={{ marginTop: "1.5rem" }}>
+                  Who's the right age range to find compatible people in? Choose as many as you'd
+                  like — this is also never shown to anyone.
+                </p>
+                <div className="chip-grid">
+                  <button
+                    type="button"
+                    className={agePreference.includes("everyone") ? "chip chip-liked" : "chip"}
+                    onClick={selectAnyAge}
+                  >
+                    Any age
+                  </button>
+                  {AGE_PREFERENCE_OPTIONS.map((o) => (
+                    <button
+                      key={o.value}
+                      type="button"
+                      className={agePreference.includes(o.value) ? "chip chip-liked" : "chip"}
+                      onClick={() => toggleAgePreference(o.value)}
                     >
                       {o.label}
                     </button>
