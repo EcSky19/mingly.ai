@@ -488,6 +488,40 @@ export default function OnboardingStyles() {
         padding-bottom: 0;
       }
 
+      .radius-slider {
+        width: 100%;
+        -webkit-appearance: none;
+        appearance: none;
+        height: 4px;
+        border-radius: 2px;
+        background: rgba(185, 175, 209, 0.25);
+        outline: none;
+        margin: 0.5rem 0 1rem 0;
+      }
+      .radius-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #e8a548;
+        cursor: pointer;
+        border: 2px solid #1b1730;
+      }
+      .radius-slider::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #e8a548;
+        cursor: pointer;
+        border: 2px solid #1b1730;
+      }
+      .radius-slider::-moz-range-track {
+        height: 4px;
+        border-radius: 2px;
+        background: rgba(185, 175, 209, 0.25);
+      }
+
       @media (max-width: 420px) {
         .headline {
           font-size: 1.15rem;
