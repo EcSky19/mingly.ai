@@ -85,6 +85,7 @@ type LocationEntry = {
   cityLon?: number;
   label: string;
   isPrimary: boolean;
+  travelRadiusMiles: number;
 };
 
 const emptyLocationEntry = (isPrimary: boolean): LocationEntry => ({
@@ -92,6 +93,7 @@ const emptyLocationEntry = (isPrimary: boolean): LocationEntry => ({
   city: "",
   label: "",
   isPrimary,
+  travelRadiusMiles: 10,
 });
 
 type PetEntry = {
@@ -274,6 +276,7 @@ export default function Onboarding() {
             longitude?: number;
             label?: string;
             is_primary: boolean;
+            travel_radius_miles?: number;
           }[]
         ) => {
           if (rows.length === 0) return;
@@ -286,6 +289,7 @@ export default function Onboarding() {
               cityLon: r.longitude,
               label: r.label || "",
               isPrimary: r.is_primary,
+              travelRadiusMiles: r.travel_radius_miles ?? 10,
             }))
           );
         }
@@ -466,6 +470,7 @@ export default function Onboarding() {
             longitude: entry.cityLon,
             label: entry.label || undefined,
             is_primary: entry.isPrimary,
+            travel_radius_miles: entry.travelRadiusMiles,
           }),
         });
       } catch {
@@ -849,6 +854,23 @@ export default function Onboarding() {
                     placeholder="e.g. Home, or Work travel"
                     value={entry.label}
                     onChange={(e) => updateLocation(entry.id, { label: e.target.value })}
+                  />
+                </div>
+                <div className="field">
+                  <label className="field-label">
+                    How far would you travel to meet an activity partner? {entry.travelRadiusMiles} mile
+                    {entry.travelRadiusMiles === 1 ? "" : "s"}
+                  </label>
+                  <input
+                    type="range"
+                    min={1}
+                    max={25}
+                    step={1}
+                    value={entry.travelRadiusMiles}
+                    onChange={(e) =>
+                      updateLocation(entry.id, { travelRadiusMiles: Number(e.target.value) })
+                    }
+                    className="radius-slider"
                   />
                 </div>
                 {locations.length > 1 && !entry.isPrimary && (
