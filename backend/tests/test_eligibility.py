@@ -253,3 +253,53 @@ def test_candidates_endpoint_full_pipeline():
     ids = [row["id"] for row in response.json()]
     assert b_id in ids
     assert c_id not in ids
+
+
+def test_candidate_lookup_is_not_n_plus_one():
+    """Proves the query count stays flat regardless of candidate count -
+    not just an assumption. Counts real executed SQL statements via
+    SQLAlchemy's event system with 2 candidates vs 8 candidates; if the
+    old per-candidate query pattern were still there, the query count
+    would scale with the candidate count. With the batch-fetch fix, it
+    shouldn't."""
+    from sqlalchemy import event
+
+    def _make_scenario(db, n_candidates):
+        a = _make_user(db)
+        _make_location(db, a.id, *NYC)
+        for _ in range(n_candidates):
+            b = _make_user(db)
+            _make_location(db, b.id, *NYC_NEARBY)
+        return a.id
+
+    def _count_queries(user_id):
+        count = 0
+
+        def _on_execute(*args, **kwargs):
+            nonlocal count
+            count += 1
+
+        db = SessionLocal()
+        event.listen(db.bind, "before_cursor_execute", _on_execute)
+        try:
+            get_eligible_candidates(db, user_id)
+        finally:
+            event.remove(db.bind, "before_cursor_execute", _on_execute)
+            db.close()
+        return count
+
+    db1 = SessionLocal()
+    small_user_id = _make_scenario(db1, 2)
+    db1.close()
+    small_count = _count_queries(small_user_id)
+
+    db2 = SessionLocal()
+    large_user_id = _make_scenario(db2, 8)
+    db2.close()
+    large_count = _count_queries(large_user_id)
+
+    assert small_count == large_count, (
+        f"Query count should be flat regardless of candidate count "
+        f"(2 candidates: {small_count} queries, 8 candidates: {large_count} queries) - "
+        f"if this fails, the N+1 pattern has regressed."
+    )
