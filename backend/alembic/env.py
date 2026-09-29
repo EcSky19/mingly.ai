@@ -16,6 +16,7 @@ from app.models import user_language  # noqa: F401
 from app.models import user_social_profile  # noqa: F401
 from app.models import user_pet  # noqa: F401
 from app.models import user_photo  # noqa: F401
+from app.models import user_interaction  # noqa: F401
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
