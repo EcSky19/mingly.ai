@@ -1,6 +1,8 @@
 """
-Auth endpoints: LinkedIn login, callback, logout, current-session check.
+Auth endpoints: LinkedIn login, callback, logout, current-session check, account deletion.
 """
+import shutil
+
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
@@ -10,6 +12,7 @@ from app.db.session import get_db
 from app.models.user import User
 from app.services import linkedin_auth
 from app.services.session_auth import get_current_user
+from app.services.photo_storage import UPLOADS_DIR
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -61,6 +64,35 @@ async def linkedin_callback(request: Request, code: str, state: str, db: Session
 
 @router.post("/logout")
 async def logout(request: Request):
+    request.session.clear()
+    return {"ok": True}
+
+
+@router.delete("/account")
+async def delete_account(request: Request, db: Session = Depends(get_db)):
+    """A genuine hard delete, not a soft deactivation - AccountStatus.deleted
+    exists as an enum value but isn't used here. Deleting the User row
+    cascades everything else at the DB level (verified directly against
+    the live schema: every users.id foreign key has ON DELETE CASCADE).
+    Uploaded photo files aren't covered by that cascade since they live
+    on disk, not in a table, so they're cleaned up explicitly first."""
+    user = get_current_user(request, db)
+
+    user_photo_dir = UPLOADS_DIR / str(user.id)
+    if user_photo_dir.exists():
+        shutil.rmtree(user_photo_dir, ignore_errors=True)
+
+    # A bulk delete (raw SQL), not db.delete(user) - the ORM-level
+    # delete tries to manage relationships itself by default, attempting
+    # to SET NULL on every child row's foreign key before deleting,
+    # which fails against columns that are NOT NULL (confirmed this
+    # breaks against real Postgres). A bulk delete issues a plain
+    # DELETE FROM users WHERE id = ... and lets the database's own
+    # ON DELETE CASCADE - already verified directly against the live
+    # schema - do the actual cascading work.
+    db.query(User).filter(User.id == user.id).delete()
+    db.commit()
+
     request.session.clear()
     return {"ok": True}
 
