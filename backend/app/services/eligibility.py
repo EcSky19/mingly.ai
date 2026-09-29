@@ -144,14 +144,28 @@ def get_eligible_candidates(db: Session, user_id: UUID) -> list[User]:
         .all()
     )
 
+    # Batch-fetch social profiles and locations for every candidate in 2
+    # queries total, not 2 per candidate. The original version queried
+    # each candidate's social profile and locations individually inside
+    # the loop below - fine at tiny scale, but genuinely O(N) round
+    # trips that would matter once the candidate pool is real-sized.
+    candidate_ids = [c.id for c in candidates]
+    social_by_user = {
+        sp.user_id: sp
+        for sp in db.query(UserSocialProfile).filter(UserSocialProfile.user_id.in_(candidate_ids)).all()
+    }
+    locations_by_user: dict = {}
+    for loc in db.query(UserLocation).filter(UserLocation.user_id.in_(candidate_ids)).all():
+        locations_by_user.setdefault(loc.user_id, []).append(loc)
+
     eligible = []
     for candidate in candidates:
-        candidate_social = db.query(UserSocialProfile).filter(UserSocialProfile.user_id == candidate.id).first()
+        candidate_social = social_by_user.get(candidate.id)
         if not _genders_compatible(requester_social, candidate_social):
             continue
         if not _ages_compatible(requester_social, candidate_social):
             continue
-        candidate_locations = db.query(UserLocation).filter(UserLocation.user_id == candidate.id).all()
+        candidate_locations = locations_by_user.get(candidate.id, [])
         if not _within_travel_radius(requester_locations, candidate_locations):
             continue
         eligible.append(candidate)
