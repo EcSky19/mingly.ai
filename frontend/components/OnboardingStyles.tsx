@@ -350,6 +350,7 @@ export default function OnboardingStyles() {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
         gap: 1rem;
+        align-items: start;
       }
       .photo-slot {
         position: relative;
@@ -359,9 +360,8 @@ export default function OnboardingStyles() {
       }
       .photo-thumb {
         width: 100%;
-        aspect-ratio: 1;
-        object-fit: contain;
-        background: #2c2650;
+        height: auto;
+        display: block;
         border-radius: 8px;
         border: 1px solid rgba(185, 175, 209, 0.25);
       }
