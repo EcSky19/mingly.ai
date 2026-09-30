@@ -439,7 +439,7 @@ export default function Profile() {
         />
       </Head>
       <main className="page">
-        <div className="wrap">
+        <div className="profile-wrap">
           <span className="wordmark">
             <img src="/mingly-mark.png" alt="" className="mark" />
             <span>Mingly.ai</span>
@@ -447,6 +447,9 @@ export default function Profile() {
 
           <h1 className="headline">{firstName ? `${firstName}'s` : "My"} Profile</h1>
           <p className="subhead">Everything you've shared, in one place.</p>
+
+          <div className="profile-columns">
+          <div className="profile-col-left">
 
           <CollapsibleSection title="Photos" defaultOpen summary={`${photos.length} of ${MAX_PHOTOS} added`}>
             {linkedinPhotoUrl && (
@@ -717,6 +720,9 @@ export default function Profile() {
               </>
             )}
           </CollapsibleSection>
+
+          </div>
+          <div className="profile-col-right">
 
           <CollapsibleSection
             title="Professional"
@@ -1022,6 +1028,8 @@ export default function Profile() {
             )}
           </CollapsibleSection>
 
+          </div>
+          </div>
         </div>
       </main>
       <OnboardingStyles />
