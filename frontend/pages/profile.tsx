@@ -535,7 +535,7 @@ export default function Profile() {
                     className="add-entry"
                     onClick={() => fileInputRef.current?.click()}
                   >
-                    + Choose a photo
+                    Upload Photo
                   </button>
                 )}
 
