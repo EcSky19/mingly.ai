@@ -156,6 +156,7 @@ export default function Profile() {
   const [linkedinPhotoUrl, setLinkedinPhotoUrl] = useState("");
 
   const [photos, setPhotos] = useState<Photo[]>([]);
+  const [viewingPhotoIndex, setViewingPhotoIndex] = useState<number | null>(null);
   const [lovedOptions, setLovedOptions] = useState<LovedOption[]>([]);
   const [selectedTag, setSelectedTag] = useState(""); // "" = prefer not to tag, else "activity:<id>" or "interest:<id>"
   const [uploading, setUploading] = useState(false);
@@ -277,6 +278,33 @@ export default function Profile() {
       })
       .catch(() => {});
   }, [checkingAuth]);
+
+  function openLightbox(index: number) {
+    setViewingPhotoIndex(index);
+  }
+
+  function closeLightbox() {
+    setViewingPhotoIndex(null);
+  }
+
+  function showNextPhoto() {
+    setViewingPhotoIndex((prev) => (prev === null ? null : (prev + 1) % photos.length));
+  }
+
+  function showPrevPhoto() {
+    setViewingPhotoIndex((prev) => (prev === null ? null : (prev - 1 + photos.length) % photos.length));
+  }
+
+  useEffect(() => {
+    if (viewingPhotoIndex === null) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") closeLightbox();
+      if (e.key === "ArrowRight") showNextPhoto();
+      if (e.key === "ArrowLeft") showPrevPhoto();
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [viewingPhotoIndex, photos.length]);
 
   function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -465,9 +493,15 @@ export default function Profile() {
             </p>
 
             <div className="photo-grid">
-              {photos.map((photo) => (
+              {photos.map((photo, index) => (
                 <div className="photo-slot" key={photo.id}>
-                  <img src={`${API_URL}${photo.url}`} alt="" className="photo-thumb" />
+                  <img
+                    src={`${API_URL}${photo.url}`}
+                    alt=""
+                    className="photo-thumb"
+                    onClick={() => openLightbox(index)}
+                    style={{ cursor: "pointer" }}
+                  />
                   {(photo.tagged_activity_name || photo.tagged_interest_name) && (
                     <span className="photo-tag-label">
                       {photo.tagged_activity_name || photo.tagged_interest_name}
@@ -1032,6 +1066,40 @@ export default function Profile() {
           </div>
         </div>
       </main>
+
+      {viewingPhotoIndex !== null && photos[viewingPhotoIndex] && (
+        <div className="lightbox-overlay">
+          <button type="button" className="lightbox-close" onClick={closeLightbox} aria-label="Close">
+            ✕
+          </button>
+          {photos.length > 1 && (
+            <button
+              type="button"
+              className="lightbox-arrow lightbox-arrow-left"
+              onClick={showPrevPhoto}
+              aria-label="Previous photo"
+            >
+              ‹
+            </button>
+          )}
+          <img
+            src={`${API_URL}${photos[viewingPhotoIndex].url}`}
+            alt=""
+            className="lightbox-image"
+          />
+          {photos.length > 1 && (
+            <button
+              type="button"
+              className="lightbox-arrow lightbox-arrow-right"
+              onClick={showNextPhoto}
+              aria-label="Next photo"
+            >
+              ›
+            </button>
+          )}
+        </div>
+      )}
+
       <OnboardingStyles />
     </>
   );
