@@ -522,6 +522,21 @@ export default function OnboardingStyles() {
         background: rgba(185, 175, 209, 0.25);
       }
 
+      /* Profile page 2-column layout only - .wrap stays untouched since
+         it's shared with the single-column onboarding forms. */
+      .profile-wrap { max-width: 960px; margin: 0 auto; }
+      .profile-columns {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0 3rem;
+        align-items: start;
+      }
+      @media (max-width: 860px) {
+        .profile-columns {
+          grid-template-columns: 1fr;
+        }
+      }
+
       @media (max-width: 420px) {
         .headline {
           font-size: 1.15rem;
