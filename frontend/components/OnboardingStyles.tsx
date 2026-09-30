@@ -537,6 +537,65 @@ export default function OnboardingStyles() {
         }
       }
 
+      .lightbox-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(10, 8, 20, 0.92);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+      }
+      .lightbox-image {
+        max-width: 90vw;
+        max-height: 90vh;
+        object-fit: contain;
+        border-radius: 4px;
+      }
+      .lightbox-close {
+        position: fixed;
+        top: 1.25rem;
+        left: 1.25rem;
+        background: rgba(246, 241, 231, 0.12);
+        border: none;
+        color: #f6f1e7;
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 50%;
+        font-size: 1.1rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 150ms ease;
+      }
+      .lightbox-close:hover {
+        background: rgba(246, 241, 231, 0.22);
+      }
+      .lightbox-arrow {
+        position: fixed;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(246, 241, 231, 0.12);
+        border: none;
+        color: #f6f1e7;
+        width: 3rem;
+        height: 3rem;
+        border-radius: 50%;
+        font-size: 1.75rem;
+        line-height: 1;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 150ms ease;
+      }
+      .lightbox-arrow:hover {
+        background: rgba(246, 241, 231, 0.22);
+      }
+      .lightbox-arrow-left { left: 1.25rem; }
+      .lightbox-arrow-right { right: 1.25rem; }
+
       @media (max-width: 420px) {
         .headline {
           font-size: 1.15rem;
