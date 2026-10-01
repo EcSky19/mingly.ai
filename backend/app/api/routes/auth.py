@@ -12,7 +12,7 @@ from app.db.session import get_db
 from app.models.user import User
 from app.services import linkedin_auth
 from app.services.session_auth import get_current_user
-from app.services.photo_storage import UPLOADS_DIR
+from app.services.photo_storage import UPLOADS_DIR, LINKEDIN_PHOTOS_DIR, save_linkedin_photo
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -50,11 +50,25 @@ async def linkedin_callback(request: Request, code: str, state: str, db: Session
             email=email,
             first_name=userinfo.get("given_name", ""),
             last_name=userinfo.get("family_name", ""),
-            profile_photo_url=userinfo.get("picture"),
         )
         db.add(user)
         db.commit()
         db.refresh(user)
+
+    # Re-downloaded on every login, not just at account creation: LinkedIn's
+    # picture claim is a signed URL that expires after about a week
+    # (confirmed against real stored URLs), so storing it directly means
+    # every user's photo silently breaks around a week after signup. We
+    # keep our own permanent copy instead - see save_linkedin_photo's
+    # docstring. Doing this on every login (not just once) also means a
+    # profile picture change on LinkedIn is picked up here next time they
+    # sign back in, rather than freezing at whatever it was at signup.
+    linkedin_picture_url = userinfo.get("picture")
+    if linkedin_picture_url:
+        saved_path = await save_linkedin_photo(str(user.id), linkedin_picture_url)
+        if saved_path:
+            user.profile_photo_url = saved_path
+            db.commit()
 
     request.session["user_id"] = str(user.id)
 
@@ -82,6 +96,9 @@ async def delete_account(request: Request, db: Session = Depends(get_db)):
     if user_photo_dir.exists():
         shutil.rmtree(user_photo_dir, ignore_errors=True)
 
+    linkedin_photo_file = LINKEDIN_PHOTOS_DIR / f"{user.id}.jpg"
+    linkedin_photo_file.unlink(missing_ok=True)
+
     # A bulk delete (raw SQL), not db.delete(user) - the ORM-level
     # delete tries to manage relationships itself by default, attempting
     # to SET NULL on every child row's foreign key before deleting,
@@ -107,5 +124,10 @@ async def me(request: Request, db: Session = Depends(get_db)):
         "email": user.email,
         "onboarding_completed": user.onboarding_completed,
         "account_status": user.account_status,
-        "profile_photo_url": user.profile_photo_url,
+        # profile_photo_url is stored as a relative path to OUR OWN saved
+        # copy (see save_linkedin_photo), not a full URL - same pattern
+        # as photos.py's _to_out, prefixed here so the frontend can use
+        # it directly as an <img src> the same way it already does for
+        # the other photos.
+        "profile_photo_url": f"/api/uploads/{user.profile_photo_url}" if user.profile_photo_url else None,
     }
