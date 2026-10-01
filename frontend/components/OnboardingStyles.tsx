@@ -596,6 +596,22 @@ export default function OnboardingStyles() {
       .lightbox-arrow-left { left: 1.25rem; }
       .lightbox-arrow-right { right: 1.25rem; }
 
+      .activity-details-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem;
+      }
+      @media (max-width: 860px) {
+        .activity-details-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .activity-detail-card {
+        padding: 1.25rem;
+        border: 1px dashed rgba(185, 175, 209, 0.3);
+        border-radius: 8px;
+      }
+
       @media (max-width: 420px) {
         .headline {
           font-size: 1.15rem;
