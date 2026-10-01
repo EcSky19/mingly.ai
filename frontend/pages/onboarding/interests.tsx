@@ -20,9 +20,6 @@ const emptyActivityContext = (): ActivityContext => ({
 });
 
 
-const MAX_TOP_INTERESTS = 5;
-const MAX_TOP_ACTIVITIES = 10;
-
 // Split out from the main onboarding page: personal/professional info
 // (role, education, location) rarely changes once filled in, but
 // interests and activities are things people revisit more often - so
@@ -120,8 +117,7 @@ export default function OnboardingInterests() {
       setTopInterestIds((prev) => prev.filter((x) => x !== id));
       setSelectedInterestIds((prev) => prev.filter((x) => x !== id));
     } else if (isLiked) {
-      // liked -> loved, unless loved is already at capacity (stays liked)
-      if (topInterestIds.length >= MAX_TOP_INTERESTS) return;
+      // liked -> loved
       setTopInterestIds((prev) => [...prev, id]);
     } else {
       // unselected -> liked
@@ -181,7 +177,6 @@ export default function OnboardingInterests() {
       setTopActivityIds((prev) => prev.filter((x) => x !== id));
       setSelectedActivityIds((prev) => prev.filter((x) => x !== id));
     } else if (isLiked) {
-      if (topActivityIds.length >= MAX_TOP_ACTIVITIES) return;
       setTopActivityIds((prev) => [...prev, id]);
     } else {
       setSelectedActivityIds((prev) => [...prev, id]);
@@ -318,14 +313,12 @@ export default function OnboardingInterests() {
             summary={selectedInterestIds.length > 0 ? `${selectedInterestIds.length} selected` : undefined}
           >
             <p className="section-hint">
-              Click once to like something, again to love it (up to {MAX_TOP_INTERESTS}), a third
-              time to clear it.
+              Click once to like something, again to love it, a third time to clear it.
             </p>
             <ChipSelect
               items={interestCatalog.map((i) => ({ id: i.id, label: i.name }))}
               selectedIds={selectedInterestIds}
               lovedIds={topInterestIds}
-              maxLoved={MAX_TOP_INTERESTS}
               onCycle={cycleInterest}
             />
             <div className="other-entry-row">
@@ -363,14 +356,12 @@ export default function OnboardingInterests() {
           >
             <p className="section-hint">
               Things you'd actually do with someone — not just enjoy in theory. Click once to
-              like, again to love (up to {MAX_TOP_ACTIVITIES}) — loved activities get the most
-              weight in your recommendations.
+              like, again to love — loved activities get the most weight in your recommendations.
             </p>
             <ChipSelect
               items={activityCatalog.map((a) => ({ id: a.id, label: a.name }))}
               selectedIds={selectedActivityIds}
               lovedIds={topActivityIds}
-              maxLoved={MAX_TOP_ACTIVITIES}
               onCycle={cycleActivity}
             />
             <div className="other-entry-row">
