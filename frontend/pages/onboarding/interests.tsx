@@ -290,7 +290,7 @@ export default function OnboardingInterests() {
         />
       </Head>
       <main className="page">
-        <div className="wrap">
+        <div className="profile-wrap">
           <span className="wordmark">
             <img src="/mingly-mark.png" alt="" className="mark" />
             <span>Mingly.ai</span>
@@ -308,6 +308,9 @@ export default function OnboardingInterests() {
             love to do with someone — it's how we connect you with people who get it, not just
             people who exist nearby.
           </p>
+
+          <div className="profile-columns">
+          <div className="profile-col-left">
 
           <CollapsibleSection
             title="Interests"
@@ -350,6 +353,9 @@ export default function OnboardingInterests() {
             </div>
           </CollapsibleSection>
 
+          </div>
+          <div className="profile-col-right">
+
           <CollapsibleSection
             title="Activities"
             defaultOpen
@@ -391,6 +397,9 @@ export default function OnboardingInterests() {
               </button>
             </div>
           </CollapsibleSection>
+
+          </div>
+          </div>
 
           <div className="actions">
             <button type="button" className="cta" disabled={saving} onClick={handleSave}>
