@@ -175,17 +175,22 @@ def test_top_picks_must_be_subset_of_selected(test_user):
     assert response.status_code == 400
 
 
-def test_too_many_top_picks_rejected(test_user):
+def test_no_limit_on_top_picks(test_user):
+    """Loves (top picks) used to be capped at 5 for interests - removed
+    per product decision. Selecting ALL available interests as loved
+    should succeed with no rejection."""
     cookies = _cookie_for(str(test_user.id))
     catalog = client.get("/api/catalog/interests").json()
-    ids = [c["id"] for c in catalog]  # all 6
+    ids = [c["id"] for c in catalog]
 
     response = client.put(
         "/api/profile/interests",
-        json={"interest_ids": ids, "top_pick_ids": ids},  # 6 top picks, max is 5
+        json={"interest_ids": ids, "top_pick_ids": ids},
         cookies=cookies,
     )
-    assert response.status_code == 400
+    assert response.status_code == 200
+    fetched = client.get("/api/profile/interests", cookies=cookies).json()
+    assert sum(1 for i in fetched if i["is_top_pick"]) == len(ids)
 
 
 def test_invalid_interest_id_rejected(test_user):
@@ -273,14 +278,16 @@ def test_set_and_get_activities_with_context(test_user):
     assert fetched[0]["is_top_pick"] is True
 
 
-def test_activities_too_many_top_picks_rejected(test_user):
+def test_no_limit_on_activity_top_picks(test_user):
+    """Loves (top picks) used to be capped at 10 for activities -
+    removed per product decision. Selecting well beyond the old cap as
+    loved should succeed with no rejection."""
     cookies = _cookie_for(str(test_user.id))
     catalog = client.get("/api/catalog/activities").json()
-    # Not hardcoding an exact catalog count here - other tests in this
-    # module (submit_activity tests) genuinely add catalog rows via a
-    # shared module-scoped fixture, so the total count can legitimately
-    # grow. Just need enough to exceed MAX_TOP_PICKS (10).
-    assert len(catalog) >= 11, "need at least 11 seeded activities to test exceeding the max of 10"
+    # Not hardcoding an exact catalog count - other tests in this module
+    # (submit_activity tests) genuinely add catalog rows via a shared
+    # module-scoped fixture, so the total count can legitimately grow.
+    assert len(catalog) >= 11, "need at least 11 seeded activities to test exceeding the old max of 10"
     eleven = catalog[:11]
 
     response = client.put(
@@ -288,24 +295,9 @@ def test_activities_too_many_top_picks_rejected(test_user):
         json={"activities": [{"activity_id": a["id"], "is_top_pick": True} for a in eleven]},
         cookies=cookies,
     )
-    assert response.status_code == 400
-
-
-def test_activities_exactly_ten_top_picks_allowed(test_user):
-    """Boundary check: exactly 10 (the new max, raised from 3) should
-    succeed, only 11+ should be rejected."""
-    cookies = _cookie_for(str(test_user.id))
-    catalog = client.get("/api/catalog/activities").json()
-    ten = catalog[:10]
-
-    response = client.put(
-        "/api/profile/activities",
-        json={"activities": [{"activity_id": a["id"], "is_top_pick": True} for a in ten]},
-        cookies=cookies,
-    )
     assert response.status_code == 200
     fetched = client.get("/api/profile/activities", cookies=cookies).json()
-    assert sum(1 for a in fetched if a["is_top_pick"]) == 10
+    assert sum(1 for a in fetched if a["is_top_pick"]) == 11
 
 
 # --- Locations ---
