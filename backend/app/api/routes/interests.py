@@ -19,8 +19,6 @@ from app.services.session_auth import get_current_user
 router = APIRouter(prefix="/api/profile/interests", tags=["interests"])
 catalog_router = APIRouter(prefix="/api/catalog/interests", tags=["catalog"])
 
-MAX_TOP_PICKS = 5
-
 
 @catalog_router.get("", response_model=list[InterestCatalogOut])
 def list_interest_catalog(db: Session = Depends(get_db)):
@@ -77,8 +75,6 @@ def set_user_interests(body: UserInterestSet, request: Request, db: Session = De
     add/remove calls per checkbox toggle."""
     user = get_current_user(request, db)
 
-    if len(body.top_pick_ids) > MAX_TOP_PICKS:
-        raise HTTPException(status_code=400, detail=f"At most {MAX_TOP_PICKS} top picks allowed")
     if not set(body.top_pick_ids).issubset(set(body.interest_ids)):
         raise HTTPException(status_code=400, detail="Top picks must be a subset of selected interests")
 

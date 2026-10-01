@@ -19,8 +19,6 @@ from app.services.session_auth import get_current_user
 router = APIRouter(prefix="/api/profile/activities", tags=["activities"])
 catalog_router = APIRouter(prefix="/api/catalog/activities", tags=["catalog"])
 
-MAX_TOP_PICKS = 10  # raised from 3 after product feedback - "loved" activities via the click-cycle UI, not just "top 3 this month"
-
 
 def _to_out(row: UserActivity) -> UserActivityOut:
     return UserActivityOut(
@@ -79,10 +77,6 @@ def get_user_activities(request: Request, db: Session = Depends(get_db)):
 @router.put("", response_model=list[UserActivityOut])
 def set_user_activities(body: UserActivitySet, request: Request, db: Session = Depends(get_db)):
     user = get_current_user(request, db)
-
-    top_pick_count = sum(1 for a in body.activities if a.is_top_pick)
-    if top_pick_count > MAX_TOP_PICKS:
-        raise HTTPException(status_code=400, detail=f"At most {MAX_TOP_PICKS} top picks allowed")
 
     activity_ids = [a.activity_id for a in body.activities]
     valid_ids = {
