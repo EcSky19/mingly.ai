@@ -430,16 +430,27 @@ export default function OnboardingStyles() {
         margin-top: 0.5rem;
       }
       .profile-chip {
-        background: #2c2650;
-        border: 1px solid rgba(185, 175, 209, 0.25);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: rgba(74, 222, 128, 0.15);
+        border: 1px solid #4ade80;
         color: #f6f1e7;
         font-size: 0.85rem;
         padding: 0.35rem 0.75rem;
         border-radius: 999px;
       }
       .profile-chip-loved {
+        background: rgba(244, 114, 182, 0.15);
         border-color: #f472b6;
+      }
+      .profile-chip-icon-check {
+        color: #4ade80;
+        font-size: 0.8rem;
+      }
+      .profile-chip-icon-heart {
         color: #f472b6;
+        font-size: 0.8rem;
       }
 
       .collapsible-section {
