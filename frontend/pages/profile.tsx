@@ -279,6 +279,17 @@ export default function Profile() {
       .catch(() => {});
   }, [checkingAuth]);
 
+  async function handleLogout() {
+    try {
+      await fetch(`${API_URL}/api/auth/logout`, { method: "POST", credentials: "include" });
+    } catch {
+      // Fails open - clear the session cookie server-side attempt was
+      // made; worst case the person just sees the login page again on
+      // their next visit even if this particular request dropped.
+    }
+    router.push("/");
+  }
+
   function openLightbox(index: number) {
     setViewingPhotoIndex(index);
   }
@@ -472,6 +483,10 @@ export default function Profile() {
             <img src="/mingly-mark.png" alt="" className="mark" />
             <span>Mingly.ai</span>
           </span>
+
+          <button type="button" className="skip" onClick={handleLogout} style={{ float: "right" }}>
+            Log out
+          </button>
 
           <h1 className="headline">{firstName ? `${firstName}'s` : "My"} Profile</h1>
           <p className="subhead">Everything you've shared, in one place.</p>
