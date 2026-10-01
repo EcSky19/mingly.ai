@@ -912,6 +912,13 @@ export default function Profile() {
                     className={entry.is_top_pick ? "profile-chip profile-chip-loved" : "profile-chip"}
                   >
                     {entry.name}
+                    <span
+                      className={
+                        entry.is_top_pick ? "profile-chip-icon-heart" : "profile-chip-icon-check"
+                      }
+                    >
+                      {entry.is_top_pick ? "♥" : "✓"}
+                    </span>
                   </span>
                 ))}
               </div>
@@ -942,6 +949,13 @@ export default function Profile() {
                     {entry.is_top_pick && entry.desired_frequency && (
                       <> · {humanize(entry.desired_frequency)}</>
                     )}
+                    <span
+                      className={
+                        entry.is_top_pick ? "profile-chip-icon-heart" : "profile-chip-icon-check"
+                      }
+                    >
+                      {entry.is_top_pick ? "♥" : "✓"}
+                    </span>
                   </span>
                 ))}
               </div>
