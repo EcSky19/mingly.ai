@@ -577,7 +577,7 @@ export default function Onboarding() {
         />
       </Head>
       <main className="page">
-        <div className="wrap">
+        <div className="profile-wrap">
           <span className="wordmark">
             <img src="/mingly-mark.png" alt="" className="mark" />
             <span>Mingly.ai</span>
@@ -591,6 +591,9 @@ export default function Onboarding() {
             information you shared is only used to help you find meaningful
             connections.
           </p>
+
+          <div className="profile-columns">
+          <div className="profile-col-left">
 
           <CollapsibleSection title="Role" defaultOpen summary={currentRole.value || undefined}>
             <AutocompleteField
@@ -810,6 +813,9 @@ export default function Onboarding() {
             </button>
           </CollapsibleSection>
 
+          </div>
+          <div className="profile-col-right">
+
           <CollapsibleSection
             title="Location"
             defaultOpen
@@ -993,6 +999,9 @@ export default function Onboarding() {
               + Add a pet
             </button>
           </CollapsibleSection>
+
+          </div>
+          </div>
 
           <div className="actions">
             <button
