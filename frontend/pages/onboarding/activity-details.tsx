@@ -136,7 +136,7 @@ export default function ActivityDetails() {
         />
       </Head>
       <main className="page">
-        <div className="wrap">
+        <div className="profile-wrap">
           <span className="wordmark">
             <img src="/mingly-mark.png" alt="" className="mark" />
             <span>Mingly.ai</span>
@@ -158,9 +158,9 @@ export default function ActivityDetails() {
             right time.
           </p>
 
-          <section className="section">
+          <div className="activity-details-grid">
             {loved.map((activity) => (
-              <div className="education-entry" key={activity.activityId}>
+              <div className="activity-detail-card" key={activity.activityId}>
                 <div className="education-entry-header">
                   <span className="education-entry-label">{activity.name}</span>
                 </div>
@@ -182,7 +182,7 @@ export default function ActivityDetails() {
                 </div>
               </div>
             ))}
-          </section>
+          </div>
 
           <div className="actions">
             <button type="button" className="cta" disabled={saving} onClick={handleFinish}>
