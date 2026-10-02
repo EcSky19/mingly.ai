@@ -6,3 +6,5 @@ from pydantic import BaseModel
 class CandidateOut(BaseModel):
     id: UUID
     first_name: str
+    score: float
+    reasons: list[str]
