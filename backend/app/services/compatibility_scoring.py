@@ -69,6 +69,22 @@ def _interest_sets(rows: list[UserInterest]) -> tuple[set, set]:
     return loved, liked
 
 
+def _describe_shared(label: str, shared_ids: set, names: dict, visible_ids: set) -> str:
+    """Human-readable description of a shared-items overlap. Every
+    shared item counts toward the score and the stated count (hiding
+    something controls public DISPLAY, not matching), but only items
+    the CANDIDATE left visible on their profile are named - naming a
+    hidden one would reveal a selection they chose not to show anyone."""
+    named = sorted(names.get(i, "?") for i in shared_ids if i in visible_ids)
+    hidden_count = len(shared_ids) - len(named)
+    text = f"{len(shared_ids)} shared {label}"
+    if named:
+        text += ": " + ", ".join(named)
+        if hidden_count:
+            text += f" (+{hidden_count} more)"
+    return text
+
+
 def _score_pair(
     requester_activities: list[UserActivity],
     requester_interests: list[UserInterest],
@@ -96,8 +112,10 @@ def _score_pair(
 
     if shared_loved_activities:
         score += WEIGHT_SHARED_LOVED_ACTIVITY * len(shared_loved_activities)
-        names = ", ".join(sorted(activity_names.get(a, "?") for a in shared_loved_activities))
-        reasons.append(f"{len(shared_loved_activities)} shared loved activities: {names}")
+        visible_activity_ids = {r.activity_id for r in candidate_activities if r.visible_on_profile}
+        reasons.append(
+            _describe_shared("loved activities", shared_loved_activities, activity_names, visible_activity_ids)
+        )
     if shared_liked_activities:
         score += WEIGHT_SHARED_LIKED_ACTIVITY * len(shared_liked_activities)
         reasons.append(f"{len(shared_liked_activities)} other shared activities")
@@ -112,8 +130,10 @@ def _score_pair(
 
     if shared_loved_interests:
         score += WEIGHT_SHARED_LOVED_INTEREST * len(shared_loved_interests)
-        names = ", ".join(sorted(interest_names.get(i, "?") for i in shared_loved_interests))
-        reasons.append(f"{len(shared_loved_interests)} shared loved interests: {names}")
+        visible_interest_ids = {r.interest_id for r in candidate_interests if r.visible_on_profile}
+        reasons.append(
+            _describe_shared("loved interests", shared_loved_interests, interest_names, visible_interest_ids)
+        )
     if shared_liked_interests:
         score += WEIGHT_SHARED_LIKED_INTEREST * len(shared_liked_interests)
         reasons.append(f"{len(shared_liked_interests)} other shared interests")
