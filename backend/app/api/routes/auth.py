@@ -12,7 +12,7 @@ from app.db.session import get_db
 from app.models.user import User
 from app.services import linkedin_auth
 from app.services.session_auth import get_current_user
-from app.services.photo_storage import UPLOADS_DIR, LINKEDIN_PHOTOS_DIR, save_linkedin_photo
+from app.services.photo_storage import UPLOADS_DIR, LINKEDIN_PHOTOS_DIR, public_photo_url, save_linkedin_photo
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -124,10 +124,8 @@ async def me(request: Request, db: Session = Depends(get_db)):
         "email": user.email,
         "onboarding_completed": user.onboarding_completed,
         "account_status": user.account_status,
-        # profile_photo_url is stored as a relative path to OUR OWN saved
-        # copy (see save_linkedin_photo), not a full URL - same pattern
-        # as photos.py's _to_out, prefixed here so the frontend can use
-        # it directly as an <img src> the same way it already does for
-        # the other photos.
-        "profile_photo_url": f"/api/uploads/{user.profile_photo_url}" if user.profile_photo_url else None,
+        # Stored as a relative path to our own saved copy (or, for rows
+        # not yet refreshed by a login, LinkedIn's legacy full URL) -
+        # public_photo_url handles both shapes.
+        "profile_photo_url": public_photo_url(user.profile_photo_url),
     }

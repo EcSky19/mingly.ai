@@ -116,6 +116,20 @@ async def save_linkedin_photo(user_id: str, image_url: str) -> str | None:
     return f"linkedin/{user_id}.jpg"
 
 
+def public_photo_url(stored: str | None) -> str | None:
+    """Turns a stored profile_photo_url into something an <img src> can
+    use. Normally that's a relative path to our own saved copy, served
+    under /api/uploads. Rows written before we started keeping our own
+    copy still hold LinkedIn's full URL until that person's next login
+    replaces it - those pass through unchanged rather than being
+    mangled into /api/uploads/https://..."""
+    if not stored:
+        return None
+    if stored.startswith(("http://", "https://")):
+        return stored
+    return f"/api/uploads/{stored}"
+
+
 def delete_photo_file(relative_path: str) -> None:
     """Removes a photo file from disk. Safe to call even if the file is
     already gone (e.g. manual cleanup happened) - fails open rather than
