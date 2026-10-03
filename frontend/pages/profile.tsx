@@ -418,25 +418,22 @@ export default function Profile() {
     setSavingAboutYou(true);
     setAboutYouError("");
     try {
-      // /api/profile/social fully replaces the row - it was designed for
-      // /onboarding/social, which always sends its complete local state.
-      // Sending only the About You fields here would silently wipe out
-      // everything else already saved (career orientation, lifestyle,
-      // etc.), so the full previously-loaded `social` state is merged in
-      // underneath the new About You values.
+      // /api/profile/social is a partial update: only the fields sent here
+      // are written, so this sends just the About You fields and leaves
+      // lifestyle data alone. Cleared values are sent as an explicit null
+      // (omitting a key would leave the old value in place).
       const res = await fetch(`${API_URL}/api/profile/social`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          ...(social || {}),
-          gender_identity: genderIdentity || undefined,
+          gender_identity: genderIdentity || null,
           gender_identity_description:
-            genderIdentity === "self_describe" ? genderIdentityDescription || undefined : undefined,
+            genderIdentity === "self_describe" ? genderIdentityDescription || null : null,
           gender_identity_visible_on_profile: genderIdentityVisible,
           gender_identity_usable_for_matching: genderIdentityMatching,
           mingle_preference: minglePreference,
-          age_range: ageRange || undefined,
+          age_range: ageRange || null,
           age_range_visible_on_profile: ageRangeVisible,
           age_range_usable_for_matching: ageRangeMatching,
           age_preference: agePreference,
