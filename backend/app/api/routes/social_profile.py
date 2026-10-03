@@ -32,7 +32,13 @@ def update_social_profile(
         profile = UserSocialProfile(user_id=user.id)
         db.add(profile)
 
-    for field, value in body.model_dump().items():
+    # Partial update: only fields actually present in the request are
+    # written. Previously every field was written, so a caller that only
+    # owned some fields (the onboarding page saves lifestyle fields only)
+    # silently reset everything else - including About You settings, where
+    # a wiped mingle preference reads as "everyone". Sending an explicit
+    # null still clears a field; omitting it leaves it untouched.
+    for field, value in body.model_dump(exclude_unset=True).items():
         setattr(profile, field, value)
 
     db.commit()
