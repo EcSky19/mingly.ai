@@ -8,8 +8,9 @@ from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
-from app.schemas.discover import CandidateOut
+from app.schemas.discover import CandidateItem, CandidateOut, CandidatePhoto
 from app.services.compatibility_scoring import get_ranked_candidates
+from app.services.public_profile import build_public_cards
 from app.services.session_auth import get_current_user
 
 router = APIRouter(prefix="/api/discover", tags=["discover"])
@@ -19,7 +20,21 @@ router = APIRouter(prefix="/api/discover", tags=["discover"])
 def list_candidates(request: Request, db: Session = Depends(get_db)):
     user = get_current_user(request, db)
     ranked = get_ranked_candidates(db, user.id)
-    return [
-        CandidateOut(id=sc.user.id, first_name=sc.user.first_name, score=sc.score, reasons=sc.reasons)
-        for sc in ranked
-    ]
+    cards = build_public_cards(db, [sc.user for sc in ranked])
+    results = []
+    for sc in ranked:
+        card = cards[sc.user.id]
+        results.append(
+            CandidateOut(
+                id=sc.user.id,
+                first_name=sc.user.first_name,
+                score=sc.score,
+                reasons=sc.reasons,
+                photo_url=card.photo_url,
+                headline=card.headline,
+                photos=[CandidatePhoto(url=p.url, tag=p.tag) for p in card.photos],
+                activities=[CandidateItem(name=i.name, loved=i.loved) for i in card.activities],
+                interests=[CandidateItem(name=i.name, loved=i.loved) for i in card.interests],
+            )
+        )
+    return results
