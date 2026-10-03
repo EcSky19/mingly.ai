@@ -90,13 +90,13 @@ def _make_interest(db, label):
     return i
 
 
-def _select_activity(db, user_id, activity_id, loved):
-    db.add(UserActivity(user_id=user_id, activity_id=activity_id, is_top_pick=loved))
+def _select_activity(db, user_id, activity_id, loved, visible=True):
+    db.add(UserActivity(user_id=user_id, activity_id=activity_id, is_top_pick=loved, visible_on_profile=visible))
     db.commit()
 
 
-def _select_interest(db, user_id, interest_id, loved):
-    db.add(UserInterest(user_id=user_id, interest_id=interest_id, is_top_pick=loved))
+def _select_interest(db, user_id, interest_id, loved, visible=True):
+    db.add(UserInterest(user_id=user_id, interest_id=interest_id, is_top_pick=loved, visible_on_profile=visible))
     db.commit()
 
 
@@ -221,3 +221,37 @@ def test_candidates_endpoint_returns_score_and_reasons():
     assert len(body) >= 1
     assert "score" in body[0]
     assert "reasons" in body[0]
+
+
+def test_reasons_do_not_name_items_the_candidate_hid_from_their_profile():
+    """Privacy: a shared item the CANDIDATE marked not-visible-on-profile
+    must still count toward the score (visibility controls public
+    display, not matching eligibility) but must never be NAMED in the
+    reasons text - naming it would reveal a selection they chose not to
+    show anyone."""
+    db = SessionLocal()
+    a = _make_user(db)
+    b = _make_user(db)
+    _make_location(db, a.id)
+    _make_location(db, b.id)
+
+    shown = _make_activity(db, "ShownActivity")
+    hidden = _make_activity(db, "HiddenActivity")
+    hidden_interest = _make_interest(db, "HiddenInterest")
+    for act in (shown, hidden):
+        _select_activity(db, a.id, act.id, loved=True)
+    _select_activity(db, b.id, shown.id, loved=True, visible=True)
+    _select_activity(db, b.id, hidden.id, loved=True, visible=False)
+    _select_interest(db, a.id, hidden_interest.id, loved=True)
+    _select_interest(db, b.id, hidden_interest.id, loved=True, visible=False)
+
+    ranked = get_ranked_candidates(db, a.id)
+    result = next(sc for sc in ranked if sc.user.id == b.id)
+    all_reasons = " | ".join(result.reasons)
+
+    assert "ShownActivity" in all_reasons
+    assert "HiddenActivity" not in all_reasons, "hidden activity name leaked into reasons"
+    assert "HiddenInterest" not in all_reasons, "hidden interest name leaked into reasons"
+    # ...but both loved activities still count toward the score and the count
+    assert "2 shared loved activities" in all_reasons
+    db.close()
