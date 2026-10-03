@@ -289,3 +289,36 @@ def test_age_preference_has_no_privacy_fields(test_user):
     fetched = client.get("/api/profile/social", cookies=cookies).json()
     assert "age_preference_visible_on_profile" not in fetched
     assert "age_preference_usable_for_matching" not in fetched
+
+
+def test_saving_lifestyle_fields_does_not_wipe_about_you_settings(test_user):
+    """The onboarding page saves ONLY lifestyle fields. That must never
+    reset About You settings (set separately on /profile) - wiping a
+    narrowed mingle preference would silently widen it to 'everyone'."""
+    cookies = _cookie_for(str(test_user.id))
+    client.put(
+        "/api/profile/social",
+        json={"gender_identity": "woman", "mingle_preference": ["women"], "age_range": "25_29", "age_preference": ["25_29"]},
+        cookies=cookies,
+    )
+    # Exactly the shape the onboarding page sends: lifestyle fields only
+    client.put(
+        "/api/profile/social",
+        json={"activity_level": "active", "visible_on_profile": True, "usable_for_matching": True},
+        cookies=cookies,
+    )
+    fetched = client.get("/api/profile/social", cookies=cookies).json()
+    assert fetched["activity_level"] == "active"
+    assert fetched["gender_identity"] == "woman"
+    assert fetched["mingle_preference"] == ["women"], "narrowed mingle preference was silently wiped"
+    assert fetched["age_range"] == "25_29"
+    assert fetched["age_preference"] == ["25_29"]
+
+
+def test_explicit_null_still_clears_a_field(test_user):
+    """Partial updates must still allow deliberately clearing a field -
+    sending null clears it; omitting it leaves it alone."""
+    cookies = _cookie_for(str(test_user.id))
+    client.put("/api/profile/social", json={"drinking_preference": "social"}, cookies=cookies)
+    client.put("/api/profile/social", json={"drinking_preference": None}, cookies=cookies)
+    assert client.get("/api/profile/social", cookies=cookies).json()["drinking_preference"] is None
