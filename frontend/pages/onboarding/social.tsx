@@ -248,6 +248,20 @@ export default function OnboardingSocial() {
     );
   }
 
+  // Every path through onboarding converges on this page, so leaving it
+  // (Finish or Skip) is what marks onboarding complete - matching
+  // requires that flag, and the login redirect uses it to send returning
+  // users to /home rather than back into onboarding.
+  async function finishOnboarding() {
+    try {
+      await fetch(`${API_URL}/api/auth/onboarding-complete`, { method: "POST", credentials: "include" });
+    } catch {
+      // Fails open - they can still continue; worst case this is retried
+      // next time they pass through this page.
+    }
+    router.push("/home");
+  }
+
   async function handleSave() {
     setSaving(true);
     try {
@@ -277,9 +291,9 @@ export default function OnboardingSocial() {
         }),
       });
       setSaved(true);
-      router.push("/home");
+      await finishOnboarding();
     } catch {
-      router.push("/home");
+      await finishOnboarding();
     } finally {
       setSaving(false);
     }
@@ -584,7 +598,7 @@ export default function OnboardingSocial() {
             <button type="button" className="cta" disabled={saving} onClick={handleSave}>
               {saving ? "Saving…" : "Finish"}
             </button>
-            <button type="button" className="skip" onClick={() => router.push("/home")}>
+            <button type="button" className="skip" onClick={finishOnboarding}>
               Skip for now
             </button>
           </div>
