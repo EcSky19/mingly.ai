@@ -82,6 +82,23 @@ async def logout(request: Request):
     return {"ok": True}
 
 
+@router.post("/onboarding-complete")
+async def complete_onboarding(request: Request, db: Session = Depends(get_db)):
+    """Marks onboarding finished - called when someone leaves the last
+    onboarding page (Finish or Skip; every path through onboarding
+    converges there). Idempotent.
+
+    Before this endpoint existed, nothing ever set the flag: it was read
+    by the eligibility filter (which requires it) and the login redirect,
+    but never written - so every real user was excluded from matching
+    and every returning login was sent back into onboarding."""
+    user = get_current_user(request, db)
+    if not user.onboarding_completed:
+        user.onboarding_completed = True
+        db.commit()
+    return {"ok": True}
+
+
 @router.delete("/account")
 async def delete_account(request: Request, db: Session = Depends(get_db)):
     """A genuine hard delete, not a soft deactivation - AccountStatus.deleted
