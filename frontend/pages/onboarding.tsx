@@ -289,7 +289,10 @@ export default function Onboarding() {
               cityLon: r.longitude,
               label: r.label || "",
               isPrimary: r.is_primary,
-              travelRadiusMiles: r.travel_radius_miles ?? 10,
+              // A null radius is matched using the backend default (25), so show
+              // that - not a different number - for locations saved before the
+              // slider existed.
+              travelRadiusMiles: r.travel_radius_miles ?? 25,
             }))
           );
         }
@@ -362,6 +365,23 @@ export default function Onboarding() {
     };
   }
 
+  // Saved entries are edited in place via PATCH. Previously only NEW
+  // entries were ever sent, so every edit to a saved one - including its
+  // privacy toggles - was silently dropped. Cleared values go as explicit
+  // null, since the update is partial (an omitted key means "unchanged").
+  async function patchSavedEntry(section: string, savedId: string, body: object) {
+    try {
+      await fetch(`${API_URL}/api/profile/${section}/${savedId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(body),
+      });
+    } catch {
+      // Fails open, same as creating an entry.
+    }
+  }
+
   async function saveEducationEntries() {
     const toSave = education.filter(
       (e) => !e.savedId && (e.school || e.degree || e.fieldOfStudy || e.graduationYear)
@@ -384,6 +404,16 @@ export default function Onboarding() {
       } catch {
         // Fails open - one failed entry save doesn't block the rest of onboarding.
       }
+    }
+    for (const entry of education.filter((e) => e.savedId)) {
+      await patchSavedEntry("education", entry.savedId!, {
+        school: entry.school || null,
+        degree: entry.degree || null,
+        field_of_study: entry.fieldOfStudy || null,
+        graduation_year: entry.graduationYear ? parseInt(entry.graduationYear, 10) : null,
+        visible_on_profile: entry.visibleOnProfile,
+        usable_for_matching: entry.usableForMatching,
+      });
     }
   }
 
@@ -427,6 +457,14 @@ export default function Onboarding() {
       } catch {
         // Fails open.
       }
+    }
+    for (const entry of languages.filter((l) => l.savedId && l.language)) {
+      await patchSavedEntry("languages", entry.savedId!, {
+        language: entry.language,
+        proficiency: entry.proficiency || null,
+        visible_on_profile: entry.visibleOnProfile,
+        usable_for_matching: entry.usableForMatching,
+      });
     }
   }
 
@@ -477,6 +515,16 @@ export default function Onboarding() {
         // Fails open.
       }
     }
+    for (const entry of locations.filter((l) => l.savedId)) {
+      await patchSavedEntry("locations", entry.savedId!, {
+        city: entry.city || null,
+        latitude: entry.cityLat ?? null,
+        longitude: entry.cityLon ?? null,
+        label: entry.label || null,
+        is_primary: entry.isPrimary,
+        travel_radius_miles: entry.travelRadiusMiles,
+      });
+    }
   }
 
   function updatePet(id: string, patch: Partial<PetEntry>) {
@@ -523,6 +571,18 @@ export default function Onboarding() {
       } catch {
         // Fails open.
       }
+    }
+    for (const entry of pets.filter((p) => p.savedId && p.petType)) {
+      const isDog = entry.petType === "dog";
+      await patchSavedEntry("pets", entry.savedId!, {
+        pet_type: entry.petType,
+        name: entry.name || null,
+        size: isDog ? entry.size || null : null,
+        activity_level: isDog ? entry.activityLevel || null : null,
+        comfortable_with_other_dogs: isDog ? entry.comfortableWithOtherDogs : null,
+        visible_on_profile: entry.visibleOnProfile,
+        usable_for_matching: entry.usableForMatching,
+      });
     }
   }
 
