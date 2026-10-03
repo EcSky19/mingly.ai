@@ -10,7 +10,7 @@ type CandidateItem = { name: string; loved: boolean };
 type Candidate = {
   id: string;
   first_name: string;
-  reasons: string[];
+  intro: string;
   photo_url?: string | null;
   headline?: string | null;
   photos: CandidatePhoto[];
@@ -200,14 +200,10 @@ export default function Discover() {
                     <h2 className="discover-name">{current.first_name}</h2>
                     {current.headline && <p className="discover-headline">{current.headline}</p>}
 
-                    {current.reasons.length > 0 && (
+                    {current.intro && (
                       <>
-                        <p className="discover-label">Why you might click</p>
-                        <ul className="discover-reasons">
-                          {current.reasons.map((r) => (
-                            <li key={r}>{r}</li>
-                          ))}
-                        </ul>
+                        <p className="discover-label">Why you two might click</p>
+                        <p className="discover-intro">{current.intro}</p>
                       </>
                     )}
 

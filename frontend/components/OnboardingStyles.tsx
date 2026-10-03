@@ -713,26 +713,11 @@ export default function OnboardingStyles() {
         letter-spacing: 0.08em;
         margin: 1.25rem 0 0.5rem 0;
       }
-      .discover-reasons {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-      }
-      .discover-reasons li {
+      .discover-intro {
         color: #f6f1e7;
-        font-size: 0.9rem;
-        line-height: 1.5;
-        padding-left: 1.1rem;
-        position: relative;
-        margin-bottom: 0.3rem;
-      }
-      .discover-reasons li::before {
-        content: "✦";
-        position: absolute;
-        left: 0;
-        color: #e8a548;
-        font-size: 0.7rem;
-        top: 0.2rem;
+        font-size: 1rem;
+        line-height: 1.65;
+        margin: 0;
       }
       .discover-actions {
         display: flex;
