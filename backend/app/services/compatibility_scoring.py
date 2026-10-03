@@ -55,6 +55,48 @@ class ScoredCandidate:
     user: User
     score: float
     reasons: list[str] = field(default_factory=list)
+    intro: str = ""
+
+
+@dataclass
+class PairSignals:
+    """What two people share, for building the friendly intro. *_named
+    lists hold ONLY items the candidate left visible on their profile;
+    *_total counts include hidden ones (they still count, they're just
+    never named)."""
+    loved_activities_named: list[str] = field(default_factory=list)
+    loved_activities_total: int = 0
+    liked_activities_named: list[str] = field(default_factory=list)
+    liked_activities_total: int = 0
+    loved_interests_named: list[str] = field(default_factory=list)
+    loved_interests_total: int = 0
+    liked_interests_total: int = 0
+    lifestyle_matches: int = 0
+    best_distance: float | None = None
+
+
+# Catalog names that read awkwardly mid-sentence ("you both love golf and
+# gym / weightlifting") get a natural phrasing instead. Every slash-style
+# name in the live catalog is covered; anything else falls back to the
+# generic lowercase rule in _casual.
+CONVERSATIONAL_NAMES = {
+    "Baseball / Softball": "baseball",
+    "Billiards / Pool": "pool",
+    "Boxing / Martial Arts": "martial arts",
+    "Concerts / Live Music": "live music",
+    "Coworking / Coffee Shops": "working from coffee shops",
+    "Dancing / Nightclubs": "dancing",
+    "Drinks / Bars": "going out for drinks",
+    "Golf Simulators / Indoor Golf": "indoor golf",
+    "Gym / Weightlifting": "lifting",
+    "Investment / Stock Market Discussions": "talking markets",
+    "Pottery / Ceramics": "pottery",
+    "Sauna / Spa": "spa days",
+    "Skiing / Snowboarding": "hitting the slopes",
+    "Topgolf / Social Golf": "Topgolf",
+    "Workout / Fitness Classes": "fitness classes",
+}
+MAX_NAMED_IN_INTRO = 3
 
 
 def _activity_sets(rows: list[UserActivity]) -> tuple[set, set]:
@@ -96,9 +138,12 @@ def _score_pair(
     candidate_locations: list[UserLocation],
     activity_names: dict,
     interest_names: dict,
-) -> tuple[float, list[str]]:
+) -> tuple[float, list[str], PairSignals]:
     score = 0.0
     reasons: list[str] = []
+    signals = PairSignals()
+    visible_activity_ids = {r.activity_id for r in candidate_activities if r.visible_on_profile}
+    visible_interest_ids = {r.interest_id for r in candidate_interests if r.visible_on_profile}
 
     r_loved_act, r_liked_act = _activity_sets(requester_activities)
     c_loved_act, c_liked_act = _activity_sets(candidate_activities)
@@ -112,12 +157,19 @@ def _score_pair(
 
     if shared_loved_activities:
         score += WEIGHT_SHARED_LOVED_ACTIVITY * len(shared_loved_activities)
-        visible_activity_ids = {r.activity_id for r in candidate_activities if r.visible_on_profile}
+        signals.loved_activities_total = len(shared_loved_activities)
+        signals.loved_activities_named = sorted(
+            activity_names[a] for a in shared_loved_activities if a in visible_activity_ids and a in activity_names
+        )
         reasons.append(
             _describe_shared("loved activities", shared_loved_activities, activity_names, visible_activity_ids)
         )
     if shared_liked_activities:
         score += WEIGHT_SHARED_LIKED_ACTIVITY * len(shared_liked_activities)
+        signals.liked_activities_total = len(shared_liked_activities)
+        signals.liked_activities_named = sorted(
+            activity_names[a] for a in shared_liked_activities if a in visible_activity_ids and a in activity_names
+        )
         reasons.append(f"{len(shared_liked_activities)} other shared activities")
 
     r_loved_int, r_liked_int = _interest_sets(requester_interests)
@@ -130,12 +182,16 @@ def _score_pair(
 
     if shared_loved_interests:
         score += WEIGHT_SHARED_LOVED_INTEREST * len(shared_loved_interests)
-        visible_interest_ids = {r.interest_id for r in candidate_interests if r.visible_on_profile}
+        signals.loved_interests_total = len(shared_loved_interests)
+        signals.loved_interests_named = sorted(
+            interest_names[i] for i in shared_loved_interests if i in visible_interest_ids and i in interest_names
+        )
         reasons.append(
             _describe_shared("loved interests", shared_loved_interests, interest_names, visible_interest_ids)
         )
     if shared_liked_interests:
         score += WEIGHT_SHARED_LIKED_INTEREST * len(shared_liked_interests)
+        signals.liked_interests_total = len(shared_liked_interests)
         reasons.append(f"{len(shared_liked_interests)} other shared interests")
 
     if requester_social and candidate_social:
@@ -146,6 +202,7 @@ def _score_pair(
         ]
         if matched_fields:
             score += WEIGHT_LIFESTYLE_FIELD_MATCH * len(matched_fields)
+            signals.lifestyle_matches = len(matched_fields)
             reasons.append(f"Similar lifestyle ({len(matched_fields)} shared preferences)")
 
     best_distance = None
@@ -158,13 +215,85 @@ def _score_pair(
             d = _haversine_miles(r_loc.latitude, r_loc.longitude, c_loc.latitude, c_loc.longitude)
             if best_distance is None or d < best_distance:
                 best_distance = d
+    signals.best_distance = best_distance
     if best_distance is not None:
         proximity_fraction = max(0.0, 1 - best_distance / DEFAULT_TRAVEL_RADIUS_MILES)
         score += MAX_PROXIMITY_BONUS * proximity_fraction
         if best_distance < VERY_CLOSE_MILES:
             reasons.append(f"Very close by ({best_distance:.1f} miles)")
 
-    return score, reasons
+    return score, reasons, signals
+
+
+def _casual(name: str) -> str:
+    """'Fitness & Wellness' -> 'fitness and wellness', keeping acronyms
+    like 'AI' intact; slash-style names use their natural phrasing."""
+    if name in CONVERSATIONAL_NAMES:
+        return CONVERSATIONAL_NAMES[name]
+    words = name.replace(" & ", " and ").split()
+    return " ".join(w if (w.isupper() and len(w) > 1) else w.lower() for w in words)
+
+
+def _join(items: list[str]) -> str:
+    if len(items) == 1:
+        return items[0]
+    if len(items) == 2:
+        return f"{items[0]} and {items[1]}"
+    return ", ".join(items[:-1]) + f", and {items[-1]}"
+
+
+def _named_phrase(named: list[str], total: int) -> str:
+    shown = [_casual(n) for n in named[:MAX_NAMED_IN_INTRO]]
+    if total > len(shown):
+        if len(shown) == 1:
+            return f"{shown[0]}, among other things"
+        shown.append("more")
+    return _join(shown)
+
+
+def _build_intro(first_name: str, s: PairSignals) -> str:
+    """A short, friend-introducing-a-friend style intro built from the
+    same signals as the score. Only ever names items the candidate left
+    visible; hidden overlaps are acknowledged vaguely, never named."""
+    who = f"You and {first_name}" if first_name else "You two"
+    sentences: list[str] = []
+
+    if s.loved_activities_named:
+        sentences.append(f"{who} both love {_named_phrase(s.loved_activities_named, s.loved_activities_total)}.")
+    elif s.loved_activities_total:
+        sentences.append(f"{who} love some of the same activities.")
+    elif s.liked_activities_named:
+        sentences.append(f"{who} both enjoy {_named_phrase(s.liked_activities_named, s.liked_activities_total)}.")
+    elif s.liked_activities_total:
+        sentences.append(f"{who} enjoy some of the same activities.")
+
+    if s.loved_interests_named:
+        opener = "You're also both into" if sentences else f"{who} are both into"
+        sentences.append(f"{opener} {_named_phrase(s.loved_interests_named, s.loved_interests_total)}.")
+    elif s.loved_interests_total or s.liked_interests_total:
+        sentences.append(
+            "You've got some interests in common, too." if sentences else f"{who} share some of the same interests."
+        )
+
+    if s.lifestyle_matches >= 2:
+        sentences.append(
+            "It sounds like you move at a similar pace, too." if sentences else f"{who} seem to move at a similar pace."
+        )
+
+    close = s.best_distance is not None and s.best_distance < VERY_CLOSE_MILES
+    near = "practically neighbors" if close and s.best_distance < 1 else "close by"
+    if sentences:
+        if close:
+            sentences.append(f"Plus, you're {near}.")
+    elif close:
+        sentences.append(
+            f"{who} don't have much listed in common yet, but you're {near} - sometimes that's all it takes."
+        )
+    else:
+        sentences.append(
+            f"{who} don't have much listed in common yet, but you're in the same area - sometimes that's all it takes to start."
+        )
+    return " ".join(sentences)
 
 
 def get_ranked_candidates(db: Session, user_id: UUID) -> list[ScoredCandidate]:
@@ -214,7 +343,7 @@ def get_ranked_candidates(db: Session, user_id: UUID) -> list[ScoredCandidate]:
 
     scored = []
     for candidate in eligible:
-        score, reasons = _score_pair(
+        score, reasons, signals = _score_pair(
             requester_activities,
             requester_interests,
             requester_social,
@@ -226,7 +355,14 @@ def get_ranked_candidates(db: Session, user_id: UUID) -> list[ScoredCandidate]:
             activity_names,
             interest_names,
         )
-        scored.append(ScoredCandidate(user=candidate, score=score, reasons=reasons))
+        scored.append(
+            ScoredCandidate(
+                user=candidate,
+                score=score,
+                reasons=reasons,
+                intro=_build_intro((candidate.first_name or "").strip(), signals),
+            )
+        )
 
     scored.sort(key=lambda sc: sc.score, reverse=True)
     return scored

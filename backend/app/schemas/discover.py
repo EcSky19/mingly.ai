@@ -22,6 +22,7 @@ class CandidateOut(BaseModel):
     first_name: str
     score: float
     reasons: list[str]
+    intro: str = ""
     photo_url: Optional[str] = None
     headline: Optional[str] = None
     photos: list[CandidatePhoto] = []

@@ -30,6 +30,7 @@ def list_candidates(request: Request, db: Session = Depends(get_db)):
                 first_name=sc.user.first_name,
                 score=sc.score,
                 reasons=sc.reasons,
+                intro=sc.intro,
                 photo_url=card.photo_url,
                 headline=card.headline,
                 photos=[CandidatePhoto(url=p.url, tag=p.tag) for p in card.photos],
