@@ -4,7 +4,7 @@ of the rest of onboarding. See docs/roadmap.md.
 """
 from typing import Optional
 from uuid import UUID
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 from app.models.activity import (
     ActivityCategory,
@@ -24,6 +24,28 @@ class LocationCreate(BaseModel):
     transport_preferences: Optional[str] = None
     is_primary: bool = False
     label: Optional[str] = None
+
+
+class LocationUpdate(BaseModel):
+    """Partial update of an existing location: omitted fields are left
+    unchanged. is_primary can be omitted but not set to null (the column
+    is NOT NULL) - an explicit null is rejected with a 422 rather than
+    reaching the database."""
+    city: Optional[str] = None
+    metro: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    travel_radius_miles: Optional[int] = None
+    transport_preferences: Optional[str] = None
+    is_primary: Optional[bool] = None
+    label: Optional[str] = None
+
+    @field_validator("is_primary")
+    @classmethod
+    def _not_null(cls, v):
+        if v is None:
+            raise ValueError("may be omitted, but not set to null")
+        return v
 
 
 class LocationOut(BaseModel):
