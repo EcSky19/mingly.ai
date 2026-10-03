@@ -3,7 +3,7 @@ Pydantic schemas for the professional profile onboarding step.
 """
 from typing import Optional
 from uuid import UUID
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 from app.models.professional_profile import CareerStage
 
@@ -117,3 +117,59 @@ class PetOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class EducationEntryUpdate(BaseModel):
+    """Partial update of an existing entry: omitted fields are left
+    unchanged. Fields backed by NOT NULL columns may be omitted but not
+    set to null - that's rejected with a 422 rather than reaching the DB."""
+    school: Optional[str] = None
+    degree: Optional[str] = None
+    field_of_study: Optional[str] = None
+    graduation_year: Optional[int] = None
+    visible_on_profile: Optional[bool] = None
+    usable_for_matching: Optional[bool] = None
+
+    @field_validator("visible_on_profile", "usable_for_matching")
+    @classmethod
+    def _not_null(cls, v):
+        if v is None:
+            raise ValueError("may be omitted, but not set to null")
+        return v
+
+
+class LanguageEntryUpdate(BaseModel):
+    """Partial update of an existing entry: omitted fields are left
+    unchanged. Fields backed by NOT NULL columns may be omitted but not
+    set to null - that's rejected with a 422 rather than reaching the DB."""
+    language: Optional[str] = None
+    proficiency: Optional[str] = None
+    visible_on_profile: Optional[bool] = None
+    usable_for_matching: Optional[bool] = None
+
+    @field_validator("language", "visible_on_profile", "usable_for_matching")
+    @classmethod
+    def _not_null(cls, v):
+        if v is None:
+            raise ValueError("may be omitted, but not set to null")
+        return v
+
+
+class PetUpdate(BaseModel):
+    """Partial update of an existing entry: omitted fields are left
+    unchanged. Fields backed by NOT NULL columns may be omitted but not
+    set to null - that's rejected with a 422 rather than reaching the DB."""
+    pet_type: Optional[str] = None
+    name: Optional[str] = None
+    size: Optional[str] = None
+    activity_level: Optional[str] = None
+    comfortable_with_other_dogs: Optional[bool] = None
+    visible_on_profile: Optional[bool] = None
+    usable_for_matching: Optional[bool] = None
+
+    @field_validator("pet_type", "visible_on_profile", "usable_for_matching")
+    @classmethod
+    def _not_null(cls, v):
+        if v is None:
+            raise ValueError("may be omitted, but not set to null")
+        return v
