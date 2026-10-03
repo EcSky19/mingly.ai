@@ -607,6 +607,169 @@ export default function OnboardingStyles() {
       .lightbox-arrow-left { left: 1.25rem; }
       .lightbox-arrow-right { right: 1.25rem; }
 
+      /* Discovery (/home) */
+      .discover-topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+      }
+      .discover-topbar .wordmark { margin-bottom: 0; }
+      .discover-nav {
+        display: flex;
+        gap: 1.25rem;
+        align-items: center;
+      }
+      .discover-nav-link {
+        background: transparent;
+        border: none;
+        color: #b9afd1;
+        font-size: 0.9rem;
+        cursor: pointer;
+        padding: 0;
+      }
+      .discover-nav-link:hover { color: #f6f1e7; }
+      .discover-card {
+        background: #241f3d;
+        border: 1px solid rgba(185, 175, 209, 0.2);
+        border-radius: 12px;
+        padding: 1.5rem;
+      }
+      .discover-card-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        align-items: start;
+      }
+      @media (max-width: 860px) {
+        .discover-card-grid { grid-template-columns: 1fr; }
+      }
+      /* Frame hugs the photo: capped height, natural width, no cropping
+         or letterboxing - same lesson as the profile photo grid fix. */
+      .discover-main-photo {
+        display: block;
+        max-width: 100%;
+        max-height: 460px;
+        width: auto;
+        height: auto;
+        margin: 0 auto;
+        border-radius: 10px;
+        border: 1px solid rgba(185, 175, 209, 0.25);
+      }
+      .discover-photo-placeholder {
+        width: 100%;
+        aspect-ratio: 1;
+        max-width: 320px;
+        margin: 0 auto;
+        border-radius: 10px;
+        background: #2c2650;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: "Fraunces", serif;
+        font-size: 4rem;
+        color: #b9afd1;
+      }
+      .discover-photo-tag {
+        text-align: center;
+        color: #e8a548;
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+      }
+      .discover-thumbs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: center;
+        margin-top: 0.75rem;
+      }
+      .discover-thumb {
+        height: 56px;
+        width: auto;
+        border-radius: 6px;
+        border: 2px solid transparent;
+        cursor: pointer;
+        opacity: 0.7;
+      }
+      .discover-thumb-active {
+        border-color: #e8a548;
+        opacity: 1;
+      }
+      .discover-name {
+        font-family: "Fraunces", serif;
+        font-size: 1.75rem;
+        font-weight: 500;
+        margin: 0;
+        color: #f6f1e7;
+      }
+      .discover-headline {
+        color: #b9afd1;
+        margin: 0.25rem 0 0 0;
+      }
+      .discover-label {
+        color: #8f84ad;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin: 1.25rem 0 0.5rem 0;
+      }
+      .discover-reasons {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .discover-reasons li {
+        color: #f6f1e7;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        padding-left: 1.1rem;
+        position: relative;
+        margin-bottom: 0.3rem;
+      }
+      .discover-reasons li::before {
+        content: "✦";
+        position: absolute;
+        left: 0;
+        color: #e8a548;
+        font-size: 0.7rem;
+        top: 0.2rem;
+      }
+      .discover-actions {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 1.75rem;
+      }
+      .discover-actions .cta { flex: 1; text-align: center; }
+      .discover-pass-btn {
+        flex: 1;
+        background: transparent;
+        border: 1px solid rgba(185, 175, 209, 0.4);
+        color: #f6f1e7;
+        font-weight: 600;
+        font-size: 1rem;
+        padding: 0.85rem 1.25rem;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .discover-pass-btn:hover { border-color: #f6f1e7; }
+      .discover-pass-btn:disabled, .discover-actions .cta:disabled { opacity: 0.5; cursor: default; }
+      .discover-counter {
+        color: #8f84ad;
+        font-size: 0.85rem;
+        text-align: right;
+        margin-bottom: 0.75rem;
+      }
+      .discover-empty {
+        text-align: center;
+        padding: 3rem 1.5rem;
+      }
+      .discover-empty p {
+        color: #b9afd1;
+        max-width: 32em;
+        margin: 0.75rem auto 1.5rem auto;
+        line-height: 1.6;
+      }
+
       .activity-details-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
