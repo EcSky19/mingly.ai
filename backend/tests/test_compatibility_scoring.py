@@ -255,3 +255,63 @@ def test_reasons_do_not_name_items_the_candidate_hid_from_their_profile():
     # ...but both loved activities still count toward the score and the count
     assert "2 shared loved activities" in all_reasons
     db.close()
+
+
+# --- Friendly intro ---
+
+from app.services.compatibility_scoring import PairSignals, _build_intro, _casual  # noqa: E402
+
+
+def test_intro_reads_like_a_friend_introducing_you():
+    intro = _build_intro(
+        "Ethan",
+        PairSignals(
+            loved_activities_named=["Golf", "Gym / Weightlifting"], loved_activities_total=2,
+            loved_interests_named=["Fitness & Wellness", "Gaming", "Nightlife"], loved_interests_total=3,
+            best_distance=0.0,
+        ),
+    )
+    assert intro == (
+        "You and Ethan both love golf and lifting. "
+        "You're also both into fitness and wellness, gaming, and nightlife. "
+        "Plus, you're practically neighbors."
+    )
+
+
+def test_casual_names_read_naturally_mid_sentence():
+    assert _casual("Gym / Weightlifting") == "lifting"
+    assert _casual("Skiing / Snowboarding") == "hitting the slopes"
+    assert _casual("AI & Technology") == "AI and technology"  # acronym kept intact
+    assert _casual("Trivia Nights") == "trivia nights"
+
+
+def test_intro_when_nothing_in_common_is_honest_not_empty():
+    intro = _build_intro("Riley", PairSignals(best_distance=18.0))
+    assert intro.startswith("You and Riley don't have much listed in common yet")
+
+
+def test_intro_never_names_items_the_candidate_hid():
+    """Same privacy rule as the reasons text: hidden overlaps still count
+    and can be acknowledged vaguely, but are never named."""
+    db = SessionLocal()
+    a = _make_user(db)
+    b = _make_user(db, first_name="Casey")
+    _make_location(db, a.id)
+    _make_location(db, b.id)
+    shown = _make_activity(db, "Shownact")
+    hidden = _make_activity(db, "Hiddenact")
+    hidden_interest = _make_interest(db, "Hiddenint")
+    for act in (shown, hidden):
+        _select_activity(db, a.id, act.id, loved=True)
+    _select_activity(db, b.id, shown.id, loved=True, visible=True)
+    _select_activity(db, b.id, hidden.id, loved=True, visible=False)
+    _select_interest(db, a.id, hidden_interest.id, loved=True)
+    _select_interest(db, b.id, hidden_interest.id, loved=True, visible=False)
+
+    result = next(sc for sc in get_ranked_candidates(db, a.id) if sc.user.id == b.id)
+    assert "shownact" in result.intro
+    assert "hiddenact" not in result.intro.lower(), "hidden activity named in intro"
+    assert "hiddenint" not in result.intro.lower(), "hidden interest named in intro"
+    assert "among other things" in result.intro  # acknowledged, not named
+    assert "some interests in common" in result.intro
+    db.close()
