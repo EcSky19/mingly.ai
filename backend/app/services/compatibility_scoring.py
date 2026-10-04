@@ -194,7 +194,14 @@ def _score_pair(
         signals.liked_interests_total = len(shared_liked_interests)
         reasons.append(f"{len(shared_liked_interests)} other shared interests")
 
-    if requester_social and candidate_social:
+    # Lifestyle answers are only compared when BOTH people allowed their
+    # lifestyle section to be used for matching.
+    if (
+        requester_social
+        and candidate_social
+        and requester_social.usable_for_matching
+        and candidate_social.usable_for_matching
+    ):
         matched_fields = [
             f
             for f in LIFESTYLE_FIELDS_TO_COMPARE

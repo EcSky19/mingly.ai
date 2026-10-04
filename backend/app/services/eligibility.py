@@ -71,11 +71,25 @@ def _preference_accepts(preference: list[str] | None, other_value: str | None, b
     return bucket in preference
 
 
+def _usable_gender(p: UserSocialProfile | None):
+    """Gender identity only if the person allowed it to be used for
+    matching. Opted out = treated exactly like 'prefer not to say': never
+    used to include or exclude anyone, only reachable via 'everyone'."""
+    return p.gender_identity if p and p.gender_identity_usable_for_matching else None
+
+
+def _usable_age(p: UserSocialProfile | None):
+    """Same consent rule as _usable_gender, for age range."""
+    return p.age_range if p and p.age_range_usable_for_matching else None
+
+
 def _genders_compatible(a: UserSocialProfile | None, b: UserSocialProfile | None) -> bool:
+    # Preferences have no opt-out: they're each person's own private
+    # filter for who THEY see, not data about them shown to others.
     a_pref = a.mingle_preference if a else None
-    a_gender = a.gender_identity if a else None
+    a_gender = _usable_gender(a)
     b_pref = b.mingle_preference if b else None
-    b_gender = b.gender_identity if b else None
+    b_gender = _usable_gender(b)
     return _preference_accepts(a_pref, b_gender, GENDER_TO_MINGLE_BUCKET) and _preference_accepts(
         b_pref, a_gender, GENDER_TO_MINGLE_BUCKET
     )
@@ -83,9 +97,9 @@ def _genders_compatible(a: UserSocialProfile | None, b: UserSocialProfile | None
 
 def _ages_compatible(a: UserSocialProfile | None, b: UserSocialProfile | None) -> bool:
     a_pref = a.age_preference if a else None
-    a_age = a.age_range if a else None
+    a_age = _usable_age(a)
     b_pref = b.age_preference if b else None
-    b_age = b.age_range if b else None
+    b_age = _usable_age(b)
     return _preference_accepts(a_pref, b_age, AGE_RANGE_TO_PREFERENCE_BUCKET) and _preference_accepts(
         b_pref, a_age, AGE_RANGE_TO_PREFERENCE_BUCKET
     )
