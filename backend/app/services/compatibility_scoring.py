@@ -24,6 +24,10 @@ from sqlalchemy.orm import Session
 
 from app.models.activity import Activity, UserActivity
 from app.models.interest import Interest, UserInterest
+from app.models.professional_profile import ProfessionalProfile
+from app.models.user_education import UserEducation
+from app.models.user_language import UserLanguage
+from app.models.user_pet import UserPet
 from app.models.user import User
 from app.models.user_location import UserLocation
 from app.models.user_social_profile import UserSocialProfile
@@ -42,11 +46,43 @@ VERY_CLOSE_MILES = 5
 # nuanced compatibility logic yet (e.g. early-bird/night-owl pairing
 # rules) - that's a real design question for a later iteration, not
 # something to guess at for V0.
+# Personal info from onboarding - each only counts when BOTH people allowed
+# that field to be used for matching.
+WEIGHT_SHARED_LANGUAGE = 3        # English excluded: near-universal here, so no signal
+WEIGHT_SAME_SCHOOL = 4
+WEIGHT_SAME_FIELD_OF_STUDY = 1.5
+WEIGHT_SAME_INDUSTRY = 2
+WEIGHT_SAME_CAREER_STAGE = 1.5
+WEIGHT_BOTH_DOG_PEOPLE = 3
+WEIGHT_DOG_FRIENDLY = 2           # one has a dog, the other is comfortable around dogs
+PENALTY_DOG_MISMATCH = -3         # one has a dog, the other said they're not comfortable
+WEIGHT_SHARED_SOCIAL_GOAL = 2
+MAX_EXTRAS_IN_INTRO = 2           # keep the intro a friendly few lines, not a wall
+LIFESTYLE_PACE_MIN_MATCHES = 3
+
+# Answers that express no preference - two people both saying "either"
+# doesn't make them similar, so these never count as a lifestyle match.
+NON_SIGNAL_VALUES = {"either", "flexible", "depends_on_activity", "prefer_not_to_say"}
+
+GOAL_PHRASES = {
+    "regular_friends": "new friends",
+    "activity_partners": "activity partners",
+    "broader_social_circle": "a broader social circle",
+    "people_with_similar_lifestyles": "people with similar lifestyles",
+    "professional_peers": "connections with professional peers",
+}
+
 LIFESTYLE_FIELDS_TO_COMPARE = [
     "activity_level",
     "going_out_frequency",
     "social_cadence",
     "indoor_outdoor_preference",
+    "early_bird_night_owl",
+    "drinking_preference",
+    "weekday_weekend_preference",
+    "planning_style",
+    "meeting_preference",
+    "spending_preference",
 ]
 
 
@@ -71,8 +107,23 @@ class PairSignals:
     loved_interests_named: list[str] = field(default_factory=list)
     loved_interests_total: int = 0
     liked_interests_total: int = 0
-    lifestyle_matches: int = 0
+    lifestyle_matches: int = 0          # only set when the candidate's lifestyle section is visible
     best_distance: float | None = None
+    languages_named: list[str] = field(default_factory=list)
+    schools_named: list[str] = field(default_factory=list)
+    industry_named: str | None = None
+    both_dog_people: bool = False
+    goals_named: list[str] = field(default_factory=list)
+
+
+@dataclass
+class PersonalInfo:
+    """One person's onboarding personal info, batch-fetched for scoring."""
+    social: UserSocialProfile | None = None
+    professional: ProfessionalProfile | None = None
+    education: list = field(default_factory=list)
+    languages: list = field(default_factory=list)
+    pets: list = field(default_factory=list)
 
 
 # Catalog names that read awkwardly mid-sentence ("you both love golf and
@@ -202,15 +253,21 @@ def _score_pair(
         and requester_social.usable_for_matching
         and candidate_social.usable_for_matching
     ):
-        matched_fields = [
-            f
-            for f in LIFESTYLE_FIELDS_TO_COMPARE
-            if getattr(requester_social, f, None) and getattr(requester_social, f, None) == getattr(candidate_social, f, None)
-        ]
+        matched_fields = []
+        for f in LIFESTYLE_FIELDS_TO_COMPARE:
+            value = getattr(requester_social, f, None)
+            value = getattr(value, "value", value)
+            other = getattr(candidate_social, f, None)
+            other = getattr(other, "value", other)
+            if value and value not in NON_SIGNAL_VALUES and value == other:
+                matched_fields.append(f)
         if matched_fields:
             score += WEIGHT_LIFESTYLE_FIELD_MATCH * len(matched_fields)
-            signals.lifestyle_matches = len(matched_fields)
-            reasons.append(f"Similar lifestyle ({len(matched_fields)} shared preferences)")
+            # Saying "you're alike" reveals their answers, so it's only
+            # mentioned when they made their lifestyle section visible.
+            if candidate_social.visible_on_profile:
+                signals.lifestyle_matches = len(matched_fields)
+                reasons.append(f"Similar lifestyle ({len(matched_fields)} shared preferences)")
 
     best_distance = None
     for r_loc in requester_locations:
@@ -230,6 +287,108 @@ def _score_pair(
             reasons.append(f"Very close by ({best_distance:.1f} miles)")
 
     return score, reasons, signals
+
+
+def _norm(text: str | None) -> str:
+    return (text or "").strip().lower()
+
+
+def _score_personal_info(r: PersonalInfo, c: PersonalInfo, signals: PairSignals) -> tuple[float, list[str]]:
+    """Signals from onboarding personal info. Every one follows the same
+    two consent rules:
+      - it only COUNTS when both people allowed that field for matching;
+      - it's only MENTIONED (reasons/intro) when the candidate made the
+        underlying field visible on their profile - even 'you both work
+        in tech' reveals their industry, so it's treated like naming it.
+    """
+    score = 0.0
+    reasons: list[str] = []
+
+    # Languages (English excluded - near-universal here, so no signal)
+    r_langs = {_norm(l.language) for l in r.languages if l.usable_for_matching and l.language}
+    c_langs = {_norm(l.language): l for l in c.languages if l.usable_for_matching and l.language}
+    shared = sorted(k for k in r_langs & set(c_langs) if k != "english")
+    if shared:
+        score += WEIGHT_SHARED_LANGUAGE * len(shared)
+        named = [c_langs[k].language.strip() for k in shared if c_langs[k].visible_on_profile]
+        signals.languages_named = named
+        if named:
+            reasons.append(f"Both speak {', '.join(named)}")
+
+    # Education: same school; same field of study
+    r_edu = [e for e in r.education if e.usable_for_matching]
+    c_edu = [e for e in c.education if e.usable_for_matching]
+    r_schools = {_norm(e.school) for e in r_edu if e.school}
+    c_schools = {_norm(e.school): e for e in c_edu if e.school}
+    shared_schools = sorted(r_schools & set(c_schools))
+    if shared_schools:
+        score += WEIGHT_SAME_SCHOOL * len(shared_schools)
+        named = [c_schools[k].school.strip() for k in shared_schools if c_schools[k].visible_on_profile]
+        signals.schools_named = named
+        if named:
+            reasons.append(f"Both went to {', '.join(named)}")
+    r_fields = {_norm(e.field_of_study) for e in r_edu if e.field_of_study}
+    c_fields = {_norm(e.field_of_study): e for e in c_edu if e.field_of_study}
+    shared_fields = r_fields & set(c_fields)
+    if shared_fields:
+        score += WEIGHT_SAME_FIELD_OF_STUDY * len(shared_fields)
+        if any(c_fields[k].visible_on_profile for k in shared_fields):
+            reasons.append("Studied the same field")
+
+    # Professional: same industry; same career stage. (Company and role are
+    # deliberately not used: coworkers may not want to be matched, and
+    # free-text job titles don't compare reliably.)
+    rp, cp = r.professional, c.professional
+    if rp and cp:
+        if (
+            rp.industry_usable_for_matching and cp.industry_usable_for_matching
+            and rp.industry and _norm(rp.industry) == _norm(cp.industry)
+        ):
+            score += WEIGHT_SAME_INDUSTRY
+            if cp.industry_visible_on_profile:
+                signals.industry_named = cp.industry.strip()
+                reasons.append(f"Both work in {cp.industry.strip()}")
+        if (
+            rp.career_stage_usable_for_matching and cp.career_stage_usable_for_matching
+            and rp.career_stage and rp.career_stage == cp.career_stage
+        ):
+            score += WEIGHT_SAME_CAREER_STAGE
+            if cp.career_stage_visible_on_profile:
+                reasons.append("At a similar career stage")
+
+    # Dogs: both dog people > one dog + the other comfortable > mismatch
+    def _dogs(info: PersonalInfo):
+        return [p for p in info.pets if p.usable_for_matching and getattr(p.pet_type, "value", p.pet_type) == "dog"]
+
+    def _comfortable(info: PersonalInfo):
+        if info.social and info.social.usable_for_matching:
+            return info.social.comfortable_with_dogs
+        return None
+
+    r_dogs, c_dogs = _dogs(r), _dogs(c)
+    if r_dogs and c_dogs:
+        score += WEIGHT_BOTH_DOG_PEOPLE
+        if any(p.visible_on_profile for p in c_dogs):
+            signals.both_dog_people = True
+            reasons.append("Both have dogs")
+    elif r_dogs or c_dogs:
+        other_comfortable = _comfortable(c) if r_dogs else _comfortable(r)
+        if other_comfortable is True:
+            score += WEIGHT_DOG_FRIENDLY
+        elif other_comfortable is False:
+            score += PENALTY_DOG_MISMATCH  # real friction; never mentioned
+
+    # Shared social goals
+    rs, cs = r.social, c.social
+    if rs and cs and rs.usable_for_matching and cs.usable_for_matching:
+        shared_goals = [g for g in (cs.social_goals or []) if g in set(rs.social_goals or [])]
+        if shared_goals:
+            score += WEIGHT_SHARED_SOCIAL_GOAL * len(shared_goals)
+            if cs.visible_on_profile:
+                signals.goals_named = [GOAL_PHRASES.get(g, g.replace("_", " ")) for g in shared_goals]
+                reasons.append(f"Both looking for {', '.join(signals.goals_named)}")
+
+    return score, reasons
 
 
 def _casual(name: str) -> str:
@@ -282,7 +441,32 @@ def _build_intro(first_name: str, s: PairSignals) -> str:
             "You've got some interests in common, too." if sentences else f"{who} share some of the same interests."
         )
 
-    if s.lifestyle_matches >= 2:
+    # Personal-info extras, most distinctive first, capped so the intro
+    # stays a friendly few lines. Every one is already visibility-gated.
+    extras: list[str] = []  # verb phrases: "<who> both <phrase>"
+    if s.schools_named:
+        extras.append(f"went to {_join(s.schools_named)}")
+    if s.languages_named:
+        extras.append(f"speak {_join(s.languages_named)}")
+    if s.both_dog_people:
+        extras.append("are dog people")
+    if s.industry_named:
+        extras.append(f"work in {_casual(s.industry_named)}")
+    if s.goals_named:
+        extras.append(f"are looking for {_join(s.goals_named[:2])}")
+    if extras:
+        chosen = extras[:MAX_EXTRAS_IN_INTRO]
+        if chosen[0].startswith("are "):
+            # "You're both dog people and looking for..." rather than
+            # "You both are dog people and are looking for..."
+            rest = [c[len("are "):] if c.startswith("are ") else c for c in chosen]
+            lead = "You're" if sentences else f"{who} are"
+            sentences.append(f"{lead} both {' and '.join(rest)}.")
+        else:
+            subject = "You" if sentences else who
+            sentences.append(f"{subject} both {' and '.join(chosen)}.")
+
+    if s.lifestyle_matches >= LIFESTYLE_PACE_MIN_MATCHES:
         sentences.append(
             "It sounds like you move at a similar pace, too." if sentences else f"{who} seem to move at a similar pace."
         )
@@ -341,6 +525,20 @@ def get_ranked_candidates(db: Session, user_id: UUID) -> list[ScoredCandidate]:
     for loc in db.query(UserLocation).filter(UserLocation.user_id.in_(candidate_ids)).all():
         locations_by_user.setdefault(loc.user_id, []).append(loc)
 
+    everyone = candidate_ids + [user_id]
+    info: dict = {uid: PersonalInfo() for uid in everyone}
+    info[user_id].social = requester_social
+    for uid, sp in social_by_user.items():
+        info[uid].social = sp
+    for p in db.query(ProfessionalProfile).filter(ProfessionalProfile.user_id.in_(everyone)).all():
+        info[p.user_id].professional = p
+    for e in db.query(UserEducation).filter(UserEducation.user_id.in_(everyone)).all():
+        info[e.user_id].education.append(e)
+    for l in db.query(UserLanguage).filter(UserLanguage.user_id.in_(everyone)).all():
+        info[l.user_id].languages.append(l)
+    for pet in db.query(UserPet).filter(UserPet.user_id.in_(everyone)).all():
+        info[pet.user_id].pets.append(pet)
+
     activity_names = {
         a.id: a.name for a in db.query(Activity).filter(Activity.id.in_(all_activity_ids)).all()
     }
@@ -362,6 +560,9 @@ def get_ranked_candidates(db: Session, user_id: UUID) -> list[ScoredCandidate]:
             activity_names,
             interest_names,
         )
+        extra_score, extra_reasons = _score_personal_info(info[user_id], info[candidate.id], signals)
+        score += extra_score
+        reasons += extra_reasons
         scored.append(
             ScoredCandidate(
                 user=candidate,
