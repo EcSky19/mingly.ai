@@ -36,25 +36,27 @@ def update_professional_profile(
         profile = ProfessionalProfile(user_id=user.id)
         db.add(profile)
 
-    if body.current_role is not None:
-        profile.current_role = body.current_role.value
-        profile.current_role_visible_on_profile = body.current_role.visible_on_profile
-        profile.current_role_usable_for_matching = body.current_role.usable_for_matching
+    # Omitted field = leave it alone; explicit null = clear it. Clearing
+    # matters: the page shares EITHER company or industry, and switching
+    # must remove the other one, or it silently stays stored and keeps
+    # being used for matching. Same for career stage -> "prefer not to say".
+    fields_set = body.model_fields_set
+    for name in ("current_role", "company", "industry"):
+        if name not in fields_set:
+            continue
+        field = getattr(body, name)
+        if field is None:
+            setattr(profile, name, None)
+        else:
+            setattr(profile, name, field.value)
+            setattr(profile, f"{name}_visible_on_profile", field.visible_on_profile)
+            setattr(profile, f"{name}_usable_for_matching", field.usable_for_matching)
 
-    if body.company is not None:
-        profile.company = body.company.value
-        profile.company_visible_on_profile = body.company.visible_on_profile
-        profile.company_usable_for_matching = body.company.usable_for_matching
-
-    if body.industry is not None:
-        profile.industry = body.industry.value
-        profile.industry_visible_on_profile = body.industry.visible_on_profile
-        profile.industry_usable_for_matching = body.industry.usable_for_matching
-
-    if body.career_stage is not None:
+    if "career_stage" in fields_set:
         profile.career_stage = body.career_stage
-        profile.career_stage_visible_on_profile = body.career_stage_visible_on_profile
-        profile.career_stage_usable_for_matching = body.career_stage_usable_for_matching
+    for toggle in ("career_stage_visible_on_profile", "career_stage_usable_for_matching"):
+        if toggle in fields_set:
+            setattr(profile, toggle, getattr(body, toggle))
 
     db.commit()
     db.refresh(profile)
