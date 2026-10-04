@@ -49,7 +49,10 @@ VERY_CLOSE_MILES = 5
 # Personal info from onboarding - each only counts when BOTH people allowed
 # that field to be used for matching.
 WEIGHT_SHARED_LANGUAGE = 3        # English excluded: near-universal here, so no signal
-WEIGHT_SAME_SCHOOL = 4
+# Same-college alumni is a strong signal on its own - close to a shared loved
+# activity - and deliberately the same whether they graduated one year or
+# twenty years apart (graduation year is intentionally not used).
+WEIGHT_SAME_SCHOOL = 8
 WEIGHT_SAME_FIELD_OF_STUDY = 1.5
 WEIGHT_SAME_INDUSTRY = 2
 WEIGHT_SAME_CAREER_STAGE = 1.5
