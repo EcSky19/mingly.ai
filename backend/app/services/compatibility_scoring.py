@@ -31,6 +31,7 @@ from app.models.user_pet import UserPet
 from app.models.user import User
 from app.models.user_location import UserLocation
 from app.models.user_social_profile import UserSocialProfile
+from app.services.careers import career_family, core_role, core_role_display, family_phrase
 from app.services.eligibility import DEFAULT_TRAVEL_RADIUS_MILES, _haversine_miles, get_eligible_candidates
 
 WEIGHT_SHARED_LOVED_ACTIVITY = 10
@@ -55,7 +56,8 @@ WEIGHT_SHARED_LANGUAGE = 3        # English excluded: near-universal here, so no
 WEIGHT_SAME_SCHOOL = 8
 WEIGHT_SAME_FIELD_OF_STUDY = 1.5
 WEIGHT_SAME_DEGREE = 1
-WEIGHT_SAME_ROLE = 2              # titles come from the autocomplete list, so they compare reliably
+WEIGHT_SAME_ROLE = 3              # same core role, ignoring seniority (see app/services/careers.py)
+WEIGHT_SAME_CAREER_FAMILY = 2     # related roles in the same field, e.g. Data Scientist + Data Engineer
 # A shared language counts fully only if both speak it at least
 # conversationally; if either is still learning it, it's half the signal.
 LEARNING_LANGUAGE_FACTOR = 0.5
@@ -121,6 +123,7 @@ class PairSignals:
     schools_named: list[str] = field(default_factory=list)
     industry_named: str | None = None
     role_named: str | None = None
+    career_family_named: str | None = None
     both_dog_people: bool = False
     goals_named: list[str] = field(default_factory=list)
 
@@ -360,12 +363,23 @@ def _score_personal_info(r: PersonalInfo, c: PersonalInfo, signals: PairSignals)
     if rp and cp:
         if (
             rp.current_role_usable_for_matching and cp.current_role_usable_for_matching
-            and rp.current_role and _norm(rp.current_role) == _norm(cp.current_role)
+            and rp.current_role and cp.current_role
         ):
-            score += WEIGHT_SAME_ROLE
-            if cp.current_role_visible_on_profile:
-                signals.role_named = cp.current_role.strip()
-                reasons.append(f"Both work as {cp.current_role.strip()}")
+            # Similar careers, not just identical titles: same core role first,
+            # otherwise the same career family.
+            r_family, c_family = career_family(rp.current_role), career_family(cp.current_role)
+            if core_role(rp.current_role) == core_role(cp.current_role):
+                score += WEIGHT_SAME_ROLE
+                if cp.current_role_visible_on_profile:
+                    # The shared CORE role, true for both - not their exact title,
+                    # which may include a seniority the requester doesn't have.
+                    signals.role_named = core_role_display(cp.current_role)
+                    reasons.append(f"Both work as {signals.role_named}")
+            elif r_family and r_family == c_family:
+                score += WEIGHT_SAME_CAREER_FAMILY
+                if cp.current_role_visible_on_profile:
+                    signals.career_family_named = family_phrase(c_family)
+                    reasons.append(f"Similar careers ({family_phrase(c_family)})")
         if (
             rp.industry_usable_for_matching and cp.industry_usable_for_matching
             and rp.industry and _norm(rp.industry) == _norm(cp.industry)
@@ -479,9 +493,11 @@ def _build_intro(first_name: str, s: PairSignals) -> str:
         first = role.split()[0] if role.split() else ""
         article = "an" if role[:1] in "aeiou" and not (first.isupper() and len(first) > 1) else "a"
         extras.append(f"work as {article} {role}")
+    if s.career_family_named and not s.role_named:
+        extras.append(f"work in {s.career_family_named}")
     if s.both_dog_people:
         extras.append("are dog people")
-    if s.industry_named:
+    if s.industry_named and not (s.role_named or s.career_family_named):
         extras.append(f"work in {_casual(s.industry_named)}")
     if s.goals_named:
         extras.append(f"are looking for {_join(s.goals_named[:2])}")
