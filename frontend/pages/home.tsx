@@ -54,6 +54,9 @@ export default function Discover() {
   const [photoIndex, setPhotoIndex] = useState(0);
   const [acting, setActing] = useState(false);
   const [actionError, setActionError] = useState("");
+  // Set when your "Interested" completes a mutual match - shown as its own
+  // moment before moving on to the next person.
+  const [justMatched, setJustMatched] = useState<Candidate | null>(null);
 
   useEffect(() => {
     fetch(`${API_URL}/api/auth/me`, { credentials: "include" })
@@ -92,6 +95,8 @@ export default function Discover() {
         body: JSON.stringify({ target_user_id: current.id, action }),
       });
       if (!res.ok) throw new Error();
+      const result: { matched?: boolean } = await res.json();
+      if (action === "interested" && result.matched) setJustMatched(current);
       // Only advance once the server has recorded it, so a failed save
       // never silently skips someone.
       setQueue((prev) => prev.slice(1));
@@ -130,7 +135,25 @@ export default function Discover() {
 
           {!checkingAuth && !loading && loadError && <p className="section-hint">{loadError}</p>}
 
-          {!checkingAuth && !loading && !loadError && !current && (
+          {justMatched && (
+            <div className="discover-card match-moment">
+              <h2 className="match-moment-title">It's a match!</h2>
+              <p>
+                You and {justMatched.first_name} are both interested. Head to your matches to see how
+                to reach them and make a plan.
+              </p>
+              <div className="match-moment-actions">
+                <button type="button" className="cta" onClick={() => router.push("/matches")}>
+                  See your matches
+                </button>
+                <button type="button" className="discover-pass-btn" style={{ flex: "none" }} onClick={() => setJustMatched(null)}>
+                  Keep discovering
+                </button>
+              </div>
+            </div>
+          )}
+
+          {!justMatched && !checkingAuth && !loading && !loadError && !current && (
             <div className="discover-card discover-empty">
               <h2 className="discover-name">
                 {total === 0 ? "No one new to show right now" : "You're all caught up"}
@@ -146,7 +169,7 @@ export default function Discover() {
             </div>
           )}
 
-          {!checkingAuth && !loading && current && (
+          {!justMatched && !checkingAuth && !loading && current && (
             <>
               <p className="discover-counter">
                 {total - queue.length + 1} of {total}
