@@ -629,6 +629,128 @@ export default function OnboardingStyles() {
         padding: 0;
       }
       .discover-nav-link:hover { color: #f6f1e7; }
+      .discover-nav-link-active {
+        color: #e8a548;
+        font-weight: 600;
+      }
+
+      /* Matches (/matches) */
+      .matches-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem;
+        align-items: start;
+      }
+      @media (max-width: 860px) {
+        .matches-grid { grid-template-columns: 1fr; }
+      }
+      .match-card {
+        background: #241f3d;
+        border: 1px solid rgba(185, 175, 209, 0.2);
+        border-radius: 12px;
+        padding: 1.25rem;
+      }
+      .match-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+      .match-avatar {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid rgba(232, 165, 72, 0.4);
+        flex-shrink: 0;
+      }
+      .match-avatar-placeholder {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: #2c2650;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: "Fraunces", serif;
+        font-size: 1.6rem;
+        color: #b9afd1;
+        flex-shrink: 0;
+      }
+      .match-name {
+        font-family: "Fraunces", serif;
+        font-size: 1.3rem;
+        font-weight: 500;
+        margin: 0;
+        color: #f6f1e7;
+      }
+      .match-meta {
+        color: #8f84ad;
+        font-size: 0.85rem;
+        margin: 0.15rem 0 0 0;
+      }
+      .match-contact {
+        margin-top: 1rem;
+        padding: 0.9rem 1rem;
+        background: rgba(232, 165, 72, 0.08);
+        border: 1px solid rgba(232, 165, 72, 0.25);
+        border-radius: 8px;
+      }
+      .match-contact-row {
+        display: flex;
+        gap: 0.6rem;
+        font-size: 0.9rem;
+        margin-bottom: 0.35rem;
+      }
+      .match-contact-row:last-child { margin-bottom: 0; }
+      .match-contact-label {
+        color: #8f84ad;
+        min-width: 4.5rem;
+      }
+      .match-contact a {
+        color: #e8a548;
+        word-break: break-all;
+      }
+      .match-contact-none {
+        color: #b9afd1;
+        font-size: 0.9rem;
+        margin: 0;
+      }
+      .match-unmatch {
+        background: transparent;
+        border: none;
+        color: #8f84ad;
+        font-size: 0.8rem;
+        cursor: pointer;
+        text-decoration: underline;
+        padding: 0;
+        margin-top: 1rem;
+      }
+      .match-unmatch:hover { color: #f472b6; }
+
+      /* The moment a match happens on Discovery */
+      .match-moment {
+        text-align: center;
+        padding: 2.5rem 1.5rem;
+      }
+      .match-moment-title {
+        font-family: "Fraunces", serif;
+        font-size: 2rem;
+        font-weight: 500;
+        color: #e8a548;
+        margin: 0 0 0.5rem 0;
+      }
+      .match-moment p {
+        color: #b9afd1;
+        max-width: 30em;
+        margin: 0 auto 1.5rem auto;
+        line-height: 1.6;
+      }
+      .match-moment-actions {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
       .discover-card {
         background: #241f3d;
         border: 1px solid rgba(185, 175, 209, 0.2);

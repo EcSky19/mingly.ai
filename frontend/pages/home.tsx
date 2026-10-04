@@ -2,6 +2,7 @@ import Head from "next/head";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import OnboardingStyles from "../components/OnboardingStyles";
+import AppNav from "../components/AppNav";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -102,15 +103,6 @@ export default function Discover() {
     }
   }
 
-  async function handleLogout() {
-    try {
-      await fetch(`${API_URL}/api/auth/logout`, { method: "POST", credentials: "include" });
-    } catch {
-      // Fails open - worst case they see the sign-in page next visit anyway.
-    }
-    router.push("/");
-  }
-
   const allPhotos: CandidatePhoto[] = current
     ? [...(current.photo_url ? [{ url: current.photo_url, tag: null }] : []), ...current.photos]
     : [];
@@ -129,20 +121,7 @@ export default function Discover() {
       </Head>
       <main className="page">
         <div className="profile-wrap">
-          <div className="discover-topbar">
-            <span className="wordmark">
-              <img src="/mingly-mark.png" alt="" className="mark" />
-              <span>Mingly.ai</span>
-            </span>
-            <nav className="discover-nav">
-              <button type="button" className="discover-nav-link" onClick={() => router.push("/profile")}>
-                My Profile
-              </button>
-              <button type="button" className="discover-nav-link" onClick={handleLogout}>
-                Log out
-              </button>
-            </nav>
-          </div>
+          <AppNav />
 
           <h1 className="headline">People you might click with</h1>
           <p className="subhead">Ranked by what you actually share - activities first.</p>
