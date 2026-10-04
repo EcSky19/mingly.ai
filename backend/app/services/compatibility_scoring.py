@@ -54,6 +54,11 @@ WEIGHT_SHARED_LANGUAGE = 3        # English excluded: near-universal here, so no
 # twenty years apart (graduation year is intentionally not used).
 WEIGHT_SAME_SCHOOL = 8
 WEIGHT_SAME_FIELD_OF_STUDY = 1.5
+WEIGHT_SAME_DEGREE = 1
+WEIGHT_SAME_ROLE = 2              # titles come from the autocomplete list, so they compare reliably
+# A shared language counts fully only if both speak it at least
+# conversationally; if either is still learning it, it's half the signal.
+LEARNING_LANGUAGE_FACTOR = 0.5
 WEIGHT_SAME_INDUSTRY = 2
 WEIGHT_SAME_CAREER_STAGE = 1.5
 WEIGHT_BOTH_DOG_PEOPLE = 3
@@ -115,6 +120,7 @@ class PairSignals:
     languages_named: list[str] = field(default_factory=list)
     schools_named: list[str] = field(default_factory=list)
     industry_named: str | None = None
+    role_named: str | None = None
     both_dog_people: bool = False
     goals_named: list[str] = field(default_factory=list)
 
@@ -308,11 +314,14 @@ def _score_personal_info(r: PersonalInfo, c: PersonalInfo, signals: PairSignals)
     reasons: list[str] = []
 
     # Languages (English excluded - near-universal here, so no signal)
-    r_langs = {_norm(l.language) for l in r.languages if l.usable_for_matching and l.language}
+    r_langs = {_norm(l.language): l for l in r.languages if l.usable_for_matching and l.language}
     c_langs = {_norm(l.language): l for l in c.languages if l.usable_for_matching and l.language}
-    shared = sorted(k for k in r_langs & set(c_langs) if k != "english")
+    shared = sorted(k for k in set(r_langs) & set(c_langs) if k != "english")
     if shared:
-        score += WEIGHT_SHARED_LANGUAGE * len(shared)
+        for k in shared:
+            levels = {getattr(x.proficiency, "value", x.proficiency) for x in (r_langs[k], c_langs[k])}
+            factor = LEARNING_LANGUAGE_FACTOR if "learning" in levels else 1.0
+            score += WEIGHT_SHARED_LANGUAGE * factor
         named = [c_langs[k].language.strip() for k in shared if c_langs[k].visible_on_profile]
         signals.languages_named = named
         if named:
@@ -337,12 +346,26 @@ def _score_personal_info(r: PersonalInfo, c: PersonalInfo, signals: PairSignals)
         score += WEIGHT_SAME_FIELD_OF_STUDY * len(shared_fields)
         if any(c_fields[k].visible_on_profile for k in shared_fields):
             reasons.append("Studied the same field")
+    r_degrees = {_norm(e.degree) for e in r_edu if e.degree}
+    c_degrees = {_norm(e.degree): e for e in c_edu if e.degree}
+    shared_degrees = r_degrees & set(c_degrees)
+    if shared_degrees:
+        score += WEIGHT_SAME_DEGREE
+        if any(c_degrees[k].visible_on_profile for k in shared_degrees):
+            reasons.append("Same degree")
 
-    # Professional: same industry; same career stage. (Company and role are
-    # deliberately not used: coworkers may not want to be matched, and
-    # free-text job titles don't compare reliably.)
+    # Professional: same role, industry, career stage. (Company pending a
+    # product decision on whether to match coworkers.)
     rp, cp = r.professional, c.professional
     if rp and cp:
+        if (
+            rp.current_role_usable_for_matching and cp.current_role_usable_for_matching
+            and rp.current_role and _norm(rp.current_role) == _norm(cp.current_role)
+        ):
+            score += WEIGHT_SAME_ROLE
+            if cp.current_role_visible_on_profile:
+                signals.role_named = cp.current_role.strip()
+                reasons.append(f"Both work as {cp.current_role.strip()}")
         if (
             rp.industry_usable_for_matching and cp.industry_usable_for_matching
             and rp.industry and _norm(rp.industry) == _norm(cp.industry)
@@ -451,6 +474,11 @@ def _build_intro(first_name: str, s: PairSignals) -> str:
         extras.append(f"went to {_join(s.schools_named)}")
     if s.languages_named:
         extras.append(f"speak {_join(s.languages_named)}")
+    if s.role_named:
+        role = _casual(s.role_named)
+        first = role.split()[0] if role.split() else ""
+        article = "an" if role[:1] in "aeiou" and not (first.isupper() and len(first) > 1) else "a"
+        extras.append(f"work as {article} {role}")
     if s.both_dog_people:
         extras.append("are dog people")
     if s.industry_named:
