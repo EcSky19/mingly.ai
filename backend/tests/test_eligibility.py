@@ -303,3 +303,33 @@ def test_candidate_lookup_is_not_n_plus_one():
         f"(2 candidates: {small_count} queries, 8 candidates: {large_count} queries) - "
         f"if this fails, the N+1 pattern has regressed."
     )
+
+
+# --- Consent: 'usable for matching' opt-outs must be respected ---
+
+def test_gender_opted_out_of_matching_is_not_used():
+    """B is a man but turned off 'usable for matching' for gender
+    identity. A only wants to meet men. B's gender must not be used to
+    include him - he's treated like 'prefer not to say', reachable only
+    through an 'everyone' preference."""
+    db = SessionLocal()
+    a = _make_user(db)
+    b = _make_user(db)
+    _make_social(db, a.id, mingle_preference=["men"])
+    _make_social(db, b.id, gender_identity="man", gender_identity_usable_for_matching=False)
+    _make_location(db, a.id, *NYC)
+    _make_location(db, b.id, *NYC_NEARBY)
+    assert b.id not in [c.id for c in get_eligible_candidates(db, a.id)]
+    db.close()
+
+
+def test_age_opted_out_of_matching_is_not_used():
+    db = SessionLocal()
+    a = _make_user(db)
+    b = _make_user(db)
+    _make_social(db, a.id, age_preference=["40_49"])
+    _make_social(db, b.id, age_range="40_49", age_range_usable_for_matching=False)
+    _make_location(db, a.id, *NYC)
+    _make_location(db, b.id, *NYC_NEARBY)
+    assert b.id not in [c.id for c in get_eligible_candidates(db, a.id)]
+    db.close()

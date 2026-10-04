@@ -315,3 +315,26 @@ def test_intro_never_names_items_the_candidate_hid():
     assert "among other things" in result.intro  # acknowledged, not named
     assert "some interests in common" in result.intro
     db.close()
+
+
+def test_lifestyle_opted_out_of_matching_is_not_used():
+    """Two candidates with identical lifestyle answers - one opted out of
+    'usable for matching' for their lifestyle section. Only the opted-in
+    one may get lifestyle credit or a 'similar pace' mention."""
+    db = SessionLocal()
+    a = _make_user(db)
+    opted_in = _make_user(db, first_name="In")
+    opted_out = _make_user(db, first_name="Out")
+    for u in (a, opted_in, opted_out):
+        _make_location(db, u.id)
+    same = dict(activity_level="active", going_out_frequency="often", social_cadence="about_once_per_week")
+    db.add(UserSocialProfile(user_id=a.id, visible_on_profile=False, usable_for_matching=True, **same))
+    db.add(UserSocialProfile(user_id=opted_in.id, visible_on_profile=False, usable_for_matching=True, **same))
+    db.add(UserSocialProfile(user_id=opted_out.id, visible_on_profile=False, usable_for_matching=False, **same))
+    db.commit()
+
+    ranked = {sc.user.id: sc for sc in get_ranked_candidates(db, a.id)}
+    assert ranked[opted_in.id].score > ranked[opted_out.id].score
+    assert "pace" not in ranked[opted_out.id].intro
+    assert not any("lifestyle" in r.lower() for r in ranked[opted_out.id].reasons)
+    db.close()
