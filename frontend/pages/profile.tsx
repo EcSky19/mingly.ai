@@ -186,6 +186,12 @@ export default function Profile() {
   const [agePreference, setAgePreference] = useState<string[]>(["everyone"]);
   const [savingAboutYou, setSavingAboutYou] = useState(false);
   const [aboutYouError, setAboutYouError] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [contactInstagram, setContactInstagram] = useState("");
+  const [savingContact, setSavingContact] = useState(false);
+  const [contactError, setContactError] = useState("");
+  const [contactSaved, setContactSaved] = useState(false);
 
   useEffect(() => {
     fetch(`${API_URL}/api/auth/me`, { credentials: "include" })
@@ -258,6 +264,16 @@ export default function Profile() {
       .then(setPets)
       .catch(() => {});
 
+    fetch(`${API_URL}/api/profile/match-contact`, { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: { email?: string | null; phone?: string | null; instagram?: string | null } | null) => {
+        if (!data) return;
+        setContactEmail(data.email || "");
+        setContactPhone(data.phone || "");
+        setContactInstagram(data.instagram ? `@${data.instagram}` : "");
+      })
+      .catch(() => {});
+
     fetch(`${API_URL}/api/profile/social`, { credentials: "include" })
       .then((r) => (r.ok ? r.json() : null))
       .then((data: SocialData | null) => {
@@ -278,6 +294,37 @@ export default function Profile() {
       })
       .catch(() => {});
   }, [checkingAuth]);
+
+  async function saveMatchContact() {
+    setSavingContact(true);
+    setContactError("");
+    setContactSaved(false);
+    try {
+      const res = await fetch(`${API_URL}/api/profile/match-contact`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          email: contactEmail.trim() || null,
+          phone: contactPhone.trim() || null,
+          instagram: contactInstagram.trim() || null,
+        }),
+      });
+      if (res.ok) {
+        const saved = await res.json();
+        setContactInstagram(saved.instagram ? `@${saved.instagram}` : "");
+        setContactSaved(true);
+      } else {
+        const err = await res.json().catch(() => null);
+        const msg = err?.detail?.[0]?.msg;
+        setContactError(msg ? String(msg).replace("Value error, ", "") : "Couldn't save that.");
+      }
+    } catch {
+      setContactError("Couldn't save that.");
+    } finally {
+      setSavingContact(false);
+    }
+  }
 
   async function handleLogout() {
     try {
@@ -765,6 +812,54 @@ export default function Profile() {
                 </div>
               </>
             )}
+          </CollapsibleSection>
+
+          <CollapsibleSection
+            title="How Matches Can Reach You"
+            summary={contactEmail || contactPhone || contactInstagram ? "Added" : "Optional"}
+          >
+            <p className="section-hint">
+              Only people you've matched with - where you've both said you're interested - can see
+              this. Nobody else ever does, and unmatching hides it again right away. Add as much or
+              as little as you're comfortable with.
+            </p>
+            <div className="field">
+              <label className="field-label">Email</label>
+              <input
+                className="field-input"
+                type="email"
+                placeholder="you@example.com"
+                value={contactEmail}
+                onChange={(e) => setContactEmail(e.target.value)}
+              />
+            </div>
+            <div className="field">
+              <label className="field-label">Phone</label>
+              <input
+                className="field-input"
+                type="tel"
+                placeholder="+1 (555) 555-0123"
+                value={contactPhone}
+                onChange={(e) => setContactPhone(e.target.value)}
+              />
+            </div>
+            <div className="field">
+              <label className="field-label">Instagram</label>
+              <input
+                className="field-input"
+                type="text"
+                placeholder="@yourhandle"
+                value={contactInstagram}
+                onChange={(e) => setContactInstagram(e.target.value)}
+              />
+            </div>
+            {contactError && <p className="section-hint" style={{ color: "#f472b6" }}>{contactError}</p>}
+            {contactSaved && !contactError && <p className="saved-hint">Saved.</p>}
+            <div className="actions">
+              <button type="button" className="cta" disabled={savingContact} onClick={saveMatchContact}>
+                {savingContact ? "Saving…" : "Save"}
+              </button>
+            </div>
           </CollapsibleSection>
 
           </div>
