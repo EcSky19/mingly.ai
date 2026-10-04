@@ -17,6 +17,7 @@ class InteractionOut(BaseModel):
     id: UUID
     target_user_id: UUID
     action: InteractionAction
+    matched: bool = False
 
     class Config:
         from_attributes = True

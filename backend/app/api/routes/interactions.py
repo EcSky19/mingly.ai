@@ -9,6 +9,7 @@ from app.db.session import get_db
 from app.models.user import User
 from app.models.user_interaction import UserInteraction
 from app.schemas.interactions import InteractionOut, InteractionRequest
+from app.services.matches import is_mutual_match
 from app.services.session_auth import get_current_user
 
 router = APIRouter(prefix="/api/discover", tags=["discover"])
@@ -37,13 +38,24 @@ def record_interaction(body: InteractionRequest, request: Request, db: Session =
         existing.action = body.action
         db.commit()
         db.refresh(existing)
-        return existing
+        return _with_match_flag(db, existing)
 
     interaction = UserInteraction(user_id=user.id, target_user_id=body.target_user_id, action=body.action)
     db.add(interaction)
     db.commit()
     db.refresh(interaction)
-    return interaction
+    return _with_match_flag(db, interaction)
+
+
+def _with_match_flag(db: Session, interaction: UserInteraction) -> InteractionOut:
+    """matched=True when this 'interested' completes a mutual match, so the
+    Discovery page can celebrate the moment it happens."""
+    return InteractionOut(
+        id=interaction.id,
+        target_user_id=interaction.target_user_id,
+        action=interaction.action,
+        matched=is_mutual_match(db, interaction.user_id, interaction.target_user_id),
+    )
 
 
 @router.get("/interactions", response_model=list[InteractionOut])
