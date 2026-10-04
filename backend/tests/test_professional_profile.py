@@ -405,3 +405,42 @@ def test_pet_delete_scoped_to_owner(test_user):
 
     other_db.close()
     client.cookies.clear()
+
+
+# --- Clearing fields: explicit null clears, omission leaves alone ---
+
+def _cookie_for(user_id: str) -> dict:
+    # Earlier tests in this file set cookies on the shared client; clear
+    # them so a previous test's session can't bleed into these requests.
+    client.cookies.clear()
+    return {settings.SESSION_COOKIE_NAME: _session_cookie_for(user_id)}
+
+
+def test_switching_to_company_clears_the_previously_shared_industry(test_user):
+    """The page shares EITHER company or industry. Switching from
+    industry to company must remove the old industry, or it silently
+    stays stored and keeps being used for matching."""
+    cookies = _cookie_for(str(test_user.id))
+    field = {"visible_on_profile": True, "usable_for_matching": True}
+    client.put("/api/profile/professional", json={"industry": {"value": "Technology", **field}}, cookies=cookies)
+    client.put("/api/profile/professional", json={"company": {"value": "Acme", **field}, "industry": None}, cookies=cookies)
+    fetched = client.get("/api/profile/professional", cookies=cookies).json()
+    assert fetched["company"] == "Acme"
+    assert fetched["industry"] is None, "previously shared industry was left behind"
+
+
+def test_prefer_not_to_say_clears_a_saved_career_stage(test_user):
+    cookies = _cookie_for(str(test_user.id))
+    client.put("/api/profile/professional", json={"career_stage": "mid_career"}, cookies=cookies)
+    client.put("/api/profile/professional", json={"career_stage": None}, cookies=cookies)
+    assert client.get("/api/profile/professional", cookies=cookies).json()["career_stage"] is None
+
+
+def test_omitted_fields_are_left_untouched(test_user):
+    cookies = _cookie_for(str(test_user.id))
+    field = {"visible_on_profile": False, "usable_for_matching": False}
+    client.put("/api/profile/professional", json={"industry": {"value": "Finance", **field}, "career_stage": "early_career"}, cookies=cookies)
+    client.put("/api/profile/professional", json={"current_role": {"value": "Analyst", **field}}, cookies=cookies)
+    fetched = client.get("/api/profile/professional", cookies=cookies).json()
+    assert fetched["industry"] == "Finance" and fetched["industry_usable_for_matching"] is False
+    assert fetched["career_stage"] == "early_career"
