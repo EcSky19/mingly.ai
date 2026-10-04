@@ -153,6 +153,8 @@ export default function Onboarding() {
   const [company, setCompany] = useState<FieldState>(emptyField());
   const [industry, setIndustry] = useState<FieldState>(emptyField());
   const [careerStage, setCareerStage] = useState("");
+  const [careerStageVisible, setCareerStageVisible] = useState(false);
+  const [careerStageMatching, setCareerStageMatching] = useState(true);
   const [education, setEducation] = useState<EducationEntry[]>([emptyEducationEntry()]);
 
   const [languages, setLanguages] = useState<LanguageEntry[]>([emptyLanguageEntry()]);
@@ -188,21 +190,42 @@ export default function Onboarding() {
         (
           data: {
             current_role?: string;
+            current_role_visible_on_profile?: boolean;
+            current_role_usable_for_matching?: boolean;
             company?: string;
+            company_visible_on_profile?: boolean;
+            company_usable_for_matching?: boolean;
             industry?: string;
+            industry_visible_on_profile?: boolean;
+            industry_usable_for_matching?: boolean;
             career_stage?: string;
+            career_stage_visible_on_profile?: boolean;
+            career_stage_usable_for_matching?: boolean;
           } | null
         ) => {
           if (!data) return;
-          if (data.current_role) setCurrentRole({ ...emptyField(), value: data.current_role });
+          // Restore each field's SAVED privacy choices too - restoring only the
+          // value reset the toggles to defaults, so saving again silently
+          // reverted someone's "don't use for matching" choice.
+          const restored = (value: string, visible?: boolean, usable?: boolean): FieldState => ({
+            ...emptyField(),
+            value,
+            visibleOnProfile: visible ?? false,
+            usableForMatching: usable ?? true,
+          });
+          if (data.current_role) {
+            setCurrentRole(restored(data.current_role, data.current_role_visible_on_profile, data.current_role_usable_for_matching));
+          }
           if (data.company) {
-            setCompany({ ...emptyField(), value: data.company });
+            setCompany(restored(data.company, data.company_visible_on_profile, data.company_usable_for_matching));
             setShareCompany(true);
           } else if (data.industry) {
-            setIndustry({ ...emptyField(), value: data.industry });
+            setIndustry(restored(data.industry, data.industry_visible_on_profile, data.industry_usable_for_matching));
             setShareCompany(false);
           }
           if (data.career_stage) setCareerStage(data.career_stage);
+          setCareerStageVisible(data.career_stage_visible_on_profile ?? false);
+          setCareerStageMatching(data.career_stage_usable_for_matching ?? true);
         }
       )
       .catch(() => {});
@@ -357,7 +380,9 @@ export default function Onboarding() {
   }
 
   function fieldPayload(f: FieldState) {
-    if (!f.value.trim()) return undefined;
+    // null (not undefined) so an emptied field is actually cleared - an
+    // omitted key means "leave unchanged" to the backend.
+    if (!f.value.trim()) return null;
     return {
       value: f.value,
       visible_on_profile: f.visibleOnProfile,
@@ -591,9 +616,13 @@ export default function Onboarding() {
     try {
       const body = {
         current_role: fieldPayload(currentRole),
-        company: shareCompany ? fieldPayload(company) : undefined,
-        industry: !shareCompany ? fieldPayload(industry) : undefined,
-        career_stage: careerStage || undefined,
+        // Sharing one means NOT sharing the other: clear it, so an old value
+        // can't linger and keep being used for matching.
+        company: shareCompany ? fieldPayload(company) : null,
+        industry: !shareCompany ? fieldPayload(industry) : null,
+        career_stage: careerStage || null,
+        career_stage_visible_on_profile: careerStageVisible,
+        career_stage_usable_for_matching: careerStageMatching,
       };
       await fetch(`${API_URL}/api/profile/professional`, {
         method: "PUT",
@@ -747,6 +776,12 @@ export default function Onboarding() {
                 ))}
               </select>
             </div>
+            <PrivacyToggles
+              visibleOnProfile={careerStageVisible}
+              usableForMatching={careerStageMatching}
+              onChangeVisible={setCareerStageVisible}
+              onChangeMatching={setCareerStageMatching}
+            />
           </CollapsibleSection>
 
           <CollapsibleSection
