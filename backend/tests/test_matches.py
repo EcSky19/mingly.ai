@@ -71,16 +71,16 @@ def test_match_contact_is_normalized_and_partially_updatable():
     _, cookies = _person()
     saved = client.put(
         "/api/profile/match-contact",
-        json={"email": " me@example.com ", "phone": "+1 (917) 555-0123", "instagram": "@my.handle"},
+        json={"linkedin_url": "linkedin.com/in/Me-Here/?utm_source=share", "phone": "+1 (917) 555-0123", "instagram": "@my.handle"},
         cookies=cookies,
     ).json()
-    assert saved == {"email": "me@example.com", "phone": "+1 (917) 555-0123", "instagram": "my.handle"}
+    assert saved == {"linkedin_url": "https://www.linkedin.com/in/me-here", "phone": "+1 (917) 555-0123", "instagram": "my.handle"}
 
     after = client.put("/api/profile/match-contact", json={"phone": ""}, cookies=cookies).json()
-    assert after["phone"] is None and after["email"] == "me@example.com", "blank clears; omitted fields untouched"
+    assert after["phone"] is None and after["linkedin_url"] == "https://www.linkedin.com/in/me-here", "blank clears; omitted fields untouched"
 
 
-@pytest.mark.parametrize("bad", [{"email": "not-an-email"}, {"phone": "12"}, {"instagram": "has spaces!"}])
+@pytest.mark.parametrize("bad", [{"linkedin_url": "https://evil.com/in/x"}, {"linkedin_url": "https://linkedin.com.evil.com/in/x"}, {"linkedin_url": "linkedin.com/company/acme"}, {"phone": "12"}, {"instagram": "has spaces!"}])
 def test_invalid_match_contact_rejected(bad):
     _, cookies = _person()
     assert client.put("/api/profile/match-contact", json=bad, cookies=cookies).status_code == 422
@@ -91,47 +91,47 @@ def test_invalid_match_contact_rejected(bad):
 def test_one_sided_interest_is_not_a_match_and_reveals_nothing():
     a, a_cookies = _person("Avery")
     b, b_cookies = _person("Blake")
-    client.put("/api/profile/match-contact", json={"email": "avery@example.com"}, cookies=a_cookies)
+    client.put("/api/profile/match-contact", json={"linkedin_url": "linkedin.com/in/avery-secret"}, cookies=a_cookies)
 
     assert _interested(a_cookies, b)["matched"] is False
     assert client.get("/api/matches", cookies=a_cookies).json() == []
     assert client.get("/api/matches", cookies=b_cookies).json() == []
-    assert "avery@example.com" not in json.dumps(client.get("/api/discover/candidates", cookies=b_cookies).json())
+    assert "avery-secret" not in json.dumps(client.get("/api/discover/candidates", cookies=b_cookies).json())
 
 
 def test_mutual_interest_is_a_match_and_shares_contact_both_ways():
     a, a_cookies = _person("Avery")
     b, b_cookies = _person("Blake")
-    client.put("/api/profile/match-contact", json={"email": "avery@example.com"}, cookies=a_cookies)
+    client.put("/api/profile/match-contact", json={"linkedin_url": "linkedin.com/in/avery-secret"}, cookies=a_cookies)
 
     _interested(a_cookies, b)
     assert _interested(b_cookies, a)["matched"] is True, "second 'interested' completes the match"
 
     blakes = client.get("/api/matches", cookies=b_cookies).json()
     assert [m["id"] for m in blakes] == [a]
-    assert blakes[0]["contact"]["email"] == "avery@example.com"
+    assert blakes[0]["contact"]["linkedin_url"] == "https://www.linkedin.com/in/avery-secret"
     averys = client.get("/api/matches", cookies=a_cookies).json()
     assert [m["id"] for m in averys] == [b]
-    assert averys[0]["contact"] == {"email": None, "phone": None, "instagram": None}
+    assert averys[0]["contact"] == {"linkedin_url": None, "phone": None, "instagram": None}
 
 
 def test_contact_never_visible_to_a_third_person():
     a, a_cookies = _person("Avery")
     b, b_cookies = _person("Blake")
     _, c_cookies = _person("Casey")
-    client.put("/api/profile/match-contact", json={"email": "avery@example.com", "instagram": "avery.ig"}, cookies=a_cookies)
+    client.put("/api/profile/match-contact", json={"linkedin_url": "linkedin.com/in/avery-secret", "instagram": "avery.ig"}, cookies=a_cookies)
     _interested(a_cookies, b)
     _interested(b_cookies, a)
 
     for path in ("/api/matches", "/api/discover/candidates"):
         raw = json.dumps(client.get(path, cookies=c_cookies).json())
-        assert "avery@example.com" not in raw and "avery.ig" not in raw
+        assert "avery-secret" not in raw and "avery.ig" not in raw
 
 
 def test_unmatch_ends_it_for_both_and_hides_contact_immediately():
     a, a_cookies = _person("Avery")
     b, b_cookies = _person("Blake")
-    client.put("/api/profile/match-contact", json={"email": "avery@example.com"}, cookies=a_cookies)
+    client.put("/api/profile/match-contact", json={"linkedin_url": "linkedin.com/in/avery-secret"}, cookies=a_cookies)
     _interested(a_cookies, b)
     _interested(b_cookies, a)
 
@@ -139,7 +139,7 @@ def test_unmatch_ends_it_for_both_and_hides_contact_immediately():
     assert client.get("/api/matches", cookies=a_cookies).json() == []
     assert client.get("/api/matches", cookies=b_cookies).json() == []
     raw = json.dumps([client.get(p, cookies=b_cookies).json() for p in ("/api/matches", "/api/discover/candidates")])
-    assert "avery@example.com" not in raw
+    assert "avery-secret" not in raw
 
 
 def test_unmatching_someone_you_are_not_matched_with_404s():
