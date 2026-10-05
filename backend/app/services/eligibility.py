@@ -136,13 +136,21 @@ def get_eligible_candidates(db: Session, user_id: UUID) -> list[User]:
     if not requester:
         return []
 
+    # Directional, on purpose. Someone leaves YOUR feed if you've already
+    # decided on them (interested or pass), or if they passed on you. But
+    # someone who's INTERESTED in you must stay in your feed - that's the
+    # only way you can ever match back. (Excluding any interaction in either
+    # direction made matching through the app impossible: the moment one
+    # person tapped Interested, they vanished from the other's feed.)
     already_interacted = set()
     for row in db.query(UserInteraction).filter(
         or_(UserInteraction.user_id == user_id, UserInteraction.target_user_id == user_id)
     ):
-        already_interacted.add(row.user_id)
-        already_interacted.add(row.target_user_id)
-    already_interacted.discard(user_id)
+        action = getattr(row.action, "value", row.action)
+        if row.user_id == user_id and action in ("interested", "dismissed"):
+            already_interacted.add(row.target_user_id)
+        elif row.target_user_id == user_id and action == "dismissed":
+            already_interacted.add(row.user_id)
 
     requester_social = db.query(UserSocialProfile).filter(UserSocialProfile.user_id == user_id).first()
     requester_locations = db.query(UserLocation).filter(UserLocation.user_id == user_id).all()
