@@ -66,6 +66,11 @@ WEIGHT_SAME_CAREER_STAGE = 1.5
 WEIGHT_BOTH_DOG_PEOPLE = 3
 WEIGHT_DOG_FRIENDLY = 2           # one has a dog, the other is comfortable around dogs
 PENALTY_DOG_MISMATCH = -3         # one has a dog, the other said they're not comfortable
+WEIGHT_DOGS_NOT_SOCIAL = 1        # both have dogs, but one isn't comfortable around other dogs - dog meetups won't work
+WEIGHT_SAME_DOG_ENERGY = 1        # dogs with the same activity level make easy walk/run partners
+WEIGHT_SAME_DOG_SIZE = 1          # similar-size dogs play together more safely
+WEIGHT_BOTH_CAT_PEOPLE = 2        # shared identity, though there's no joint outing like with dogs
+WEIGHT_BOTH_PET_OWNERS = 1        # both have pets, just different kinds
 WEIGHT_SHARED_SOCIAL_GOAL = 2
 MAX_EXTRAS_IN_INTRO = 2           # keep the intro a friendly few lines, not a wall
 LIFESTYLE_PACE_MIN_MATCHES = 3
@@ -125,6 +130,7 @@ class PairSignals:
     role_named: str | None = None
     career_family_named: str | None = None
     both_dog_people: bool = False
+    both_cat_people: bool = False
     goals_named: list[str] = field(default_factory=list)
 
 
@@ -396,27 +402,54 @@ def _score_personal_info(r: PersonalInfo, c: PersonalInfo, signals: PairSignals)
             if cp.career_stage_visible_on_profile:
                 reasons.append("At a similar career stage")
 
-    # Dogs: both dog people > one dog + the other comfortable > mismatch
-    def _dogs(info: PersonalInfo):
-        return [p for p in info.pets if p.usable_for_matching and getattr(p.pet_type, "value", p.pet_type) == "dog"]
+    # Pets. Each pet entry has its own "usable for matching" toggle.
+    def _pets(info: PersonalInfo, kind: str | None = None):
+        return [
+            p for p in info.pets
+            if p.usable_for_matching and (kind is None or getattr(p.pet_type, "value", p.pet_type) == kind)
+        ]
+
+    def _val(x):
+        return getattr(x, "value", x)
 
     def _comfortable(info: PersonalInfo):
         if info.social and info.social.usable_for_matching:
             return info.social.comfortable_with_dogs
         return None
 
-    r_dogs, c_dogs = _dogs(r), _dogs(c)
+    r_dogs, c_dogs = _pets(r, "dog"), _pets(c, "dog")
+    r_cats, c_cats = _pets(r, "cat"), _pets(c, "cat")
     if r_dogs and c_dogs:
-        score += WEIGHT_BOTH_DOG_PEOPLE
+        # Both dog people. If either dog isn't comfortable around other dogs,
+        # dog meetups won't work, so it's a much weaker signal.
+        dogs_social = all(d.comfortable_with_other_dogs is not False for d in r_dogs + c_dogs)
+        score += WEIGHT_BOTH_DOG_PEOPLE if dogs_social else WEIGHT_DOGS_NOT_SOCIAL
         if any(p.visible_on_profile for p in c_dogs):
             signals.both_dog_people = True
             reasons.append("Both have dogs")
+        r_energy = {_val(d.activity_level) for d in r_dogs if d.activity_level}
+        c_energy = {_val(d.activity_level) for d in c_dogs if d.activity_level}
+        if r_energy & c_energy:
+            score += WEIGHT_SAME_DOG_ENERGY
+        r_size = {_val(d.size) for d in r_dogs if d.size}
+        c_size = {_val(d.size) for d in c_dogs if d.size}
+        if r_size & c_size:
+            score += WEIGHT_SAME_DOG_SIZE
     elif r_dogs or c_dogs:
         other_comfortable = _comfortable(c) if r_dogs else _comfortable(r)
         if other_comfortable is True:
             score += WEIGHT_DOG_FRIENDLY
         elif other_comfortable is False:
             score += PENALTY_DOG_MISMATCH  # real friction; never mentioned
+
+    if r_cats and c_cats:
+        score += WEIGHT_BOTH_CAT_PEOPLE
+        if any(p.visible_on_profile for p in c_cats):
+            signals.both_cat_people = True
+            reasons.append("Both have cats")
+    elif _pets(r) and _pets(c) and not (r_dogs and c_dogs):
+        # Both have pets, just not the same kind (e.g. a cat and a rabbit)
+        score += WEIGHT_BOTH_PET_OWNERS
 
     # Shared social goals
     rs, cs = r.social, c.social
@@ -497,6 +530,8 @@ def _build_intro(first_name: str, s: PairSignals) -> str:
         extras.append(f"work in {s.career_family_named}")
     if s.both_dog_people:
         extras.append("are dog people")
+    if s.both_cat_people:
+        extras.append("are cat people")
     if s.industry_named and not (s.role_named or s.career_family_named):
         extras.append(f"work in {_casual(s.industry_named)}")
     if s.goals_named:
