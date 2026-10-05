@@ -23,6 +23,7 @@ class CandidateOut(BaseModel):
     score: float
     reasons: list[str]
     intro: str = ""
+    deferred: bool = False  # you chose 'Decide later' on them
     photo_url: Optional[str] = None
     headline: Optional[str] = None
     photos: list[CandidatePhoto] = []
