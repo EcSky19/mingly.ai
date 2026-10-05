@@ -1,5 +1,6 @@
 """
-How someone's MATCHES can reach them - entirely optional. Kept in its own
+How someone's MATCHES can reach them - entirely optional: a LinkedIn
+profile link, phone, and/or Instagram. (Email was removed as too personal.) Kept in its own
 table, separate from every other profile field, because it's the most
 sensitive thing a person can share here: it's only ever returned to its
 owner and to their current mutual matches (both marked each other
@@ -21,7 +22,7 @@ class UserMatchContact(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True, index=True)
 
-    email = Column(String, nullable=True)
+    linkedin_url = Column(String, nullable=True)  # canonical https://www.linkedin.com/in/<slug>
     phone = Column(String, nullable=True)
     instagram = Column(String, nullable=True)  # stored without the leading @
 
