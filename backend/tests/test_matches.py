@@ -165,3 +165,30 @@ def test_suspended_account_disappears_from_matches():
 def test_matches_require_auth():
     assert client.get("/api/matches").status_code == 401
     assert client.delete(f"/api/matches/{uuid.uuid4()}").status_code == 401
+
+
+def _feed_ids(cookies):
+    return [c["id"] for c in client.get("/api/discover/candidates", cookies=cookies).json()]
+
+
+def test_someone_interested_in_you_stays_in_your_feed_so_you_can_match_back():
+    """The real path, through the feed: Avery taps Interested on Blake.
+    Blake must still see Avery in Discovery, or he could never match back."""
+    a, a_cookies = _person("Avery")
+    b, b_cookies = _person("Blake")
+    assert b in _feed_ids(a_cookies)
+    _interested(a_cookies, b)
+    assert a in _feed_ids(b_cookies), "Avery vanished from Blake's feed - he can never match back"
+    s = client.post("/api/discover/interact", json={"target_user_id": a, "action": "interested"}, cookies=b_cookies).json()
+    assert s["matched"] is True
+
+
+def test_people_you_decided_on_leave_your_feed_and_people_who_passed_on_you_too():
+    a, a_cookies = _person("Avery")
+    b, b_cookies = _person("Blake")
+    c, c_cookies = _person("Casey")
+    _interested(a_cookies, b)
+    client.post("/api/discover/interact", json={"target_user_id": c, "action": "dismissed"}, cookies=a_cookies)
+    feed = _feed_ids(a_cookies)
+    assert b not in feed and c not in feed, "people you've decided on leave your own feed"
+    assert a not in _feed_ids(c_cookies), "someone who passed on you shouldn't keep appearing in your feed"
