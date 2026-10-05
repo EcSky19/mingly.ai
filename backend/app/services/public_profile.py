@@ -18,7 +18,11 @@ from app.models.activity import Activity, UserActivity
 from app.models.interest import Interest, UserInterest
 from app.models.professional_profile import ProfessionalProfile
 from app.models.user import User
+from app.models.user_education import UserEducation
+from app.models.user_language import UserLanguage
+from app.models.user_pet import UserPet
 from app.models.user_photo import UserPhoto
+from app.models.user_social_profile import UserSocialProfile
 from app.services.photo_storage import public_photo_url
 
 
@@ -35,12 +39,64 @@ class PublicPhoto:
 
 
 @dataclass
+class PublicDetail:
+    label: str
+    value: str
+
+
+AGE_LABELS = {"18_24": "18-24", "25_29": "25-29", "30_34": "30-34", "35_39": "35-39", "40_49": "40-49", "50_plus": "50+"}
+CAREER_STAGE_LABELS = {
+    "student": "Student", "graduate_student": "Graduate student", "early_career": "Early career",
+    "mid_career": "Mid-career", "senior": "Senior professional", "founder": "Founder",
+    "career_transition": "Changing careers",
+}
+PET_LABELS = {"dog": "Dog", "cat": "Cat", "other": "Pet"}
+
+
+def _val(x):
+    return getattr(x, "value", x)
+
+
+def _details(professional, education, languages, pets, social) -> list[PublicDetail]:
+    """The 'About them' rows on a Discovery card - each one only if the
+    person made that field visible on their profile. ('Usable for matching'
+    doesn't make something showable; only 'visible on profile' does.)
+    Work isn't here: it's the headline."""
+    rows: list[PublicDetail] = []
+    if professional and professional.career_stage and professional.career_stage_visible_on_profile:
+        label = CAREER_STAGE_LABELS.get(_val(professional.career_stage))
+        if label:
+            rows.append(PublicDetail("Career stage", label))
+    for e in education:
+        if e.visible_on_profile and e.school:
+            rows.append(PublicDetail("Education", f"{e.school}" + (f" · {e.degree}" if e.degree else "")))
+    if social and social.age_range and social.age_range_visible_on_profile:
+        label = AGE_LABELS.get(_val(social.age_range))
+        if label:
+            rows.append(PublicDetail("Age", label))
+    langs = [
+        l.language + (f" ({_val(l.proficiency).replace('_', ' ')})" if l.proficiency else "")
+        for l in languages if l.visible_on_profile and l.language
+    ]
+    if langs:
+        rows.append(PublicDetail("Languages", ", ".join(langs)))
+    pet_list = [
+        PET_LABELS.get(_val(p.pet_type), "Pet") + (f" ({p.name})" if p.name else "")
+        for p in pets if p.visible_on_profile and p.pet_type
+    ]
+    if pet_list:
+        rows.append(PublicDetail("Pets", ", ".join(pet_list)))
+    return rows
+
+
+@dataclass
 class PublicCard:
     photo_url: str | None = None
     headline: str | None = None
     photos: list[PublicPhoto] = field(default_factory=list)
     activities: list[PublicItem] = field(default_factory=list)
     interests: list[PublicItem] = field(default_factory=list)
+    details: list[PublicDetail] = field(default_factory=list)
 
 
 def _headline(profile: ProfessionalProfile | None) -> str | None:
@@ -88,6 +144,17 @@ def build_public_cards(db: Session, users: list[User]) -> dict[UUID, PublicCard]
         db.query(UserPhoto).filter(UserPhoto.user_id.in_(ids)).order_by(UserPhoto.display_order).all()
     )
 
+    def _group(rows):
+        grouped: dict = {}
+        for row in rows:
+            grouped.setdefault(row.user_id, []).append(row)
+        return grouped
+
+    education_by_user = _group(db.query(UserEducation).filter(UserEducation.user_id.in_(ids)).all())
+    languages_by_user = _group(db.query(UserLanguage).filter(UserLanguage.user_id.in_(ids)).all())
+    pets_by_user = _group(db.query(UserPet).filter(UserPet.user_id.in_(ids)).all())
+    social_by_user = {sp.user_id: sp for sp in db.query(UserSocialProfile).filter(UserSocialProfile.user_id.in_(ids)).all()}
+
     activity_ids = {r.activity_id for r in activity_rows}
     activity_ids |= {p.tagged_activity_id for p in photo_rows if p.tagged_activity_id}
     interest_ids = {r.interest_id for r in interest_rows}
@@ -130,5 +197,12 @@ def build_public_cards(db: Session, users: list[User]) -> dict[UUID, PublicCard]
             photos=photos,
             activities=_visible_items(user_activities, activity_names, "activity_id"),
             interests=_visible_items(user_interests, interest_names, "interest_id"),
+            details=_details(
+                professional.get(user.id),
+                education_by_user.get(user.id, []),
+                languages_by_user.get(user.id, []),
+                pets_by_user.get(user.id, []),
+                social_by_user.get(user.id),
+            ),
         )
     return cards

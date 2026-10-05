@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.models.user_interaction import InteractionAction, UserInteraction
-from app.schemas.discover import CandidateItem, CandidateOut, CandidatePhoto
+from app.schemas.discover import CandidateDetail, CandidateItem, CandidateOut, CandidatePhoto
 from app.services.compatibility_scoring import get_ranked_candidates
 from app.services.public_profile import build_public_cards
 from app.services.session_auth import get_current_user
@@ -47,6 +47,7 @@ def list_candidates(request: Request, db: Session = Depends(get_db)):
                 photos=[CandidatePhoto(url=p.url, tag=p.tag) for p in card.photos],
                 activities=[CandidateItem(name=i.name, loved=i.loved) for i in card.activities],
                 interests=[CandidateItem(name=i.name, loved=i.loved) for i in card.interests],
+                details=[CandidateDetail(label=d.label, value=d.value) for d in card.details],
             )
         )
     return results

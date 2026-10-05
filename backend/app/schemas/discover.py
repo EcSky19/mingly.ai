@@ -15,6 +15,11 @@ class CandidateItem(BaseModel):
     loved: bool
 
 
+class CandidateDetail(BaseModel):
+    label: str
+    value: str
+
+
 class CandidateOut(BaseModel):
     """Everything here comes from app/services/public_profile.py, which
     filters every field through the candidate's own visibility settings."""
@@ -29,3 +34,4 @@ class CandidateOut(BaseModel):
     photos: list[CandidatePhoto] = []
     activities: list[CandidateItem] = []
     interests: list[CandidateItem] = []
+    details: list[CandidateDetail] = []
