@@ -8,7 +8,7 @@ The living plan for Mingly.ai: what the product is, what's built, and the dated 
 
 ## What Mingly is
 
-A trust-first way for professionals to meet compatible people around the things they already love to do - built on LinkedIn-verified identity, a rich but privacy-controlled profile, and explainable matching. Two ideas shape everything:
+A Cornell startup. A trust-first way for professionals to meet compatible people around the things they already love to do - built on LinkedIn-verified identity, a rich but privacy-controlled profile, and explainable matching. Two ideas shape everything:
 
 - **Activities first.** Insert compatible people into things you already do; shared activities outweigh shared topics.
 - **Privacy by default.** Every profile field has two separate controls - *visible on profile* and *usable for matching* - and both are enforced server-side, everywhere.
@@ -23,7 +23,7 @@ A trust-first way for professionals to meet compatible people around the things 
 | Discovery | Ranked feed, Pass / Decide later / Interested, "About them" | ✅ Live |
 | Matches & connect | Mutual matching, match moment, Matches page, unmatch, contact info shown only to matches | ✅ Live |
 | **Circles & network** | Your Circle = people you trust: **existing friends** (invites, phone contacts) and, later, **people you've met** through Mingly. Secondary network = friends of your circle, as a trust bridge to new people | 🆕 Pre-beta (lite) |
-| **Events & plans** | Local events matched to your interests; interest in the same event as a strong match signal; opt-in sharing with audience controls. Absorbs the original "Activity Engine" | 🆕 Curated pilot pre-beta; full version post-launch |
+| **Events & plans** | Local events matched to your interests; interest in the same event as a strong match signal; opt-in sharing with audience controls. Absorbs the original "Activity Engine" | 🆕 Curated pilot pre-beta (NYC + Ithaca); full version post-launch |
 | Trust & safety | Report & block (everywhere), admin review, privacy settings, account deletion | Next |
 | Growth | Personal invite links, share sheet, "who's on Mingly" from contacts | 🆕 Pre-beta (web) + phone apps |
 | Monetization | Affiliate ticket links first, sponsored events after scale | 🆕 Post-launch |
@@ -55,7 +55,7 @@ Backend: 210 tests. Database at migration 0032.
 | **Oct 15–23** | **Settings & safety** - Settings page (account deletion button, privacy overview, match contact info, discoverability settings, log out); report & block that remove someone from feed, matches, and circles; simple admin view of reports | Blocking removes a user from every surface in both directions; account deletion works from the UI (an App Store requirement) |
 | **Oct 26–30** | **Notifications & backups** - email on new match and on an accepted invite; automated production database + photo backups with a tested restore | A new match triggers an email; a backup is restored to a fresh database successfully |
 | **Nov 2–6** | **Phone & legal** - optional verified phone number (needed for contact matching later); "let people find me by my contact info" setting; Terms of Service and Privacy Policy pages (policy updated for invites, phone numbers, and contacts; lawyer review on your side) | Policy and terms live at public URLs; a phone number verifies end to end |
-| **Nov 9–13** | **Events pilot (curated, NYC)** - hand-curated events mapped to the activity/interest catalog; "Things to do" page; mark interest in an event; see which matches and circle members are interested; event co-interest as a matching signal. Data model includes a `source` field (curated / API / sponsored) so later phases drop in | Two users interested in the same event see it reflected in their match intro |
+| **Nov 9–13** | **Events pilot (curated, NYC + Ithaca)** - hand-curated events in both pilot cities, mapped to the activity/interest catalog; "Things to do" page; mark interest in an event; see which matches and circle members are interested; event co-interest as a matching signal. Data model includes a `source` field (curated / API / sponsored) so later phases drop in | Two users interested in the same event see it reflected in their match intro |
 | Nov 16–20 | Buffer | — |
 | **Nov 23–30** | **Web QA & beta prep** (Thanksgiving week) | Full end-to-end pass on desktop and phone browsers: invite → sign up → onboard → discover → match → connect → event |
 | **Dec 1–27** | **Private beta (web)** - an NYC cohort recruited through invite links, so it starts with real local density | Real matches and real meetings happen, with feedback captured |
@@ -98,16 +98,18 @@ Backend: 210 tests. Database at migration 0032.
 - **Invites are always sent by the person, from their own device** - Mingly never auto-messages anyone's contacts (spam law; LinkedIn paid $13M over automated contact invitations).
 - **Phone contacts never stored for non-users** - matched as fingerprints on the device, non-matches discarded.
 - **Same-college alumni is a strong signal regardless of graduation year**; graduation year is intentionally unused.
+- **Pilot cities: New York City and Ithaca, NY** - Mingly is a Cornell startup. The two are ~220 miles apart, so they form separate local pools; people who split time between them (e.g. Cornell Tech in NYC) can list both locations and match in either.
 - **"Visible on profile" controls what's shown; "usable for matching" controls what's scored** - a hidden field can count toward matching but is never named or displayed.
 
 ## Open decisions
 
 - Should a shared **company** count toward matching (people control it with the toggle), or should its matching toggle be removed?
 - Default audience for event sharing (recommended: selected people / circle only, never public by default).
+- **Beta cohort composition:** NYC only, or NYC + Ithaca (the Cornell community - dense, high-trust, and strong on the alumni signal)? Splitting across two cities divides density, so each needs enough people on its own.
 
 ## Risks & contingencies
 
 - **App Store review** can reject a first submission. Contingency: launch on the web January 1 and let the apps follow - the web app is fully functional on phones.
 - **Holiday engagement** during a late-December beta - mitigated by starting the web beta December 1.
-- **Local density** - matching needs enough people nearby; the beta stays concentrated in NYC and grows through invites.
+- **Local density** - matching needs enough people nearby; the beta stays concentrated in the pilot cities and grows through invites. Each city must reach density on its own, since they don't overlap.
 - **Capacity** - phone apps run in parallel with the beta; beta fixes take priority, and app work can slip without blocking a web launch.
