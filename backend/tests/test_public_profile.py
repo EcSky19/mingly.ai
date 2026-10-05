@@ -180,3 +180,42 @@ def test_card_building_query_count_is_flat():
 
     small, large = _count(_scenario(2)), _count(_scenario(8))
     assert small == large, f"2 people: {small} queries, 8 people: {large} - N+1 has crept in"
+
+
+# --- 'About them' details on the card ---
+
+from app.models.user_education import UserEducation  # noqa: E402
+from app.models.user_language import UserLanguage  # noqa: E402
+from app.models.user_pet import UserPet  # noqa: E402
+from app.models.user_social_profile import UserSocialProfile  # noqa: E402
+
+
+def test_about_details_show_only_visible_fields():
+    """Only 'visible on profile' makes something showable - a field that's
+    usable for matching but hidden from the profile must never appear."""
+    db = SessionLocal()
+    user = _make_user(db)
+    db.add(ProfessionalProfile(user_id=user.id, career_stage="mid_career", career_stage_visible_on_profile=False))
+    db.add(UserEducation(user_id=user.id, school="Cornell", degree="BS", visible_on_profile=True, usable_for_matching=True))
+    db.add(UserEducation(user_id=user.id, school="SecretGrad", visible_on_profile=False, usable_for_matching=True))
+    db.add(UserLanguage(user_id=user.id, language="Spanish", proficiency="fluent", visible_on_profile=True, usable_for_matching=True))
+    db.add(UserLanguage(user_id=user.id, language="HiddenLang", visible_on_profile=False, usable_for_matching=True))
+    db.add(UserPet(user_id=user.id, pet_type="cat", name="Luna", visible_on_profile=True, usable_for_matching=True))
+    db.add(UserPet(user_id=user.id, pet_type="dog", name="HiddenDog", visible_on_profile=False, usable_for_matching=True))
+    db.add(UserSocialProfile(user_id=user.id, age_range="30_34", age_range_visible_on_profile=True, visible_on_profile=False, usable_for_matching=True))
+    db.commit()
+
+    details = {d.label: d.value for d in build_public_cards(db, [user])[user.id].details}
+    assert details == {"Education": "Cornell · BS", "Age": "30-34", "Languages": "Spanish (fluent)", "Pets": "Cat (Luna)"}
+    db.close()
+
+
+def test_hidden_age_and_career_stage_never_appear():
+    db = SessionLocal()
+    user = _make_user(db)
+    db.add(ProfessionalProfile(user_id=user.id, career_stage="founder", career_stage_visible_on_profile=True))
+    db.add(UserSocialProfile(user_id=user.id, age_range="25_29", age_range_visible_on_profile=False, visible_on_profile=False, usable_for_matching=True))
+    db.commit()
+    details = {d.label: d.value for d in build_public_cards(db, [user])[user.id].details}
+    assert details == {"Career stage": "Founder"}, "age was hidden; career stage was made visible"
+    db.close()
