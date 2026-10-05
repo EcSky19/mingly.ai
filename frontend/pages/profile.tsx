@@ -186,7 +186,7 @@ export default function Profile() {
   const [agePreference, setAgePreference] = useState<string[]>(["everyone"]);
   const [savingAboutYou, setSavingAboutYou] = useState(false);
   const [aboutYouError, setAboutYouError] = useState("");
-  const [contactEmail, setContactEmail] = useState("");
+  const [contactLinkedin, setContactLinkedin] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [contactInstagram, setContactInstagram] = useState("");
   const [savingContact, setSavingContact] = useState(false);
@@ -266,9 +266,9 @@ export default function Profile() {
 
     fetch(`${API_URL}/api/profile/match-contact`, { credentials: "include" })
       .then((r) => (r.ok ? r.json() : null))
-      .then((data: { email?: string | null; phone?: string | null; instagram?: string | null } | null) => {
+      .then((data: { linkedin_url?: string | null; phone?: string | null; instagram?: string | null } | null) => {
         if (!data) return;
-        setContactEmail(data.email || "");
+        setContactLinkedin(data.linkedin_url || "");
         setContactPhone(data.phone || "");
         setContactInstagram(data.instagram ? `@${data.instagram}` : "");
       })
@@ -305,13 +305,14 @@ export default function Profile() {
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          email: contactEmail.trim() || null,
+          linkedin_url: contactLinkedin.trim() || null,
           phone: contactPhone.trim() || null,
           instagram: contactInstagram.trim() || null,
         }),
       });
       if (res.ok) {
         const saved = await res.json();
+        setContactLinkedin(saved.linkedin_url || "");
         setContactInstagram(saved.instagram ? `@${saved.instagram}` : "");
         setContactSaved(true);
       } else {
@@ -816,7 +817,7 @@ export default function Profile() {
 
           <CollapsibleSection
             title="How Matches Can Reach You"
-            summary={contactEmail || contactPhone || contactInstagram ? "Added" : "Optional"}
+            summary={contactLinkedin || contactPhone || contactInstagram ? "Added" : "Optional"}
           >
             <p className="section-hint">
               Only people you've matched with - where you've both said you're interested - can see
@@ -824,13 +825,13 @@ export default function Profile() {
               as little as you're comfortable with.
             </p>
             <div className="field">
-              <label className="field-label">Email</label>
+              <label className="field-label">LinkedIn profile</label>
               <input
                 className="field-input"
-                type="email"
-                placeholder="you@example.com"
-                value={contactEmail}
-                onChange={(e) => setContactEmail(e.target.value)}
+                type="url"
+                placeholder="linkedin.com/in/yourname"
+                value={contactLinkedin}
+                onChange={(e) => setContactLinkedin(e.target.value)}
               />
             </div>
             <div className="field">

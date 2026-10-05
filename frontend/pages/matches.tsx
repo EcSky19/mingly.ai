@@ -15,7 +15,7 @@ type Match = {
   activities: MatchItem[];
   interests: MatchItem[];
   matched_at?: string | null;
-  contact: { email?: string | null; phone?: string | null; instagram?: string | null };
+  contact: { linkedin_url?: string | null; phone?: string | null; instagram?: string | null };
 };
 
 function resolveUrl(url: string): string {
@@ -112,7 +112,7 @@ export default function Matches() {
           {matches.length > 0 && (
             <div className="matches-grid">
               {matches.map((m) => {
-                const hasContact = m.contact.email || m.contact.phone || m.contact.instagram;
+                const hasContact = m.contact.linkedin_url || m.contact.phone || m.contact.instagram;
                 const loved = [...m.activities, ...m.interests].filter((i) => i.loved).slice(0, 6);
                 return (
                   <div className="match-card" key={m.id}>
@@ -143,10 +143,12 @@ export default function Matches() {
                     <div className="match-contact">
                       {hasContact ? (
                         <>
-                          {m.contact.email && (
+                          {m.contact.linkedin_url && (
                             <div className="match-contact-row">
-                              <span className="match-contact-label">Email</span>
-                              <a href={`mailto:${m.contact.email}`}>{m.contact.email}</a>
+                              <span className="match-contact-label">LinkedIn</span>
+                              <a href={m.contact.linkedin_url} target="_blank" rel="noopener noreferrer">
+                                View LinkedIn profile
+                              </a>
                             </div>
                           )}
                           {m.contact.phone && (
