@@ -91,7 +91,8 @@ Backend: 210 tests. Database at migration 0032.
 
 ## Decisions log
 
-- **Contact sharing instead of in-app messaging (V0).** Matches see optional email/phone/Instagram the other person chose to share; nothing is shared by default. Messaging can come later.
+- **Contact sharing instead of in-app messaging (V0).** Matches see an optional LinkedIn profile link, phone, and/or Instagram the other person chose to share; nothing is shared by default. Messaging can come later.
+- **LinkedIn link instead of email for match contact** - email is too personal for a first reach-out; a LinkedIn profile fits Mingly's professional, trust-first identity. Only genuine linkedin.com/in/ links are accepted.
 - **Recurring Routines removed** - revealing real-world patterns ("my gym on Tuesdays") is a safety risk. Event sharing must honor the same lesson.
 - **Conversation Topics removed** - redundant with Interests.
 - **LinkedIn connections are not available** - LinkedIn closed that data to outside apps in 2015; existing friends come from invites and phone contacts instead.
