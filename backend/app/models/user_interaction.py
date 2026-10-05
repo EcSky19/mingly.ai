@@ -29,6 +29,10 @@ from app.db.session import Base
 class InteractionAction(str, enum.Enum):
     dismissed = "dismissed"
     interested = "interested"
+    # "Decide later": a private deferral. Keeps the person in your feed (moved
+    # behind people you haven't seen yet), never counts as interest, and
+    # doesn't affect whether they see you.
+    later = "later"
 
 
 class UserInteraction(Base):
