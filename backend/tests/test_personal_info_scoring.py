@@ -206,3 +206,110 @@ def test_ranking_query_count_is_flat():
     Base.metadata.create_all(bind=engine)
     large = count(scenario(8))
     assert small == large, f"2 candidates: {small} queries, 8 candidates: {large} - N+1 crept in"
+
+
+# --- Career similarity, alumni, degree, proficiency, pets ---
+
+def _role(db, uid, title, visible=True, usable=True):
+    db.add(ProfessionalProfile(user_id=uid, current_role=title, current_role_visible_on_profile=visible,
+                               current_role_usable_for_matching=usable))
+    db.commit()
+
+
+def _pet(db, uid, **kw):
+    db.add(UserPet(user_id=uid, visible_on_profile=kw.pop("visible", True), usable_for_matching=kw.pop("usable", True), **kw))
+    db.commit()
+
+
+def test_career_similarity_tiers_and_consent():
+    db = SessionLocal()
+    me = _person(db)
+    same, family, unrelated, hidden, opted_out, base = (_person(db, n) for n in ("Sam", "Dana", "Alex", "Hana", "Omar", "Base"))
+    _role(db, me, "Data Scientist")
+    _role(db, same, "Senior Data Scientist")
+    _role(db, family, "Data Engineer")
+    _role(db, unrelated, "Account Executive")
+    _role(db, hidden, "Data Analyst", visible=False)
+    _role(db, opted_out, "Data Analyst", usable=False)
+    r = _rank(db, me)
+    b = r[base].score
+    assert r[same].score - b == 3 and "work as a data scientist" in r[same].intro, "shared CORE role, true for both"
+    assert "senior" not in r[same].intro.lower(), "must not attribute their seniority to the requester"
+    assert r[family].score - b == 2 and "work in data and analytics" in r[family].intro
+    assert r[unrelated].score == b
+    assert r[hidden].score - b == 2 and "data" not in r[hidden].intro.lower()
+    assert r[opted_out].score == b
+    db.close()
+
+
+def test_alumni_count_strongly_regardless_of_graduation_year():
+    db = SessionLocal()
+    me, classmate, decades_apart, base = _person(db), _person(db, "C"), _person(db, "D"), _person(db, "B")
+    db.add(UserEducation(user_id=me, school="Cornell", graduation_year=2015, visible_on_profile=True, usable_for_matching=True))
+    db.add(UserEducation(user_id=classmate, school="Cornell", graduation_year=2015, visible_on_profile=True, usable_for_matching=True))
+    db.add(UserEducation(user_id=decades_apart, school="Cornell", graduation_year=1990, visible_on_profile=True, usable_for_matching=True))
+    db.commit()
+    r = _rank(db, me)
+    assert r[classmate].score - r[base].score == 8
+    assert r[decades_apart].score == r[classmate].score, "graduation year must not change the alumni signal"
+    db.close()
+
+
+def test_same_degree_counts():
+    db = SessionLocal()
+    me, match, base = _person(db), _person(db, "M"), _person(db, "B")
+    for uid in (me, match):
+        db.add(UserEducation(user_id=uid, degree="Bachelor of Science (BS)", visible_on_profile=True, usable_for_matching=True))
+    db.commit()
+    r = _rank(db, me)
+    assert r[match].score - r[base].score == 1
+    db.close()
+
+
+def test_a_language_learner_is_half_the_signal():
+    db = SessionLocal()
+    me, fluent, learner, base = _person(db), _person(db, "F"), _person(db, "L"), _person(db, "B")
+    db.add(UserLanguage(user_id=me, language="Spanish", proficiency="fluent", visible_on_profile=True, usable_for_matching=True))
+    db.add(UserLanguage(user_id=fluent, language="Spanish", proficiency="native", visible_on_profile=True, usable_for_matching=True))
+    db.add(UserLanguage(user_id=learner, language="Spanish", proficiency="learning", visible_on_profile=True, usable_for_matching=True))
+    db.commit()
+    r = _rank(db, me)
+    assert r[fluent].score - r[base].score == 3
+    assert r[learner].score - r[base].score == 1.5
+    db.close()
+
+
+def test_cats_and_other_pets_count():
+    db = SessionLocal()
+    me = _person(db)
+    cat, other, base = _person(db, "Cat"), _person(db, "Other"), _person(db, "Base")
+    _pet(db, me, pet_type="cat")
+    _pet(db, cat, pet_type="cat")
+    _pet(db, other, pet_type="other")
+    r = _rank(db, me)
+    assert r[cat].score - r[base].score == 2 and "cat people" in r[cat].intro
+    assert r[other].score - r[base].score == 1, "both have pets, different kinds"
+    db.close()
+
+
+def test_hidden_cat_counts_but_is_not_named():
+    db = SessionLocal()
+    me, cat = _person(db), _person(db, "Cat")
+    _pet(db, me, pet_type="cat")
+    _pet(db, cat, pet_type="cat", visible=False)
+    assert "cat" not in _rank(db, me)[cat].intro
+    db.close()
+
+
+def test_dog_details_matter():
+    db = SessionLocal()
+    me = _person(db)
+    matched, mismatched, unsocial = _person(db, "M"), _person(db, "X"), _person(db, "U")
+    _pet(db, me, pet_type="dog", size="large", activity_level="high", comfortable_with_other_dogs=True)
+    _pet(db, matched, pet_type="dog", size="large", activity_level="high", comfortable_with_other_dogs=True)
+    _pet(db, mismatched, pet_type="dog", size="small", activity_level="low", comfortable_with_other_dogs=True)
+    _pet(db, unsocial, pet_type="dog", size="small", activity_level="low", comfortable_with_other_dogs=False)
+    s = {k: v.score for k, v in _rank(db, me).items()}
+    assert s[matched] - s[mismatched] == 2, "same size +1 and same energy +1"
+    assert s[mismatched] - s[unsocial] == 2, "a dog not comfortable around other dogs drops the bonus from 3 to 1"
+    db.close()
