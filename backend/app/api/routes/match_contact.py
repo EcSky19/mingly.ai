@@ -21,7 +21,7 @@ def get_match_contact(request: Request, db: Session = Depends(get_db)):
     row = db.query(UserMatchContact).filter(UserMatchContact.user_id == user.id).first()
     if not row:
         return MatchContactOut()
-    return MatchContactOut(email=row.email, phone=row.phone, instagram=row.instagram)
+    return MatchContactOut(linkedin_url=row.linkedin_url, phone=row.phone, instagram=row.instagram)
 
 
 @router.put("", response_model=MatchContactOut)
@@ -35,4 +35,4 @@ def update_match_contact(body: MatchContactUpdate, request: Request, db: Session
         setattr(row, field, value)
     db.commit()
     db.refresh(row)
-    return MatchContactOut(email=row.email, phone=row.phone, instagram=row.instagram)
+    return MatchContactOut(linkedin_url=row.linkedin_url, phone=row.phone, instagram=row.instagram)

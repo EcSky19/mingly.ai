@@ -4,7 +4,12 @@ from typing import Optional
 
 from pydantic import BaseModel, field_validator
 
-EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+# Only genuine LinkedIn profile links (optionally with a country subdomain),
+# so a match's link can never point anywhere unexpected.
+LINKEDIN_RE = re.compile(
+    r"^(?:https?://)?(?:www\.|[a-z]{2}\.)?linkedin\.com/in/([^/?#\s]+)(?:[/?#].*)?$", re.IGNORECASE
+)
+LINKEDIN_SLUG_RE = re.compile(r"^[A-Za-z0-9\-_%.]{3,100}$")
 PHONE_ALLOWED_RE = re.compile(r"^[0-9+\-().\s]+$")
 INSTAGRAM_RE = re.compile(r"^[A-Za-z0-9._]{1,30}$")
 
@@ -19,17 +24,23 @@ def _blank_to_none(v):
 class MatchContactUpdate(BaseModel):
     """Partial update: omitted fields are left alone; null or an empty
     string clears a field."""
-    email: Optional[str] = None
+    linkedin_url: Optional[str] = None
     phone: Optional[str] = None
     instagram: Optional[str] = None
 
-    @field_validator("email")
+    @field_validator("linkedin_url")
     @classmethod
-    def _email(cls, v):
+    def _linkedin(cls, v):
+        """Accepts however people copy it - with or without https/www, a
+        country subdomain, trailing slash, or tracking parameters - and
+        stores one canonical form."""
         v = _blank_to_none(v)
-        if v is not None and (len(v) > 254 or not EMAIL_RE.match(v)):
-            raise ValueError("That doesn't look like a valid email address")
-        return v
+        if v is None:
+            return v
+        m = LINKEDIN_RE.match(v)
+        if not m or not LINKEDIN_SLUG_RE.match(m.group(1)):
+            raise ValueError("Paste your LinkedIn profile link, like linkedin.com/in/yourname")
+        return f"https://www.linkedin.com/in/{m.group(1).lower()}"
 
     @field_validator("phone")
     @classmethod
@@ -55,6 +66,6 @@ class MatchContactUpdate(BaseModel):
 
 
 class MatchContactOut(BaseModel):
-    email: Optional[str] = None
+    linkedin_url: Optional[str] = None
     phone: Optional[str] = None
     instagram: Optional[str] = None

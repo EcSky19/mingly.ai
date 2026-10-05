@@ -47,7 +47,7 @@ def list_matches(request: Request, db: Session = Depends(get_db)):
                 activities=[CandidateItem(name=i.name, loved=i.loved) for i in card.activities],
                 interests=[CandidateItem(name=i.name, loved=i.loved) for i in card.interests],
                 matched_at=matched_at,
-                contact=MatchContactOut(email=c.email, phone=c.phone, instagram=c.instagram) if c else MatchContactOut(),
+                contact=MatchContactOut(linkedin_url=c.linkedin_url, phone=c.phone, instagram=c.instagram) if c else MatchContactOut(),
             )
         )
     return result
