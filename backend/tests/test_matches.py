@@ -192,3 +192,40 @@ def test_people_you_decided_on_leave_your_feed_and_people_who_passed_on_you_too(
     feed = _feed_ids(a_cookies)
     assert b not in feed and c not in feed, "people you've decided on leave your own feed"
     assert a not in _feed_ids(c_cookies), "someone who passed on you shouldn't keep appearing in your feed"
+
+
+# --- Decide later ---
+
+def _act(cookies, target_id, action):
+    return client.post("/api/discover/interact", json={"target_user_id": target_id, "action": action}, cookies=cookies).json()
+
+
+def test_decide_later_keeps_them_in_your_feed_behind_everyone_else():
+    a, a_cookies = _person("Avery")
+    b, _ = _person("Blake")
+    c, _ = _person("Casey")
+    assert _act(a_cookies, b, "later")["matched"] is False
+    feed = client.get("/api/discover/candidates", cookies=a_cookies).json()
+    ids = [x["id"] for x in feed]
+    assert b in ids and c in ids, "deferring doesn't remove anyone"
+    assert ids.index(c) < ids.index(b), "deferred people come after people you haven't decided on"
+    assert next(x for x in feed if x["id"] == b)["deferred"] is True
+    assert next(x for x in feed if x["id"] == c)["deferred"] is False
+
+
+def test_decide_later_is_private_and_never_counts_as_interest():
+    a, a_cookies = _person("Avery")
+    b, b_cookies = _person("Blake")
+    _act(a_cookies, b, "later")
+    assert a in [x["id"] for x in client.get("/api/discover/candidates", cookies=b_cookies).json()], "they still see you"
+    assert _act(b_cookies, a, "interested")["matched"] is False, "'later' is not interest"
+    assert client.get("/api/matches", cookies=b_cookies).json() == []
+
+
+def test_you_can_still_match_after_deciding_later():
+    a, a_cookies = _person("Avery")
+    b, b_cookies = _person("Blake")
+    _act(a_cookies, b, "later")
+    _act(b_cookies, a, "interested")
+    assert _act(a_cookies, b, "interested")["matched"] is True
+    assert b not in [x["id"] for x in client.get("/api/discover/candidates", cookies=a_cookies).json()]
