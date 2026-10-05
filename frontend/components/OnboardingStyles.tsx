@@ -859,6 +859,18 @@ export default function OnboardingStyles() {
         cursor: pointer;
       }
       .discover-pass-btn:hover { border-color: #f6f1e7; }
+      .discover-later-btn { border-style: dashed; color: #b9afd1; }
+      .discover-actions { flex-wrap: wrap; }
+      .discover-deferred-badge {
+        display: inline-block;
+        color: #e8a548;
+        background: rgba(232, 165, 72, 0.1);
+        border: 1px solid rgba(232, 165, 72, 0.3);
+        border-radius: 999px;
+        font-size: 0.75rem;
+        padding: 0.2rem 0.65rem;
+        margin: 0 0 0.5rem 0;
+      }
       .discover-pass-btn:disabled, .discover-actions .cta:disabled { opacity: 0.5; cursor: default; }
       .discover-counter {
         color: #8f84ad;

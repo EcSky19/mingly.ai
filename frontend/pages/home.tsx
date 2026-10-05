@@ -12,6 +12,7 @@ type Candidate = {
   id: string;
   first_name: string;
   intro: string;
+  deferred?: boolean;
   photo_url?: string | null;
   headline?: string | null;
   photos: CandidatePhoto[];
@@ -83,7 +84,7 @@ export default function Discover() {
 
   const current = queue[0];
 
-  async function act(action: "interested" | "dismissed") {
+  async function act(action: "interested" | "dismissed" | "later") {
     if (!current || acting) return;
     setActing(true);
     setActionError("");
@@ -99,7 +100,13 @@ export default function Discover() {
       if (action === "interested" && result.matched) setJustMatched(current);
       // Only advance once the server has recorded it, so a failed save
       // never silently skips someone.
-      setQueue((prev) => prev.slice(1));
+      if (action === "later") {
+        // Decide later: not a pass - they go to the back of the line and
+        // come back after everyone else, marked as saved for later.
+        setQueue((prev) => [...prev.slice(1), { ...prev[0], deferred: true }]);
+      } else {
+        setQueue((prev) => prev.slice(1));
+      }
       setPhotoIndex(0);
     } catch {
       setActionError("Couldn't save that - please try again.");
@@ -199,6 +206,7 @@ export default function Discover() {
                   </div>
 
                   <div>
+                    {current.deferred && <p className="discover-deferred-badge">You saved {current.first_name} for later</p>}
                     <h2 className="discover-name">{current.first_name}</h2>
                     {current.headline && <p className="discover-headline">{current.headline}</p>}
 
@@ -231,6 +239,14 @@ export default function Discover() {
                         onClick={() => act("dismissed")}
                       >
                         Pass
+                      </button>
+                      <button
+                        type="button"
+                        className="discover-pass-btn discover-later-btn"
+                        disabled={acting}
+                        onClick={() => act("later")}
+                      >
+                        Decide later
                       </button>
                       <button type="button" className="cta" disabled={acting} onClick={() => act("interested")}>
                         Interested
