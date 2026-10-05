@@ -13,6 +13,7 @@ type Candidate = {
   first_name: string;
   intro: string;
   deferred?: boolean;
+  details?: { label: string; value: string }[];
   photo_url?: string | null;
   headline?: string | null;
   photos: CandidatePhoto[];
@@ -203,12 +204,29 @@ export default function Discover() {
                         ))}
                       </div>
                     )}
+
+                    {(current.headline || (current.details && current.details.length > 0)) && (
+                      <div className="discover-about">
+                        <p className="discover-label">About {current.first_name}</p>
+                        {current.headline && (
+                          <div className="discover-about-row">
+                            <span className="discover-about-label">Work</span>
+                            <span>{current.headline}</span>
+                          </div>
+                        )}
+                        {(current.details || []).map((d) => (
+                          <div className="discover-about-row" key={`${d.label}-${d.value}`}>
+                            <span className="discover-about-label">{d.label}</span>
+                            <span>{d.value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <div>
                     {current.deferred && <p className="discover-deferred-badge">You saved {current.first_name} for later</p>}
                     <h2 className="discover-name">{current.first_name}</h2>
-                    {current.headline && <p className="discover-headline">{current.headline}</p>}
 
                     {current.intro && (
                       <>
