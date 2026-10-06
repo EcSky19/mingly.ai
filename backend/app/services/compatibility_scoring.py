@@ -62,6 +62,7 @@ WEIGHT_SAME_CAREER_FAMILY = 2     # related roles in the same field, e.g. Data S
 # conversationally; if either is still learning it, it's half the signal.
 LEARNING_LANGUAGE_FACTOR = 0.5
 WEIGHT_SAME_INDUSTRY = 2
+WEIGHT_SAME_COMPANY = 2           # each person decides, via its toggle, whether coworkers can be matched on it
 WEIGHT_SAME_CAREER_STAGE = 1.5
 WEIGHT_BOTH_DOG_PEOPLE = 3
 WEIGHT_DOG_FRIENDLY = 2           # one has a dog, the other is comfortable around dogs
@@ -128,6 +129,7 @@ class PairSignals:
     schools_named: list[str] = field(default_factory=list)
     industry_named: str | None = None
     role_named: str | None = None
+    company_named: str | None = None
     career_family_named: str | None = None
     both_dog_people: bool = False
     both_cat_people: bool = False
@@ -363,8 +365,9 @@ def _score_personal_info(r: PersonalInfo, c: PersonalInfo, signals: PairSignals)
         if any(c_degrees[k].visible_on_profile for k in shared_degrees):
             reasons.append("Same degree")
 
-    # Professional: same role, industry, career stage. (Company pending a
-    # product decision on whether to match coworkers.)
+    # Professional: same role, company, industry, career stage. Company is
+    # sensitive (it can match coworkers), so like everything else it only
+    # counts when BOTH people allowed it via its toggle.
     rp, cp = r.professional, c.professional
     if rp and cp:
         if (
@@ -386,6 +389,14 @@ def _score_personal_info(r: PersonalInfo, c: PersonalInfo, signals: PairSignals)
                 if cp.current_role_visible_on_profile:
                     signals.career_family_named = family_phrase(c_family)
                     reasons.append(f"Similar careers ({family_phrase(c_family)})")
+        if (
+            rp.company_usable_for_matching and cp.company_usable_for_matching
+            and rp.company and _norm(rp.company) == _norm(cp.company)
+        ):
+            score += WEIGHT_SAME_COMPANY
+            if cp.company_visible_on_profile:
+                signals.company_named = cp.company.strip()
+                reasons.append(f"Both work at {signals.company_named}")
         if (
             rp.industry_usable_for_matching and cp.industry_usable_for_matching
             and rp.industry and _norm(rp.industry) == _norm(cp.industry)
@@ -528,11 +539,13 @@ def _build_intro(first_name: str, s: PairSignals) -> str:
         extras.append(f"work as {article} {role}")
     if s.career_family_named and not s.role_named:
         extras.append(f"work in {s.career_family_named}")
+    if s.company_named:
+        extras.append(f"work at {s.company_named}")
     if s.both_dog_people:
         extras.append("are dog people")
     if s.both_cat_people:
         extras.append("are cat people")
-    if s.industry_named and not (s.role_named or s.career_family_named):
+    if s.industry_named and not (s.role_named or s.career_family_named or s.company_named):
         extras.append(f"work in {_casual(s.industry_named)}")
     if s.goals_named:
         extras.append(f"are looking for {_join(s.goals_named[:2])}")
