@@ -70,7 +70,7 @@ Backend: 210 tests. Database at migration 0032.
 
 **Q1 2027 - Events & plans v1**
 - Automated event sourcing per city (official APIs, venue calendar feeds, city open data - not scraping) with AI categorization into our catalog; research per city, never per user
-- Event sharing with audience controls: entire circle, secondary circle, selected people, everyone except some. Safety defaults: opt-in per event, narrow default audience, separate "interested" and "going", blocked users never see it
+- Event sharing, decided per event by the person: opt-in, with no pre-selected audience - each share requires choosing from selected people, circle, circle except specific people, circle + friends of friends, or public (with a safety reminder). Separate "interested" and "going"; blocked users never see a share
 - Affiliate ticket links - first revenue
 - Earned circles: post-meet feedback ("did you meet?") adds people you've met to your circle
 - Secondary network surfacing in Discovery, beyond the mutual-friend signal
@@ -100,13 +100,13 @@ Backend: 210 tests. Database at migration 0032.
 - **Phone contacts never stored for non-users** - matched as fingerprints on the device, non-matches discarded.
 - **Same-college alumni is a strong signal regardless of graduation year**; graduation year is intentionally unused.
 - **Company counts in matching, by each person's choice** (decided Oct 6) - only when both people allow it via its toggle, so anyone who'd rather not be matched with coworkers can switch it off.
+- **Event sharing is fully the person's choice, per event** (decided Oct 6) - nothing is shared automatically and no audience is pre-selected; every share requires picking from all options (selected people, circle, circle except specific people, circle + friends of friends, or public with a safety reminder). Blocked people never see a share.
 - **Beta cohort: NYC + Ithaca** (decided Oct 6). Two separate pools that each need their own density; recruited through Cornell networks - on campus in Ithaca, alumni and Cornell Tech in NYC.
 - **Pilot cities: New York City and Ithaca, NY** - Mingly is a Cornell startup. The two are ~220 miles apart, so they form separate local pools; people who split time between them (e.g. Cornell Tech in NYC) can list both locations and match in either.
 - **"Visible on profile" controls what's shown; "usable for matching" controls what's scored** - a hidden field can count toward matching but is never named or displayed.
 
 ## Open decisions
 
-- Default audience for event sharing (recommended: selected people / circle only, never public by default).
 
 ## Risks & contingencies
 
