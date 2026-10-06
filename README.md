@@ -2,594 +2,208 @@
 
 **A social community for career-oriented professionals to build their life outside of work.**
 
-Mingly.ai helps career-oriented professionals meet compatible people for real-world friendships, activities, and social experiences.
+Mingly.ai helps professionals meet compatible people for real-world friendships, activities, and social experiences - built on verified identity, a privacy-first profile, and matching that explains itself.
 
 Professionals already have platforms to build their careers. Mingly.ai is being built to help them build the rest of their lives.
+
+A Cornell startup. **Live at [mingly.ai](https://www.mingly.ai)** · Private beta from **December 1, 2026** (New York City and Ithaca, NY) · Launch **January 1, 2027**.
 
 ---
 
 ## The Problem
 
-Many professionals spend years prioritizing school, careers, internships, and professional growth while their social lives receive less attention.
+Many professionals spend years prioritizing school, careers, and professional growth while their social lives receive less attention - especially after moving to a new city, starting a new job, or graduating.
 
-Existing platforms generally fall into a few categories:
+Existing platforms fall into a few categories: professional networking, dating, large public communities, event listings, and generic friend matching. None are designed around helping career-oriented professionals find people who are genuinely compatible with their lifestyle, background, interests, and the things they actually like to do.
 
-* Professional networking
-* Dating
-* Large public communities
-* Event discovery
-* Generic friend matching
-
-None are specifically designed around helping career-oriented professionals find people who are genuinely compatible with their lifestyle, background, interests, ambitions, and preferred activities.
-
-Mingly.ai is designed to fill that gap.
-
----
-
-## What Is Mingly.ai?
-
-Mingly.ai is a **social matching and community platform for career-oriented professionals**.
-
-The platform matches people using a combination of signals such as:
-
-* Education
-* Professional background
-* Location
-* Hobbies
-* Interests
-* Lifestyle
-* Activities
-* Spoken languages
-* Social preferences
-* Ambitions and goals
-* Pet and dog-related interests
-* Other compatibility signals
-
-The objective is not simply to recommend profiles.
-
-The objective is to answer:
+Mingly.ai is designed to fill that gap, around one question:
 
 > **Who would you actually enjoy spending time with, and what could you do together?**
 
----
-
 ## What Mingly.ai Is Not
 
-### Not LinkedIn
-
-Mingly.ai is **not a professional networking platform**.
-
-LinkedIn may be used as a trust, verification, and background signal, but users are not joining Mingly.ai to collect professional connections, find jobs, or build a professional audience.
-
-### Not a Dating App
-
-Mingly.ai is not designed primarily around dating.
-
-Relationships may naturally develop between people who meet through the platform, but romantic matching is not the core product.
-
-### Not an Event Platform
-
-Mingly.ai is not primarily about publishing large events or expecting users to browse endless event listings.
-
-The product starts with **people and compatibility**, then helps those people find something worth doing together.
+- **Not LinkedIn.** LinkedIn is used for trusted sign-in and background signals, but nobody joins Mingly to collect connections or find jobs.
+- **Not a dating app.** Relationships may develop naturally, but romantic matching isn't the product.
+- **Not an event listing site.** Mingly starts with **people and compatibility**; events are a way for compatible people to make a plan together, not a feed to scroll.
 
 ---
 
-# Core Product Experience
+## How It Works Today
 
-## 1. Professional Verification
+Everything in this section is live in production.
 
-Users establish a trusted identity using their professional background.
+### 1. Sign in with LinkedIn
+Verified professional identity from the start. Mingly keeps its own copy of your profile photo, refreshed each time you sign in.
 
-LinkedIn can be used to verify professional status and provide useful matching signals such as:
+### 2. Build a profile around your life outside work
+Professional background, education, languages, locations with a travel radius, pets, interests, activities, lifestyle, social goals, and photos. Interests and activities can be **liked** or **loved** - loved ones count most.
 
-* Industry
-* Education
-* Career stage
-* Professional background
+Every field has **two separate privacy controls**:
+- **Visible on profile** - whether other people can see it
+- **Usable for matching** - whether it can influence who you're matched with
 
-Professional information does not need to dominate a user's public Mingly profile.
+A field can help your matches without ever being shown. Both controls are enforced on the server, everywhere.
 
-It exists primarily to establish trust and improve matching.
+### 3. Matching that explains itself
+**Eligibility** comes first: both people's preferences must accept each other (gender and age, in both directions), and you must be within each other's travel radius.
 
----
+**Compatibility** then ranks everyone eligible, using signals such as:
+- shared **activities** (the strongest signal - Mingly is activities-first)
+- same **college** - alumni are a strong signal regardless of graduation year
+- shared **interests**
+- **similar careers** - the same role (ignoring seniority) or the same career field
+- shared **languages**, accounting for proficiency
+- **pets** - dog people, cat people, and dog compatibility
+- **lifestyle**, social goals, and how close you live
 
-## 2. Social Profile
+Each signal counts only if *both* people allowed it for matching. Instead of a score, each person comes with a short introduction - the way a friend would introduce you:
 
-Users build a profile around who they are **outside of work**.
+> *You and Maya both love hiking and running. You're also both into AI and technology. You both went to Cornell and speak Spanish. Plus, you're close by.*
 
-Profiles can include:
+The intro only ever names things the other person made visible.
 
-* Hobbies
-* Favorite activities
-* Lifestyle
-* Interests
-* Sports
-* Fitness preferences
-* Entertainment
-* Food
-* Travel
-* Languages
-* Pets
-* Social preferences
-* Availability
-* Preferred group sizes
-* Activities they want to try
-* What they are looking for socially
+### 4. Discover
+A ranked feed, one person at a time, with their photos, an **About** section, and the activities and interests you can see. Three choices:
+- **Interested**
+- **Pass**
+- **Decide later** - they move to the back of the line and come back later; nothing is lost
 
-The profile should communicate far more than someone's job title.
-
----
-
-## 3. Compatibility Matching
-
-Mingly.ai uses a recommendation system to determine which users are likely to be socially compatible.
-
-Matching can incorporate:
-
-**Background compatibility**
-
-Education, professional stage, industry, location, and shared networks.
-
-**Interest compatibility**
-
-Hobbies, interests, sports, entertainment, travel, food, and other preferences.
-
-**Lifestyle compatibility**
-
-Schedules, preferred environments, activity intensity, social style, and habits.
-
-**Activity compatibility**
-
-Whether two people actually want to do the same things.
-
-**Language compatibility**
-
-Shared spoken languages can create stronger connections, particularly among multilingual and international professionals.
-
-**Pet compatibility**
-
-Dog owners and pet lovers can discover people interested in activities such as walks, parks, hikes, or other pet-friendly experiences.
-
-**Social intent**
-
-Different people may be looking for:
-
-* New friends
-* Activity partners
-* Small groups
-* Communities
-* People new to their city
-* People with similar backgrounds
-* Broader social circles
-
-The recommendation system should consider these signals together rather than relying on a single similarity metric.
+### 5. Match and connect
+When two people are both interested, it's a match. Matches can see each other's optional contact info - a **LinkedIn profile link**, **phone**, and/or **Instagram** - which each person chooses to share, and which nobody else ever sees. Either person can unmatch, which hides contact info immediately.
 
 ---
 
-## 4. Match + Activity
+## What's Next
 
-Mingly.ai does not stop after saying:
+The full dated plan lives in **[docs/roadmap.md](docs/roadmap.md)**. In short:
 
-> "You two should meet."
-
-The platform can also suggest **why they should meet and what they could do together**.
-
-For example:
-
-> You both enjoy tennis, live nearby, speak Lithuanian, and usually prefer weekend activities.
-
-**Suggested activity:** Play tennis Saturday afternoon.
-
-This moves matching from passive profile discovery toward real-world interaction.
+| When | What |
+|---|---|
+| October | **Circles** - invite your existing friends with a personal link; friends-of-friends become warm introductions ("You both know Maya"). **Settings & safety** - report and block, account deletion |
+| Late Oct–Nov | Match notifications, backups, verified phone numbers, Terms & Privacy Policy, and a **curated events pilot** in NYC and Ithaca |
+| December | **Private beta** on the web from Dec 1; **iOS and Android apps**, including finding friends from your phone contacts |
+| January 1, 2027 | **Launch** |
+| 2027 | Automatically sourced local **events** with audience-controlled sharing, smarter (learned) matching, and sponsored events once the community has grown |
 
 ---
 
-## 5. Bring a Friend
-
-Meeting someone from the internet can feel awkward.
-
-Users can optionally bring an existing Mingly.ai connection to an activity.
-
-This can:
-
-* Reduce pressure
-* Increase safety
-* Make first meetings more comfortable
-* Encourage small-group interactions
-* Help social networks grow organically
-
-The accompanying friend must also be a Mingly.ai user.
-
----
-
-## 6. Circles
-
-Successful interactions should create more than a single connection.
-
-After participating in an activity together, users can become part of each other's **Circles**.
-
-Circles represent the user's growing trusted social graph.
-
-As people meet through shared activities, Mingly.ai can use those relationships to surface additional compatible people through:
-
-* Mutual Circles
-* Shared activities
-* Similar communities
-* Trusted second-degree relationships
-* Repeated social interactions
-
-Over time, the social graph itself becomes an increasingly valuable recommendation signal.
-
----
-
-# The Mingly Flywheel
+## The Mingly Flywheel
 
 ```text
-Create Profile
-      ↓
-Discover Compatible People
-      ↓
-Match Around Shared Interests
-      ↓
-Choose an Activity
-      ↓
-Meet in Real Life
-      ↓
-Form a Circle
-      ↓
-Unlock Mutual Connections
-      ↓
-Better Recommendations
-      ↓
-More Real-World Interactions
+Sign in & build a profile
+        ↓
+Invite your friends → your Circle
+        ↓
+Discover compatible people (including friends of friends)
+        ↓
+Match around shared activities and interests
+        ↓
+Make a plan - an event or activity
+        ↓
+Meet in real life
+        ↓
+Grow your Circle → better, more trusted recommendations
 ```
 
-Every successful interaction can improve the network.
+---
 
-The more meaningful connections users create, the more context Mingly.ai gains for recommending future connections.
+## Product Principles
+
+- **Compatibility over popularity.** Show people the *right* people, not the most popular ones.
+- **Real-world interaction over engagement metrics.** A good recommendation gets people off the app and into the world.
+- **Career-oriented, not career-focused.** Professional background establishes context and trust; the product is about life outside work.
+- **Quality over quantity.** Ten relevant introductions beat hundreds of random profiles.
+- **Trust and privacy by design.** Verified identity, separate visibility and matching controls, and nothing shared that a person didn't choose to share.
+- **Recommendations should improve.** Every meaningful interaction should make future matching better.
 
 ---
 
-# Recommendation System
+## Technology
 
-Matching is a core part of the product rather than an optional feature added later.
+| Layer | Stack |
+|---|---|
+| Frontend | Next.js + TypeScript |
+| Backend | FastAPI (Python) |
+| Database | PostgreSQL + pgvector, migrations with Alembic |
+| Auth | Sign In with LinkedIn (OpenID Connect), signed session cookies |
+| Infrastructure | Docker Compose, nginx, TLS |
 
-The recommendation architecture can combine:
+The matching engine lives in `backend/app/services/`: `eligibility.py` (who can be shown), `compatibility_scoring.py` (ranking and the friendly intro), `careers.py` (career similarity), `public_profile.py` (what one person may see about another), and `matches.py` (mutual matches).
 
-### Hard Filters
-
-Examples:
-
-* Geographic distance
-* Age preferences where applicable
-* Availability
-* Social intent
-* Activity requirements
-* Language requirements
-* User exclusions
-
-### Structured Compatibility
-
-Similarity across profile attributes such as:
-
-* Education
-* Industry
-* Career stage
-* Activities
-* Interests
-* Lifestyle
-* Languages
-
-### Semantic Similarity
-
-Embeddings can represent free-form interests, activities, bios, preferences, and other profile information in a shared vector space.
-
-This allows the platform to recognize semantic relationships that simple keyword matching would miss.
-
-### Behavioral Signals
-
-As the platform grows, recommendations can incorporate:
-
-* Profiles viewed
-* Matches accepted
-* Matches skipped
-* Conversations started
-* Activities accepted
-* Activities completed
-* Repeat interactions
-* Circle formation
-* User feedback
-
-### Social Graph Signals
-
-Existing Circles and mutual relationships can eventually become an important trust and discovery layer.
-
-The long-term system should improve as users interact with it.
-
----
-
-# Example
-
-Two users may have:
+### Repository structure
 
 ```text
-User A
-────────────────────────
-Software Engineer
-Cornell graduate
-Lives in Manhattan
-Speaks English + Turkish
-Likes skiing, lifting, dogs,
-coffee, and live music
-Looking for new friends
-
-User B
-────────────────────────
-Product Manager
-Columbia graduate
-Lives in Brooklyn
-Speaks English + Turkish
-Likes skiing, fitness,
-dogs, concerts, and cafes
-Looking to expand their
-social circle
-```
-
-Instead of simply displaying a compatibility score, Mingly.ai could explain:
-
-```text
-92% Match
-
-You both:
-• work in technology
-• speak Turkish
-• enjoy skiing
-• own or love dogs
-• enjoy fitness
-• like live music
-• want to expand your social circles
-```
-
-And suggest:
-
-```text
-Activity Idea
-
-Grab coffee this weekend and
-take your dogs through Central Park.
-```
-
-That is the experience Mingly.ai is designed around.
-
----
-
-# MVP
-
-The initial MVP focuses on proving one fundamental hypothesis:
-
-> **Can we consistently introduce professionals to people they genuinely want to meet in real life?**
-
-Core MVP functionality includes:
-
-* User authentication
-* Professional verification
-* User onboarding
-* Social profiles
-* Interests and activity preferences
-* Location preferences
-* Spoken languages
-* Pet/dog preferences
-* Matching and recommendation engine
-* Match explanations
-* Activity suggestions
-* Match discovery
-* Connection requests
-* Messaging
-* Bring-a-friend functionality
-* Circles
-* Feedback signals for improving recommendations
-* Reporting, blocking, and basic trust and safety controls
-
----
-
-# Long-Term Vision
-
-Mingly.ai can evolve from a matching application into a **social graph for professional communities outside of work**.
-
-The long-term goal is for a user entering a new city, beginning a new job, graduating from university, or simply wanting to expand their social life to be able to open Mingly.ai and quickly discover:
-
-* People they are likely to get along with
-* Things they would enjoy doing together
-* Trusted communities they can become part of
-* Mutual connections that reduce the friction of meeting strangers
-
-The product becomes more valuable as the network becomes denser.
-
----
-
-# Product Principles
-
-### Compatibility over popularity
-
-The objective is not to show users the most popular people. It is to show them the **right people**.
-
-### Real-world interaction over engagement metrics
-
-Success is not measured purely by screen time.
-
-A successful recommendation should eventually get users **off the app and into the real world**.
-
-### Career-oriented, not career-focused
-
-Professional background establishes context and trust.
-
-The actual product is about life outside of work.
-
-### Quality over quantity
-
-Ten highly relevant recommendations are more useful than hundreds of random profiles.
-
-### Trust by design
-
-Professional verification, mutual connections, Circles, reporting tools, and reputation signals should make meeting new people feel safer and less random.
-
-### Recommendations should improve
-
-Every meaningful user interaction should provide signals that make future matching better.
-
----
-
-# Technology
-
-Mingly.ai is being built as a modern, scalable web platform with the recommendation system treated as a first-class service.
-
-The architecture is designed around several major domains:
-
-```text
-┌─────────────────────────┐
-│       Client App        │
-└────────────┬────────────┘
-             │
-┌────────────▼────────────┐
-│      Application API    │
-└────────────┬────────────┘
-             │
-     ┌───────┼────────┐
-     │       │        │
-     ▼       ▼        ▼
- Profiles  Social   Matching
-          Graph     Engine
-     │       │        │
-     └───────┼────────┘
-             ▼
-        Data Layer
-```
-
-Additional services can support:
-
-* Authentication
-* Professional verification
-* Messaging
-* Notifications
-* Geospatial discovery
-* Embeddings
-* Recommendation ranking
-* Activity recommendations
-* Analytics
-* Trust and safety
-
----
-
-# Local Development
-
-Clone the repository:
-
-```bash
-git clone <repository-url>
-cd mingly
-```
-
-Install the project dependencies according to the application's package configuration.
-
-Create your local environment configuration:
-
-```bash
-cp .env.example .env
-```
-
-Configure the required environment variables and start the development environment using the commands defined by the repository.
-
-> Development commands and infrastructure instructions should remain synchronized with the actual implementation as the project evolves.
-
----
-
-# Repository Structure
-
-The repository is organized around clear boundaries between product functionality.
-
-A typical structure may include:
-
-```text
-mingly/
-├── frontend/
+mingly.ai/
 ├── backend/
-├── matching/
-├── database/
-├── scripts/
-├── tests/
-├── docs/
-├── .env.example
-└── README.md
+│   ├── app/
+│   │   ├── api/routes/     # HTTP endpoints
+│   │   ├── models/         # database models
+│   │   ├── schemas/        # request/response validation
+│   │   ├── services/       # matching engine and business logic
+│   │   └── data/           # seed catalogs (activities, interests, job titles, ...)
+│   ├── alembic/            # database migrations
+│   └── tests/
+├── frontend/
+│   ├── pages/              # onboarding, profile, discover, matches
+│   └── components/
+├── docs/                   # roadmap, design notes, privacy policy draft
+├── infrastructure/
+├── docker-compose.yml
+└── .env.example
 ```
 
-The exact structure may evolve as the MVP architecture develops.
+---
+
+## Local Development
+
+**Prerequisites:** Docker and Docker Compose, plus a LinkedIn developer app with the **"Sign In with LinkedIn using OpenID Connect"** product.
+
+```bash
+git clone https://github.com/EcSky19/mingly.ai.git
+cd mingly.ai
+cp .env.example .env          # then fill in the values
+docker compose up -d --build
+docker compose exec backend alembic upgrade head
+```
+
+- Web app: http://localhost:3010
+- API: http://localhost:8010 (health check at `/api/health`)
+
+Set the LinkedIn redirect URI in both `.env` and your LinkedIn app so they match.
+
+### Tests
+
+```bash
+cd backend
+pip install -r requirements.txt
+SESSION_SECRET=test-secret DATABASE_URL=sqlite:///./test.db pytest
+```
+
+The backend suite has 200+ tests, including privacy guarantees (hidden fields never shown or named, opt-outs respected), consent rules for every matching signal, and query-count tests that keep the matching engine from slowing down as the user base grows. Features that depend on PostgreSQL-specific behavior are also verified against a real PostgreSQL database before release.
 
 ---
 
-# Development Status
+## Documentation
 
-🚧 **Mingly.ai is currently under active development.**
-
-The immediate priority is building and validating the MVP, with particular emphasis on:
-
-1. High-quality user profiles
-2. Trust and professional verification
-3. Strong compatibility recommendations
-4. Relevant activity suggestions
-5. Converting online matches into real-world interactions
-6. Learning from user behavior to improve future recommendations
-7. Building an organic social graph through Circles
+| Doc | What's in it |
+|---|---|
+| [roadmap.md](docs/roadmap.md) | Scope, what's built, the dated launch plan, decisions log, risks |
+| [privacy-policy.md](docs/privacy-policy.md) | Privacy policy draft |
+| [location-design.md](docs/location-design.md), [pets-design.md](docs/pets-design.md), [professional-profile-design.md](docs/professional-profile-design.md) | Design notes for profile sections |
+| [deployment-log.md](docs/deployment-log.md) | Deployment history |
 
 ---
 
-# Contributing
+## Security
 
-Mingly.ai is currently an early-stage project.
+If you discover a security or privacy vulnerability, please don't open a public GitHub issue. Contact the maintainers privately so it can be investigated responsibly.
 
-Contribution guidelines, development conventions, issue templates, and pull request requirements will be documented as the codebase and engineering team grow.
-
----
-
-# Security
-
-If you discover a security or privacy vulnerability, please do not open a public GitHub issue.
-
-Contact the project maintainers privately so the issue can be investigated responsibly.
-
----
-
-# Privacy
-
-Mingly.ai handles information related to identity, professional background, location, preferences, social relationships, and user behavior.
-
-Privacy and user control should therefore be treated as core product requirements rather than secondary features.
-
-Users should have clear control over:
-
-* What information is visible
-* Who can discover them
-* What professional information is displayed
-* Location precision
-* Connection permissions
-* Blocking
-* Reporting
-* Account deletion
-* Data removal
-
----
-
-# Our Mission
+## Our Mission
 
 **Help career-oriented professionals build meaningful lives and relationships outside of work.**
 
-People spend years building their careers.
-
-**Mingly.ai helps them catch up with life.**
+People spend years building their careers. **Mingly.ai helps them catch up with life.**
 
 ---
 
-**Mingly.ai**
-*Meet your kind of people.*
-
-[mingly.ai](https://mingly.ai)
+**Mingly.ai** · *Meet your kind of people.* · [mingly.ai](https://www.mingly.ai)
