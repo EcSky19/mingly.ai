@@ -313,3 +313,29 @@ def test_dog_details_matter():
     assert s[matched] - s[mismatched] == 2, "same size +1 and same energy +1"
     assert s[mismatched] - s[unsocial] == 2, "a dog not comfortable around other dogs drops the bonus from 3 to 1"
     db.close()
+
+
+def test_company_counts_only_if_both_allow_it_and_is_named_only_if_visible():
+    db = SessionLocal()
+    me = _person(db)
+    shown, hidden, opted_out, base = (_person(db, n) for n in ("S", "H", "O", "B"))
+    for uid, visible, usable in ((me, True, True), (shown, True, True), (hidden, False, True), (opted_out, True, False)):
+        db.add(ProfessionalProfile(user_id=uid, company="Acme", company_visible_on_profile=visible, company_usable_for_matching=usable))
+    db.commit()
+    r = _rank(db, me)
+    b = r[base].score
+    assert r[shown].score - b == 2 and "work at Acme" in r[shown].intro
+    assert r[hidden].score - b == 2 and "Acme" not in r[hidden].intro, "counts, but never named when hidden"
+    assert r[opted_out].score == b, "their opt-out means a shared company is ignored"
+    db.close()
+
+
+def test_your_own_company_opt_out_also_blocks_it():
+    db = SessionLocal()
+    me, coworker, base = _person(db), _person(db, "C"), _person(db, "B")
+    db.add(ProfessionalProfile(user_id=me, company="Acme", company_visible_on_profile=True, company_usable_for_matching=False))
+    db.add(ProfessionalProfile(user_id=coworker, company="Acme", company_visible_on_profile=True, company_usable_for_matching=True))
+    db.commit()
+    r = _rank(db, me)
+    assert r[coworker].score == r[base].score
+    db.close()
