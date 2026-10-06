@@ -99,13 +99,13 @@ Backend: 210 tests. Database at migration 0032.
 - **Invites are always sent by the person, from their own device** - Mingly never auto-messages anyone's contacts (spam law; LinkedIn paid $13M over automated contact invitations).
 - **Phone contacts never stored for non-users** - matched as fingerprints on the device, non-matches discarded.
 - **Same-college alumni is a strong signal regardless of graduation year**; graduation year is intentionally unused.
+- **Company counts in matching, by each person's choice** (decided Oct 6) - only when both people allow it via its toggle, so anyone who'd rather not be matched with coworkers can switch it off.
 - **Beta cohort: NYC + Ithaca** (decided Oct 6). Two separate pools that each need their own density; recruited through Cornell networks - on campus in Ithaca, alumni and Cornell Tech in NYC.
 - **Pilot cities: New York City and Ithaca, NY** - Mingly is a Cornell startup. The two are ~220 miles apart, so they form separate local pools; people who split time between them (e.g. Cornell Tech in NYC) can list both locations and match in either.
 - **"Visible on profile" controls what's shown; "usable for matching" controls what's scored** - a hidden field can count toward matching but is never named or displayed.
 
 ## Open decisions
 
-- Should a shared **company** count toward matching (people control it with the toggle), or should its matching toggle be removed?
 - Default audience for event sharing (recommended: selected people / circle only, never public by default).
 
 ## Risks & contingencies
