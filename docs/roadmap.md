@@ -2,7 +2,7 @@
 
 The living plan for Mingly.ai: what the product is, what's built, and the dated path to launch. Updated as decisions are made and milestones ship - status here reflects what's actually live in production, not intent.
 
-**Launch target: January 1, 2027.** _Last updated: October 5, 2026._
+**Launch target: January 1, 2027.** _Last updated: October 6, 2026._
 
 ---
 
@@ -58,7 +58,7 @@ Backend: 210 tests. Database at migration 0032.
 | **Nov 9–13** | **Events pilot (curated, NYC + Ithaca)** - hand-curated events in both pilot cities, mapped to the activity/interest catalog; "Things to do" page; mark interest in an event; see which matches and circle members are interested; event co-interest as a matching signal. Data model includes a `source` field (curated / API / sponsored) so later phases drop in | Two users interested in the same event see it reflected in their match intro |
 | Nov 16–20 | Buffer | — |
 | **Nov 23–30** | **Web QA & beta prep** (Thanksgiving week) | Full end-to-end pass on desktop and phone browsers: invite → sign up → onboard → discover → match → connect → event |
-| **Dec 1–27** | **Private beta (web)** - an NYC cohort recruited through invite links, so it starts with real local density | Real matches and real meetings happen, with feedback captured |
+| **Dec 1–27** | **Private beta (web)** - two cohorts, NYC and Ithaca, recruited through invite links (Cornell networks in both), so each starts with real local density | Real matches and real meetings happen, with feedback captured |
 | **Nov 30–Dec 16** (in parallel) | **Phone apps** - Capacitor wrap; contacts permission → "Already on Mingly → add to circle" and "Invite"; store submission and review. Apps join the beta when approved | Approved in both stores |
 | **Dec 28–Jan 1** | **Final polish & launch** | — |
 
@@ -99,6 +99,7 @@ Backend: 210 tests. Database at migration 0032.
 - **Invites are always sent by the person, from their own device** - Mingly never auto-messages anyone's contacts (spam law; LinkedIn paid $13M over automated contact invitations).
 - **Phone contacts never stored for non-users** - matched as fingerprints on the device, non-matches discarded.
 - **Same-college alumni is a strong signal regardless of graduation year**; graduation year is intentionally unused.
+- **Beta cohort: NYC + Ithaca** (decided Oct 6). Two separate pools that each need their own density; recruited through Cornell networks - on campus in Ithaca, alumni and Cornell Tech in NYC.
 - **Pilot cities: New York City and Ithaca, NY** - Mingly is a Cornell startup. The two are ~220 miles apart, so they form separate local pools; people who split time between them (e.g. Cornell Tech in NYC) can list both locations and match in either.
 - **"Visible on profile" controls what's shown; "usable for matching" controls what's scored** - a hidden field can count toward matching but is never named or displayed.
 
@@ -106,7 +107,6 @@ Backend: 210 tests. Database at migration 0032.
 
 - Should a shared **company** count toward matching (people control it with the toggle), or should its matching toggle be removed?
 - Default audience for event sharing (recommended: selected people / circle only, never public by default).
-- **Beta cohort composition:** NYC only, or NYC + Ithaca (the Cornell community - dense, high-trust, and strong on the alumni signal)? Splitting across two cities divides density, so each needs enough people on its own.
 
 ## Risks & contingencies
 
