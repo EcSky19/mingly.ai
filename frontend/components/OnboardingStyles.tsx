@@ -453,6 +453,7 @@ export default function OnboardingStyles() {
         font-size: 0.8rem;
       }
 
+      .collapsible-header-static { cursor: default; }
       .collapsible-section {
         margin-bottom: 0;
         padding-bottom: 0;

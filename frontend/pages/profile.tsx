@@ -539,7 +539,7 @@ export default function Profile() {
           <div className="profile-columns">
           <div className="profile-col-left">
 
-          <CollapsibleSection title="Photos" defaultOpen summary={`${photos.length} of ${MAX_PHOTOS} added`}>
+          <CollapsibleSection collapsible={false} title="Photos" defaultOpen summary={`${photos.length} of ${MAX_PHOTOS} added`}>
             {linkedinPhotoUrl && (
               <div className="field">
                 <label className="field-label">From LinkedIn</label>
@@ -645,6 +645,7 @@ export default function Profile() {
           </CollapsibleSection>
 
           <CollapsibleSection
+            collapsible={false}
             title="About You"
             summary={GENDER_IDENTITIES.find((g) => g.value === genderIdentity)?.label}
           >
@@ -816,6 +817,7 @@ export default function Profile() {
           </CollapsibleSection>
 
           <CollapsibleSection
+            collapsible={false}
             title="How Matches Can Reach You"
             summary={contactLinkedin || contactPhone || contactInstagram ? "Added" : "Optional"}
           >
@@ -867,6 +869,7 @@ export default function Profile() {
           <div className="profile-col-right">
 
           <CollapsibleSection
+            collapsible={false}
             title="Professional"
             summary={professional?.current_role || professional?.company || undefined}
           >
@@ -908,6 +911,7 @@ export default function Profile() {
           </CollapsibleSection>
 
           <CollapsibleSection
+            collapsible={false}
             title="Education"
             summary={education.length > 0 ? `${education.length} added` : undefined}
           >
@@ -929,6 +933,7 @@ export default function Profile() {
           </CollapsibleSection>
 
           <CollapsibleSection
+            collapsible={false}
             title="Languages"
             summary={languages.length > 0 ? `${languages.length} added` : undefined}
           >
@@ -949,6 +954,7 @@ export default function Profile() {
           </CollapsibleSection>
 
           <CollapsibleSection
+            collapsible={false}
             title="Location"
             summary={locations.find((l) => l.is_primary)?.city || locations[0]?.city || undefined}
           >
@@ -968,7 +974,7 @@ export default function Profile() {
             )}
           </CollapsibleSection>
 
-          <CollapsibleSection title="Pets" summary={pets.length > 0 ? `${pets.length} added` : undefined}>
+          <CollapsibleSection collapsible={false} title="Pets" summary={pets.length > 0 ? `${pets.length} added` : undefined}>
             <button type="button" className="edit-link" onClick={() => router.push("/onboarding")}>
               Edit
             </button>
@@ -987,6 +993,7 @@ export default function Profile() {
           </CollapsibleSection>
 
           <CollapsibleSection
+            collapsible={false}
             title="Interests"
             summary={interests.length > 0 ? `${interests.length} selected` : undefined}
           >
@@ -1021,6 +1028,7 @@ export default function Profile() {
           </CollapsibleSection>
 
           <CollapsibleSection
+            collapsible={false}
             title="Activities"
             summary={activities.length > 0 ? `${activities.length} selected` : undefined}
           >
@@ -1058,6 +1066,7 @@ export default function Profile() {
           </CollapsibleSection>
 
           <CollapsibleSection
+            collapsible={false}
             title="Lifestyle & Social"
             summary={social?.career_orientation ? humanize(social.career_orientation) : undefined}
           >
