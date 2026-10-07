@@ -14,6 +14,13 @@ const LINKS = [
 export default function AppNav() {
   const router = useRouter();
 
+  // The onboarding pages are where you edit your profile, so My Profile
+  // stays highlighted there too.
+  function isActive(href: string) {
+    if (href === "/profile") return router.pathname === "/profile" || router.pathname.startsWith("/onboarding");
+    return router.pathname === href;
+  }
+
   async function handleLogout() {
     try {
       await fetch(`${API_URL}/api/auth/logout`, { method: "POST", credentials: "include" });
@@ -34,7 +41,7 @@ export default function AppNav() {
           <button
             key={link.href}
             type="button"
-            className={router.pathname === link.href ? "discover-nav-link discover-nav-link-active" : "discover-nav-link"}
+            className={isActive(link.href) ? "discover-nav-link discover-nav-link-active" : "discover-nav-link"}
             onClick={() => router.push(link.href)}
           >
             {link.label}

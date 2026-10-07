@@ -2,6 +2,7 @@ import Head from "next/head";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import OnboardingStyles from "../components/OnboardingStyles";
+import AppNav from "../components/AppNav";
 import PrivacyTag from "../components/PrivacyTag";
 import PrivacyToggles from "../components/PrivacyToggles";
 import MultiSelectChips from "../components/MultiSelectChips";
@@ -327,17 +328,6 @@ export default function Profile() {
     }
   }
 
-  async function handleLogout() {
-    try {
-      await fetch(`${API_URL}/api/auth/logout`, { method: "POST", credentials: "include" });
-    } catch {
-      // Fails open - clear the session cookie server-side attempt was
-      // made; worst case the person just sees the login page again on
-      // their next visit even if this particular request dropped.
-    }
-    router.push("/");
-  }
-
   function openLightbox(index: number) {
     setViewingPhotoIndex(index);
   }
@@ -524,14 +514,8 @@ export default function Profile() {
       </Head>
       <main className="page">
         <div className="profile-wrap">
-          <span className="wordmark">
-            <img src="/mingly-mark.png" alt="" className="mark" />
-            <span>Mingly.ai</span>
-          </span>
+          <AppNav />
 
-          <button type="button" className="skip" onClick={handleLogout} style={{ float: "right" }}>
-            Log out
-          </button>
 
           <h1 className="headline">{firstName ? `${firstName}'s` : "My"} Profile</h1>
           <p className="subhead">Everything you've shared, in one place.</p>

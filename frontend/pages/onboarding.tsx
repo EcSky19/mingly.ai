@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import AutocompleteField from "../components/AutocompleteField";
 import PrivacyToggles from "../components/PrivacyToggles";
 import OnboardingStyles from "../components/OnboardingStyles";
+import AppNav from "../components/AppNav";
 import CollapsibleSection from "../components/CollapsibleSection";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -667,10 +668,7 @@ export default function Onboarding() {
       </Head>
       <main className="page">
         <div className="profile-wrap">
-          <span className="wordmark">
-            <img src="/mingly-mark.png" alt="" className="mark" />
-            <span>Mingly.ai</span>
-          </span>
+          <AppNav />
 
           <h1 className="headline">{firstName ? `${firstName}'s` : "Your"} Mingly.ai Onboarding</h1>
           <p className="subhead">

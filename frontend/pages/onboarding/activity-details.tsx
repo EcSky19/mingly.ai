@@ -2,6 +2,7 @@ import Head from "next/head";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import OnboardingStyles from "../../components/OnboardingStyles";
+import AppNav from "../../components/AppNav";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -137,10 +138,7 @@ export default function ActivityDetails() {
       </Head>
       <main className="page">
         <div className="profile-wrap">
-          <span className="wordmark">
-            <img src="/mingly-mark.png" alt="" className="mark" />
-            <span>Mingly.ai</span>
-          </span>
+          <AppNav />
 
           <button
             type="button"
