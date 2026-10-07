@@ -35,6 +35,9 @@ class User(Base):
     profile_photo_url = Column(String, nullable=True)
 
     account_status = Column(Enum(AccountStatus), nullable=False, default=AccountStatus.active)
+    # Whether this person may be NAMED as a mutual connection in someone else's
+    # intro ("You both know Maya"). Off still helps friends' matches - just unnamed.
+    show_as_mutual_connection = Column(Boolean, nullable=False, default=True)
     onboarding_completed = Column(Boolean, nullable=False, default=False)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
