@@ -822,7 +822,7 @@ export default function Profile() {
             summary={contactLinkedin || contactPhone || contactInstagram ? "Added" : "Optional"}
           >
             <p className="section-hint">
-              Only people you've matched with - where you've both said you're interested - can see
+              Only people you've matched with - where you both chose Connect - can see
               this. Nobody else ever does, and unmatching hides it again right away. Add as much or
               as little as you're comfortable with.
             </p>

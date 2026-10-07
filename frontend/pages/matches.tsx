@@ -31,7 +31,7 @@ function matchedWhen(iso?: string | null): string {
 }
 
 // Everyone you've matched with - where you've both said you're
-// interested - and how to reach them, if they chose to share it.
+// chosen Connect - and how to reach them, if they chose to share it.
 export default function Matches() {
   const router = useRouter();
   const [checkingAuth, setCheckingAuth] = useState(true);
@@ -100,7 +100,7 @@ export default function Matches() {
             <div className="discover-card discover-empty">
               <h2 className="discover-name">No matches yet</h2>
               <p>
-                When someone you're interested in is interested in you too, they'll show up here -
+                When someone you want to connect with wants to connect with you too, they'll show up here -
                 along with how to reach them, if they've shared it.
               </p>
               <button type="button" className="cta" onClick={() => router.push("/home")}>

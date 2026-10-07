@@ -56,7 +56,7 @@ export default function Discover() {
   const [photoIndex, setPhotoIndex] = useState(0);
   const [acting, setActing] = useState(false);
   const [actionError, setActionError] = useState("");
-  // Set when your "Interested" completes a mutual match - shown as its own
+  // Set when your "Connect" completes a mutual match - shown as its own
   // moment before moving on to the next person.
   const [justMatched, setJustMatched] = useState<Candidate | null>(null);
   // Circle requests (e.g. "Ethan invited you") meet people right here, since
@@ -177,7 +177,7 @@ export default function Discover() {
             <div className="discover-card match-moment">
               <h2 className="match-moment-title">It's a match!</h2>
               <p>
-                You and {justMatched.first_name} are both interested. Head to your matches to see how
+                You and {justMatched.first_name} both want to connect. Head to your matches to see how
                 to reach them and make a plan.
               </p>
               <div className="match-moment-actions">
@@ -297,7 +297,7 @@ export default function Discover() {
                         Decide later
                       </button>
                       <button type="button" className="cta" disabled={acting} onClick={() => act("interested")}>
-                        Interested
+                        Connect
                       </button>
                     </div>
                     {actionError && (
