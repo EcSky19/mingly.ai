@@ -28,9 +28,10 @@ from app.models.professional_profile import ProfessionalProfile
 from app.models.user_education import UserEducation
 from app.models.user_language import UserLanguage
 from app.models.user_pet import UserPet
-from app.models.user import User
+from app.models.user import AccountStatus, User
 from app.models.user_location import UserLocation
 from app.models.user_social_profile import UserSocialProfile
+from app.services.circles import circles_for
 from app.services.careers import career_family, core_role, core_role_display, family_phrase
 from app.services.eligibility import DEFAULT_TRAVEL_RADIUS_MILES, _haversine_miles, get_eligible_candidates
 
@@ -73,6 +74,11 @@ WEIGHT_SAME_DOG_SIZE = 1          # similar-size dogs play together more safely
 WEIGHT_BOTH_CAT_PEOPLE = 2        # shared identity, though there's no joint outing like with dogs
 WEIGHT_BOTH_PET_OWNERS = 1        # both have pets, just different kinds
 WEIGHT_SHARED_SOCIAL_GOAL = 2
+# Friends of friends: someone you share a circle member with is a warm
+# introduction, not a stranger. Counted per mutual friend, capped.
+WEIGHT_MUTUAL_FRIEND = 4
+MAX_MUTUAL_FRIENDS_COUNTED = 3
+MAX_MUTUAL_FRIENDS_NAMED = 2
 MAX_EXTRAS_IN_INTRO = 2           # keep the intro a friendly few lines, not a wall
 LIFESTYLE_PACE_MIN_MATCHES = 3
 
@@ -133,6 +139,8 @@ class PairSignals:
     career_family_named: str | None = None
     both_dog_people: bool = False
     both_cat_people: bool = False
+    mutual_friends_named: list[str] = field(default_factory=list)  # only friends who allow being named
+    mutual_friends_total: int = 0
     goals_named: list[str] = field(default_factory=list)
 
 
@@ -561,6 +569,12 @@ def _build_intro(first_name: str, s: PairSignals) -> str:
             subject = "You" if sentences else who
             sentences.append(f"{subject} both {' and '.join(chosen)}.")
 
+    if s.mutual_friends_named:
+        shown = s.mutual_friends_named[:MAX_MUTUAL_FRIENDS_NAMED]
+        tail = ", among others" if s.mutual_friends_total > len(shown) else ""
+        subject = "You" if sentences else who
+        sentences.append(f"{subject} both know {_join(shown)}{tail}.")
+
     if s.lifestyle_matches >= LIFESTYLE_PACE_MIN_MATCHES:
         sentences.append(
             "It sounds like you move at a similar pace, too." if sentences else f"{who} seem to move at a similar pace."
@@ -621,6 +635,14 @@ def get_ranked_candidates(db: Session, user_id: UUID) -> list[ScoredCandidate]:
         locations_by_user.setdefault(loc.user_id, []).append(loc)
 
     everyone = candidate_ids + [user_id]
+    # Friends of friends: everyone's circle in one query, then the mutual
+    # friends' names and naming permission in one more.
+    circles = circles_for(db, everyone)
+    mutual_ids = set().union(*(circles[user_id] & circles.get(c, set()) for c in candidate_ids)) if candidate_ids else set()
+    mutual_people = {
+        u.id: u
+        for u in db.query(User).filter(User.id.in_(mutual_ids), User.account_status == AccountStatus.active).all()
+    }
     info: dict = {uid: PersonalInfo() for uid in everyone}
     info[user_id].social = requester_social
     for uid, sp in social_by_user.items():
@@ -656,6 +678,15 @@ def get_ranked_candidates(db: Session, user_id: UUID) -> list[ScoredCandidate]:
             interest_names,
         )
         extra_score, extra_reasons = _score_personal_info(info[user_id], info[candidate.id], signals)
+        mutual = circles[user_id] & circles.get(candidate.id, set())
+        mutual_active = [mutual_people[m] for m in mutual if m in mutual_people]
+        if mutual_active:
+            signals.mutual_friends_total = len(mutual_active)
+            extra_score += WEIGHT_MUTUAL_FRIEND * min(len(mutual_active), MAX_MUTUAL_FRIENDS_COUNTED)
+            # Only friends who allow it are ever named; the rest still count.
+            signals.mutual_friends_named = sorted(p.first_name for p in mutual_active if p.show_as_mutual_connection)
+            if signals.mutual_friends_named:
+                extra_reasons.append(f"Mutual friends: {', '.join(signals.mutual_friends_named)}")
         score += extra_score
         reasons += extra_reasons
         scored.append(

@@ -28,6 +28,7 @@ from app.models.user import User
 from app.models.user_interaction import UserInteraction
 from app.models.user_location import UserLocation
 from app.models.user_social_profile import UserSocialProfile
+from app.services.circles import circle_ids
 
 DEFAULT_TRAVEL_RADIUS_MILES = 25  # used only if a location has no radius set
 EARTH_RADIUS_MILES = 3958.8
@@ -151,6 +152,10 @@ def get_eligible_candidates(db: Session, user_id: UUID) -> list[User]:
             already_interacted.add(row.target_user_id)
         elif row.target_user_id == user_id and action == "dismissed":
             already_interacted.add(row.user_id)
+
+    # People already in your circle never appear in Discovery - you already
+    # know them; Discovery is for meeting new people.
+    already_interacted |= circle_ids(db, user_id)
 
     requester_social = db.query(UserSocialProfile).filter(UserSocialProfile.user_id == user_id).first()
     requester_locations = db.query(UserLocation).filter(UserLocation.user_id == user_id).all()
