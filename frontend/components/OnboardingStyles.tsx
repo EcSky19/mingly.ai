@@ -728,6 +728,70 @@ export default function OnboardingStyles() {
       }
       .match-unmatch:hover { color: #f472b6; }
 
+      /* Circles (/circle, /invite/[code], and the request banner on /home) */
+      .circle-invite-box {
+        background: rgba(232, 165, 72, 0.08);
+        border: 1px solid rgba(232, 165, 72, 0.3);
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin-bottom: 2rem;
+      }
+      .circle-link-row {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-top: 0.75rem;
+      }
+      .circle-link-row .field-input { flex: 1; min-width: 14rem; }
+      .circle-section-title {
+        font-family: "Fraunces", serif;
+        font-size: 1.25rem;
+        font-weight: 500;
+        color: #f6f1e7;
+        margin: 2rem 0 0.75rem 0;
+      }
+      .circle-person-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.9rem;
+      }
+      .circle-banner {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+        background: rgba(232, 165, 72, 0.08);
+        border: 1px solid rgba(232, 165, 72, 0.3);
+        border-radius: 12px;
+        padding: 0.9rem 1.1rem;
+        margin-bottom: 1.25rem;
+      }
+      .circle-banner p { margin: 0; flex: 1; color: #f6f1e7; min-width: 12rem; }
+      .circle-setting {
+        display: flex;
+        gap: 0.75rem;
+        align-items: flex-start;
+        margin-top: 2.5rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid rgba(185, 175, 209, 0.15);
+        color: #f6f1e7;
+        font-size: 0.9rem;
+      }
+      .circle-setting p { margin: 0.25rem 0 0 0; color: #8f84ad; font-size: 0.85rem; }
+      .invite-card {
+        max-width: 28rem;
+        margin: 3rem auto 0 auto;
+        text-align: center;
+      }
+      .invite-avatar {
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid rgba(232, 165, 72, 0.5);
+        margin-bottom: 1rem;
+      }
+
       /* The moment a match happens on Discovery */
       .match-moment {
         text-align: center;

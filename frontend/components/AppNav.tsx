@@ -5,6 +5,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const LINKS = [
   { href: "/home", label: "Discover" },
   { href: "/matches", label: "Matches" },
+  { href: "/circle", label: "My Circle" },
   { href: "/profile", label: "My Profile" },
 ];
 
