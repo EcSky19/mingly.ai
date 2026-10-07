@@ -20,7 +20,7 @@ A Cornell startup. A trust-first way for professionals to meet compatible people
 | Trusted identity | LinkedIn sign-in; our own copy of the profile photo | ✅ Live |
 | Rich, private profile | Professional, education, languages, location + travel radius, pets, interests, activities, lifestyle, About You, photos; per-field privacy | ✅ Live |
 | Matching engine | Eligibility (bidirectional preferences, distance, consent), compatibility scoring (activities, interests, career similarity, alumni, languages, pets, lifestyle, goals), friendly explainable intros | ✅ Live |
-| Discovery | Ranked feed, Pass / Decide later / Interested, "About them" | ✅ Live |
+| Discovery | Ranked feed, Pass / Decide later / Connect, "About them" | ✅ Live |
 | Matches & connect | Mutual matching, match moment, Matches page, unmatch, contact info shown only to matches | ✅ Live |
 | **Circles & network** | Your Circle = people you trust: **existing friends** (invites, phone contacts) and, later, **people you've met** through Mingly. Secondary network = friends of your circle, as a trust bridge to new people | ✅ Live (lite: invite links, My Circle, friends of friends in matching) |
 | **Events & plans** | Local events matched to your interests; interest in the same event as a strong match signal; opt-in sharing with audience controls. Absorbs the original "Activity Engine" | 🆕 Curated pilot pre-beta (NYC + Ithaca); full version post-launch |

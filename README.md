@@ -64,12 +64,12 @@ The intro only ever names things the other person made visible.
 
 ### 4. Discover
 A ranked feed, one person at a time, with their photos, an **About** section, and the activities and interests you can see. Three choices:
-- **Interested**
+- **Connect**
 - **Pass**
 - **Decide later** - they move to the back of the line and come back later; nothing is lost
 
 ### 5. Match and connect
-When two people are both interested, it's a match. Matches can see each other's optional contact info - a **LinkedIn profile link**, **phone**, and/or **Instagram** - which each person chooses to share, and which nobody else ever sees. Either person can unmatch, which hides contact info immediately.
+When two people both choose Connect, it's a match. Matches can see each other's optional contact info - a **LinkedIn profile link**, **phone**, and/or **Instagram** - which each person chooses to share, and which nobody else ever sees. Either person can unmatch, which hides contact info immediately.
 
 ### 6. Your Circle
 Invite friends with a personal link - shared from your own phone, never sent automatically. When they join and accept, you're in each other's circle. Circle members don't appear in Discover (you already know them), but **their friends rank higher**, introduced warmly: *"You and Blake both know Maya."* Anyone can choose not to be named as a mutual friend and still help their friends' matches.
