@@ -11,6 +11,7 @@ from app.core.config import settings
 from app.db.session import get_db
 from app.models.user import User
 from app.services import linkedin_auth
+from app.services.circles import INVITE_CODE_RE, inviter_for_code, request_from_invite
 from app.services.session_auth import get_current_user
 from app.services.photo_storage import UPLOADS_DIR, LINKEDIN_PHOTOS_DIR, public_photo_url, save_linkedin_photo
 
@@ -18,9 +19,13 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
 @router.get("/linkedin/login")
-async def linkedin_login(request: Request):
+async def linkedin_login(request: Request, invite: str | None = None):
     redirect_url, state = linkedin_auth.build_authorization_url()
     request.session["oauth_state"] = state
+    # An invite link sends people here with ?invite=CODE. Keep it in the
+    # session so it survives the round trip to LinkedIn and back.
+    if invite and INVITE_CODE_RE.match(invite):
+        request.session["invite_code"] = invite
     return RedirectResponse(redirect_url)
 
 
@@ -71,6 +76,12 @@ async def linkedin_callback(request: Request, code: str, state: str, db: Session
             db.commit()
 
     request.session["user_id"] = str(user.id)
+
+    # Signed in through someone's invite link: ask this person to confirm
+    # adding the inviter to their circle (works for new and existing users).
+    inviter_id = inviter_for_code(db, request.session.pop("invite_code", None))
+    if inviter_id:
+        request_from_invite(db, inviter_id, user.id)
 
     destination = f"{settings.APP_URL}/onboarding" if not user.onboarding_completed else f"{settings.APP_URL}/home"
     return RedirectResponse(destination)
