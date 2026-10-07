@@ -59,6 +59,9 @@ export default function Discover() {
   // Set when your "Interested" completes a mutual match - shown as its own
   // moment before moving on to the next person.
   const [justMatched, setJustMatched] = useState<Candidate | null>(null);
+  // Circle requests (e.g. "Ethan invited you") meet people right here, since
+  // after signing up through an invite link they land on Discover.
+  const [circleRequests, setCircleRequests] = useState<{ id: string; from_user: { first_name: string } }[]>([]);
 
   useEffect(() => {
     fetch(`${API_URL}/api/auth/me`, { credentials: "include" })
@@ -82,6 +85,19 @@ export default function Discover() {
       .catch(() => setLoadError("Couldn't load people right now. Try refreshing the page."))
       .finally(() => setLoading(false));
   }, [checkingAuth]);
+
+  useEffect(() => {
+    if (checkingAuth) return;
+    fetch(`${API_URL}/api/circle`, { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => d && setCircleRequests(d.requests))
+      .catch(() => {});
+  }, [checkingAuth]);
+
+  async function answerCircleRequest(id: string, action: "accept" | "decline") {
+    const res = await fetch(`${API_URL}/api/circle/requests/${id}/${action}`, { method: "POST", credentials: "include" }).catch(() => null);
+    if (res && (res.ok || res.status === 404)) setCircleRequests((prev) => prev.filter((r) => r.id !== id));
+  }
 
   const current = queue[0];
 
@@ -135,6 +151,20 @@ export default function Discover() {
       <main className="page">
         <div className="profile-wrap">
           <AppNav />
+
+          {circleRequests.slice(0, 1).map((req) => (
+            <div className="circle-banner" key={req.id}>
+              <p>
+                <strong>{req.from_user.first_name}</strong> invited you to Mingly. Add {req.from_user.first_name} to your circle?
+              </p>
+              <button type="button" className="discover-pass-btn" style={{ flex: "none" }} onClick={() => answerCircleRequest(req.id, "decline")}>
+                Not now
+              </button>
+              <button type="button" className="cta" onClick={() => answerCircleRequest(req.id, "accept")}>
+                Add to my circle
+              </button>
+            </div>
+          ))}
 
           <h1 className="headline">People you might click with</h1>
           <p className="subhead">Ranked by what you actually share - activities first.</p>
