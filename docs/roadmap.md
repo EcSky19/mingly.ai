@@ -2,7 +2,7 @@
 
 The living plan for Mingly.ai: what the product is, what's built, and the dated path to launch. Updated as decisions are made and milestones ship - status here reflects what's actually live in production, not intent.
 
-**Launch target: January 1, 2027.** _Last updated: October 6, 2026._
+**Launch target: January 1, 2027.** _Last updated: October 7, 2026._
 
 ---
 
@@ -22,10 +22,10 @@ A Cornell startup. A trust-first way for professionals to meet compatible people
 | Matching engine | Eligibility (bidirectional preferences, distance, consent), compatibility scoring (activities, interests, career similarity, alumni, languages, pets, lifestyle, goals), friendly explainable intros | ✅ Live |
 | Discovery | Ranked feed, Pass / Decide later / Interested, "About them" | ✅ Live |
 | Matches & connect | Mutual matching, match moment, Matches page, unmatch, contact info shown only to matches | ✅ Live |
-| **Circles & network** | Your Circle = people you trust: **existing friends** (invites, phone contacts) and, later, **people you've met** through Mingly. Secondary network = friends of your circle, as a trust bridge to new people | 🆕 Pre-beta (lite) |
+| **Circles & network** | Your Circle = people you trust: **existing friends** (invites, phone contacts) and, later, **people you've met** through Mingly. Secondary network = friends of your circle, as a trust bridge to new people | ✅ Live (lite: invite links, My Circle, friends of friends in matching) |
 | **Events & plans** | Local events matched to your interests; interest in the same event as a strong match signal; opt-in sharing with audience controls. Absorbs the original "Activity Engine" | 🆕 Curated pilot pre-beta (NYC + Ithaca); full version post-launch |
 | Trust & safety | Report & block (everywhere), admin review, privacy settings, account deletion | Next |
-| Growth | Personal invite links, share sheet, "who's on Mingly" from contacts | 🆕 Pre-beta (web) + phone apps |
+| Growth | Personal invite links, share sheet, "who's on Mingly" from contacts | Invite links ✅; contacts with the phone apps |
 | Monetization | Affiliate ticket links first, sponsored events after scale | 🆕 Post-launch |
 | Platforms | Web; iOS and Android (Capacitor wrap of the web app) | Web ✅, phone apps Dec |
 
@@ -42,8 +42,10 @@ A Cornell startup. A trust-first way for professionals to meet compatible people
 | Matches + Connect: mutual matches, match moment, contact sharing, unmatch | Oct 4 |
 | Onboarding matching audit: consent toggles respected everywhere, all 20 fields verified; career similarity, alumni weighting | Oct 4 |
 | Core loop fix (people interested in you stay in your feed), Decide later, "About them" | Oct 5 |
+| LinkedIn link replaces email in match contact; company in matching by each person's choice | Oct 6 |
+| **Circles-lite:** personal invite links carried through sign-in, My Circle page, invite landing page, circle members leave Discovery, friends of friends ranked higher with "You both know Maya" | Oct 7 |
 
-Backend: 210 tests. Database at migration 0032.
+Backend: 230 tests. Database at migration 0034.
 
 ---
 
@@ -51,7 +53,7 @@ Backend: 210 tests. Database at migration 0032.
 
 | Dates | Milestone | Exit test |
 |---|---|---|
-| **Oct 6–14** | **Circles-lite** - personal invite links + share sheet; joining via a link adds you to the inviter's circle (with a confirm step); My Circle page; mutual-friend signal in scoring and intros ("You both know Maya"); "show me as a mutual connection" setting | A friend invited by link joins, lands in the inviter's circle, and a friend-of-friend sees "You both know ..." in Discovery |
+| ✅ **Oct 6–14** | **Circles-lite** (done Oct 7) - personal invite links + share sheet; joining via a link adds you to the inviter's circle (with a confirm step); My Circle page; mutual-friend signal in scoring and intros ("You both know Maya"); "show me as a mutual connection" setting | A friend invited by link joins, lands in the inviter's circle, and a friend-of-friend sees "You both know ..." in Discovery |
 | **Oct 15–23** | **Settings & safety** - Settings page (account deletion button, privacy overview, match contact info, discoverability settings, log out); report & block that remove someone from feed, matches, and circles; simple admin view of reports | Blocking removes a user from every surface in both directions; account deletion works from the UI (an App Store requirement) |
 | **Oct 26–30** | **Notifications & backups** - email on new match and on an accepted invite; automated production database + photo backups with a tested restore | A new match triggers an email; a backup is restored to a fresh database successfully |
 | **Nov 2–6** | **Phone & legal** - optional verified phone number (needed for contact matching later); "let people find me by my contact info" setting; Terms of Service and Privacy Policy pages (policy updated for invites, phone numbers, and contacts; lawyer review on your side) | Policy and terms live at public URLs; a phone number verifies end to end |

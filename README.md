@@ -71,6 +71,9 @@ A ranked feed, one person at a time, with their photos, an **About** section, an
 ### 5. Match and connect
 When two people are both interested, it's a match. Matches can see each other's optional contact info - a **LinkedIn profile link**, **phone**, and/or **Instagram** - which each person chooses to share, and which nobody else ever sees. Either person can unmatch, which hides contact info immediately.
 
+### 6. Your Circle
+Invite friends with a personal link - shared from your own phone, never sent automatically. When they join and accept, you're in each other's circle. Circle members don't appear in Discover (you already know them), but **their friends rank higher**, introduced warmly: *"You and Blake both know Maya."* Anyone can choose not to be named as a mutual friend and still help their friends' matches.
+
 ---
 
 ## What's Next
@@ -79,7 +82,7 @@ The full dated plan lives in **[docs/roadmap.md](docs/roadmap.md)**. In short:
 
 | When | What |
 |---|---|
-| October | **Circles** - invite your existing friends with a personal link; friends-of-friends become warm introductions ("You both know Maya"). **Settings & safety** - report and block, account deletion |
+| October | **Settings & safety** - report and block, account deletion (Circles shipped Oct 7) |
 | Late Oct–Nov | Match notifications, backups, verified phone numbers, Terms & Privacy Policy, and a **curated events pilot** in NYC and Ithaca |
 | December | **Private beta** on the web from Dec 1; **iOS and Android apps**, including finding friends from your phone contacts |
 | January 1, 2027 | **Launch** |
