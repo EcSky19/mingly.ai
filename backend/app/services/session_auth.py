@@ -9,10 +9,10 @@ import uuid
 from fastapi import HTTPException, Request
 from sqlalchemy.orm import Session
 
-from app.models.user import User
+from app.models.user import AccountStatus, User
 
 
-def get_current_user(request: Request, db: Session) -> User:
+def get_current_user(request: Request, db: Session, allow_inactive: bool = False) -> User:
     """Returns the authenticated User, or raises 401.
 
     Session stores user_id as a plain string (see auth.py callback).
@@ -35,4 +35,9 @@ def get_current_user(request: Request, db: Session) -> User:
     user = db.query(User).filter(User.id == user_uuid).first()
     if not user:
         raise HTTPException(status_code=401, detail="Not authenticated")
+    # Suspended and banned accounts are locked out of everything - checked
+    # here, centrally, so no route can forget it. allow_inactive is only for
+    # deleting your own account: everyone keeps the right to remove their data.
+    if user.account_status != AccountStatus.active and not allow_inactive:
+        raise HTTPException(status_code=403, detail="This account is not active")
     return user

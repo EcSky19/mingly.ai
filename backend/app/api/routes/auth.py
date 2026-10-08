@@ -118,7 +118,7 @@ async def delete_account(request: Request, db: Session = Depends(get_db)):
     the live schema: every users.id foreign key has ON DELETE CASCADE).
     Uploaded photo files aren't covered by that cascade since they live
     on disk, not in a table, so they're cleaned up explicitly first."""
-    user = get_current_user(request, db)
+    user = get_current_user(request, db, allow_inactive=True)
 
     user_photo_dir = UPLOADS_DIR / str(user.id)
     if user_photo_dir.exists():
