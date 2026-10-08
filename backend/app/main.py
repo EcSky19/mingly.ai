@@ -6,7 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.core.config import settings
-from app.api.routes import auth, autocomplete, professional_profile, education, locations, interests, activities, languages, social_profile, pets, photos, interactions, discover, match_contact, matches, circle
+from app.api.routes import auth, autocomplete, professional_profile, education, locations, interests, activities, languages, social_profile, pets, photos, interactions, discover, match_contact, matches, circle, safety
 
 app = FastAPI(title="Mingly.ai API", version="0.1.0")
 
@@ -46,6 +46,7 @@ app.include_router(match_contact.router)
 app.include_router(matches.router)
 app.include_router(circle.router)
 app.include_router(circle.invites_router)
+app.include_router(safety.router)
 
 # Serve uploaded profile photos as static files. The uploads directory
 # is created here if missing (StaticFiles requires it to exist at
