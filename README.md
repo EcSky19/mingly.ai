@@ -82,7 +82,7 @@ The full dated plan lives in **[docs/roadmap.md](docs/roadmap.md)**. In short:
 
 | When | What |
 |---|---|
-| October | **Settings & safety** - report and block, account deletion (Circles shipped Oct 7) |
+| October | Circles (shipped Oct 7) and **Settings & safety** (shipped Oct 8): report and block everywhere, admin review, account deletion |
 | Late Oct–Nov | Match notifications, backups, verified phone numbers, Terms & Privacy Policy, and a **curated events pilot** in NYC and Ithaca |
 | December | **Private beta** on the web from Dec 1; **iOS and Android apps**, including finding friends from your phone contacts |
 | January 1, 2027 | **Launch** |
@@ -182,7 +182,7 @@ pip install -r requirements.txt
 SESSION_SECRET=test-secret DATABASE_URL=sqlite:///./test.db pytest
 ```
 
-The backend suite has 200+ tests, including privacy guarantees (hidden fields never shown or named, opt-outs respected), consent rules for every matching signal, and query-count tests that keep the matching engine from slowing down as the user base grows. Features that depend on PostgreSQL-specific behavior are also verified against a real PostgreSQL database before release.
+The backend suite has 265 tests, including privacy guarantees (hidden fields never shown or named, opt-outs respected), consent rules for every matching signal, and query-count tests that keep the matching engine from slowing down as the user base grows. Features that depend on PostgreSQL-specific behavior are also verified against a real PostgreSQL database before release.
 
 ---
 

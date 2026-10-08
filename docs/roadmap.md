@@ -24,7 +24,7 @@ A Cornell startup. A trust-first way for professionals to meet compatible people
 | Matches & connect | Mutual matching, match moment, Matches page, unmatch, contact info shown only to matches | ✅ Live |
 | **Circles & network** | Your Circle = people you trust: **existing friends** (invites, phone contacts) and, later, **people you've met** through Mingly. Secondary network = friends of your circle, as a trust bridge to new people | ✅ Live (lite: invite links, My Circle, friends of friends in matching) |
 | **Events & plans** | Local events matched to your interests; interest in the same event as a strong match signal; opt-in sharing with audience controls. Absorbs the original "Activity Engine" | 🆕 Curated pilot pre-beta (NYC + Ithaca); full version post-launch |
-| Trust & safety | Report & block (everywhere), admin review, privacy settings, account deletion | Next |
+| Trust & safety | Report & block (everywhere), admin review, privacy settings, account deletion | ✅ Live |
 | Growth | Personal invite links, share sheet, "who's on Mingly" from contacts | Invite links ✅; contacts with the phone apps |
 | Monetization | Affiliate ticket links first, sponsored events after scale | 🆕 Post-launch |
 | Platforms | Web; iOS and Android (Capacitor wrap of the web app) | Web ✅, phone apps Dec |
@@ -44,8 +44,9 @@ A Cornell startup. A trust-first way for professionals to meet compatible people
 | Core loop fix (people interested in you stay in your feed), Decide later, "About them" | Oct 5 |
 | LinkedIn link replaces email in match contact; company in matching by each person's choice | Oct 6 |
 | **Circles-lite:** personal invite links carried through sign-in, My Circle page, invite landing page, circle members leave Discovery, friends of friends ranked higher with "You both know Maya" | Oct 7 |
+| **Settings & safety:** Settings page (account, privacy overview, mutual-friend setting, blocked people, guidelines, account deletion); report & block from Discover, Matches, and My Circle, enforced in both directions everywhere; suspended and banned accounts locked out; admin review of reports with an audit log | Oct 8 |
 
-Backend: 230 tests. Database at migration 0034.
+Backend: 265 tests. Database at migration 0035.
 
 ---
 
@@ -54,7 +55,7 @@ Backend: 230 tests. Database at migration 0034.
 | Dates | Milestone | Exit test |
 |---|---|---|
 | ✅ **Oct 6–14** | **Circles-lite** (done Oct 7) - personal invite links + share sheet; joining via a link adds you to the inviter's circle (with a confirm step); My Circle page; mutual-friend signal in scoring and intros ("You both know Maya"); "show me as a mutual connection" setting | A friend invited by link joins, lands in the inviter's circle, and a friend-of-friend sees "You both know ..." in Discovery |
-| **Oct 15–23** | **Settings & safety** - Settings page (account deletion button, privacy overview, match contact info, discoverability settings, log out); report & block that remove someone from feed, matches, and circles; simple admin view of reports | Blocking removes a user from every surface in both directions; account deletion works from the UI (an App Store requirement) |
+| ✅ **Oct 15–23** | **Settings & safety** (done Oct 8, a week early) - Settings page (account deletion button, privacy overview, match contact info, discoverability settings, log out); report & block that remove someone from feed, matches, and circles; simple admin view of reports | Blocking removes a user from every surface in both directions; account deletion works from the UI (an App Store requirement) |
 | **Oct 26–30** | **Notifications & backups** - email on new match and on an accepted invite; automated production database + photo backups with a tested restore | A new match triggers an email; a backup is restored to a fresh database successfully |
 | **Nov 2–6** | **Phone & legal** - optional verified phone number (needed for contact matching later); "let people find me by my contact info" setting; Terms of Service and Privacy Policy pages (policy updated for invites, phone numbers, and contacts; lawyer review on your side) | Policy and terms live at public URLs; a phone number verifies end to end |
 | **Nov 9–13** | **Events pilot (curated, NYC + Ithaca)** - hand-curated events in both pilot cities, mapped to the activity/interest catalog; "Things to do" page; mark interest in an event; see which matches and circle members are interested; event co-interest as a matching signal. Data model includes a `source` field (curated / API / sponsored) so later phases drop in | Two users interested in the same event see it reflected in their match intro |
