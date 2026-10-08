@@ -152,6 +152,7 @@ async def me(request: Request, db: Session = Depends(get_db)):
         "email": user.email,
         "onboarding_completed": user.onboarding_completed,
         "account_status": user.account_status,
+        "is_admin": user.is_admin,  # only ever about yourself - used to show the Admin link
         # Stored as a relative path to our own saved copy (or, for rows
         # not yet refreshed by a login, LinkedIn's legacy full URL) -
         # public_photo_url handles both shapes.
