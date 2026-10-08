@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -7,12 +8,22 @@ const LINKS = [
   { href: "/matches", label: "Matches" },
   { href: "/circle", label: "My Circle" },
   { href: "/profile", label: "My Profile" },
+  { href: "/settings", label: "Settings" },
 ];
 
 // Shared top bar for the signed-in app pages, so navigation stays
 // consistent instead of being re-implemented on each page.
 export default function AppNav() {
   const router = useRouter();
+  // The Admin link only appears for admin accounts. The admin area itself is
+  // protected on the server - this just keeps the nav uncluttered for everyone else.
+  const [isAdmin, setIsAdmin] = useState(false);
+  useEffect(() => {
+    fetch(`${API_URL}/api/auth/me`, { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setIsAdmin(Boolean(d?.is_admin)))
+      .catch(() => {});
+  }, []);
 
   // The onboarding pages are where you edit your profile, so My Profile
   // stays highlighted there too.
@@ -47,6 +58,15 @@ export default function AppNav() {
             {link.label}
           </button>
         ))}
+        {isAdmin && (
+          <button
+            type="button"
+            className={isActive("/admin") ? "discover-nav-link discover-nav-link-active" : "discover-nav-link"}
+            onClick={() => router.push("/admin")}
+          >
+            Admin
+          </button>
+        )}
         <button type="button" className="discover-nav-link" onClick={handleLogout}>
           Log out
         </button>
