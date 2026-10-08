@@ -99,7 +99,9 @@ def request_from_invite(db: Session, inviter_id: UUID, invitee_id: UUID) -> None
     their link; the invitee confirms by accepting. Skips yourself and people
     you're already connected to; reopens a request you'd declined, since
     opening the link again is a new signal of intent."""
-    if inviter_id == invitee_id or are_connected(db, inviter_id, invitee_id):
+    from app.services.safety import is_blocked  # local import: safety imports this module
+
+    if inviter_id == invitee_id or are_connected(db, inviter_id, invitee_id) or is_blocked(db, inviter_id, invitee_id):
         return
     existing = (
         db.query(CircleRequest)

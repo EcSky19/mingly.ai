@@ -17,6 +17,7 @@ from app.schemas.circle import (
 )
 from app.services.circles import connect, disconnect, get_or_create_invite_code, inviter_for_code
 from app.services.photo_storage import public_photo_url
+from app.services.safety import is_blocked
 from app.services.public_profile import build_public_cards
 from app.services.session_auth import get_current_user
 
@@ -87,6 +88,8 @@ def _my_pending_request(db: Session, user_id, request_id: str) -> CircleRequest:
 def accept_request(request_id: str, request: Request, db: Session = Depends(get_db)):
     user = get_current_user(request, db)
     req = _my_pending_request(db, user.id, request_id)
+    if is_blocked(db, user.id, req.from_user_id):
+        raise HTTPException(status_code=404, detail="Request not found")
     req.status = CircleRequestStatus.accepted
     connect(db, req.from_user_id, user.id, source=req.source.replace("_link", ""))
     db.commit()

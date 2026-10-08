@@ -12,9 +12,12 @@ from sqlalchemy.orm import Session
 
 from app.models.user import AccountStatus, User
 from app.models.user_interaction import InteractionAction, UserInteraction
+from app.services.safety import blocked_ids, is_blocked
 
 
 def is_mutual_match(db: Session, a_id: UUID, b_id: UUID) -> bool:
+    if is_blocked(db, a_id, b_id):
+        return False
     count = (
         db.query(UserInteraction)
         .filter(
@@ -52,6 +55,8 @@ def get_matches(db: Session, user_id: UUID) -> list[tuple[User, datetime | None]
     for r in theirs:
         times = [t for t in (r.updated_at, r.created_at, mine[r.user_id].updated_at, mine[r.user_id].created_at) if t]
         matched_at[r.user_id] = max(times) if times else None
+    for other in blocked_ids(db, user_id):
+        matched_at.pop(other, None)
     if not matched_at:
         return []
 

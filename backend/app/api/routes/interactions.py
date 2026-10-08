@@ -10,6 +10,7 @@ from app.models.user import User
 from app.models.user_interaction import UserInteraction
 from app.schemas.interactions import InteractionOut, InteractionRequest
 from app.services.matches import is_mutual_match
+from app.services.safety import is_blocked
 from app.services.session_auth import get_current_user
 
 router = APIRouter(prefix="/api/discover", tags=["discover"])
@@ -23,7 +24,9 @@ def record_interaction(body: InteractionRequest, request: Request, db: Session =
         raise HTTPException(status_code=400, detail="Can't interact with yourself")
 
     target = db.query(User).filter(User.id == body.target_user_id).first()
-    if not target:
+    # Blocked in either direction looks exactly like a nonexistent user, so
+    # the response never reveals that someone blocked you.
+    if not target or is_blocked(db, user.id, target.id):
         raise HTTPException(status_code=400, detail="Invalid target_user_id")
 
     existing = (
