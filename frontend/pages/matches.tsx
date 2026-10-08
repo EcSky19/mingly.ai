@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import OnboardingStyles from "../components/OnboardingStyles";
 import AppNav from "../components/AppNav";
+import ReportBlockDialog from "../components/ReportBlockDialog";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -39,6 +40,7 @@ export default function Matches() {
   const [loadError, setLoadError] = useState("");
   const [matches, setMatches] = useState<Match[]>([]);
   const [unmatchError, setUnmatchError] = useState("");
+  const [reportTarget, setReportTarget] = useState<{ id: string; first_name: string } | null>(null);
 
   useEffect(() => {
     fetch(`${API_URL}/api/auth/me`, { credentials: "include" })
@@ -59,6 +61,10 @@ export default function Matches() {
       .catch(() => setLoadError("Couldn't load your matches right now. Try refreshing the page."))
       .finally(() => setLoading(false));
   }, [checkingAuth]);
+
+  function removeBlocked(id: string) {
+    setMatches((prev) => prev.filter((m) => m.id !== id));
+  }
 
   async function unmatch(match: Match) {
     if (!window.confirm(`Unmatch with ${match.first_name}? You'll both lose each other's contact info, and this can't be undone.`)) {
@@ -177,6 +183,9 @@ export default function Matches() {
                     <button type="button" className="match-unmatch" onClick={() => unmatch(m)}>
                       Unmatch
                     </button>
+                    <button type="button" className="report-link" onClick={() => setReportTarget(m)}>
+                      Report or block
+                    </button>
                   </div>
                 );
               })}
@@ -184,6 +193,14 @@ export default function Matches() {
           )}
         </div>
       </main>
+      {reportTarget && (
+        <ReportBlockDialog
+          userId={reportTarget.id}
+          firstName={reportTarget.first_name}
+          onClose={() => setReportTarget(null)}
+          onBlocked={() => removeBlocked(reportTarget.id)}
+        />
+      )}
       <OnboardingStyles />
     </>
   );

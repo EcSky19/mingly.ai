@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import OnboardingStyles from "../components/OnboardingStyles";
 import AppNav from "../components/AppNav";
+import ReportBlockDialog from "../components/ReportBlockDialog";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -56,6 +57,7 @@ export default function Discover() {
   const [photoIndex, setPhotoIndex] = useState(0);
   const [acting, setActing] = useState(false);
   const [actionError, setActionError] = useState("");
+  const [reportTarget, setReportTarget] = useState<{ id: string; first_name: string } | null>(null);
   // Set when your "Connect" completes a mutual match - shown as its own
   // moment before moving on to the next person.
   const [justMatched, setJustMatched] = useState<Candidate | null>(null);
@@ -100,6 +102,11 @@ export default function Discover() {
   }
 
   const current = queue[0];
+
+  function removeBlocked(id: string) {
+    setQueue((prev) => prev.filter((c) => c.id !== id));
+    setPhotoIndex(0);
+  }
 
   async function act(action: "interested" | "dismissed" | "later") {
     if (!current || acting) return;
@@ -300,6 +307,9 @@ export default function Discover() {
                         Connect
                       </button>
                     </div>
+                    <button type="button" className="report-link" style={{ marginLeft: 0 }} onClick={() => setReportTarget(current)}>
+                      Report or block
+                    </button>
                     {actionError && (
                       <p className="section-hint" style={{ color: "#f472b6" }}>
                         {actionError}
@@ -312,6 +322,14 @@ export default function Discover() {
           )}
         </div>
       </main>
+      {reportTarget && (
+        <ReportBlockDialog
+          userId={reportTarget.id}
+          firstName={reportTarget.first_name}
+          onClose={() => setReportTarget(null)}
+          onBlocked={() => removeBlocked(reportTarget.id)}
+        />
+      )}
       <OnboardingStyles />
     </>
   );

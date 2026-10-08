@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import OnboardingStyles from "../components/OnboardingStyles";
 import AppNav from "../components/AppNav";
+import ReportBlockDialog from "../components/ReportBlockDialog";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -32,6 +33,7 @@ export default function Circle() {
   const [inviteUrl, setInviteUrl] = useState("");
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState("");
+  const [reportTarget, setReportTarget] = useState<{ id: string; first_name: string } | null>(null);
 
   useEffect(() => {
     fetch(`${API_URL}/api/auth/me`, { credentials: "include" })
@@ -89,6 +91,10 @@ export default function Circle() {
     const res = await fetch(`${API_URL}/api/circle/requests/${req.id}/${action}`, { method: "POST", credentials: "include" }).catch(() => null);
     if (!res || !res.ok) setError("Couldn't save that - please try again.");
     load();
+  }
+
+  function removeBlocked(id: string) {
+    setData((d) => (d ? { ...d, members: d.members.filter((m) => m.id !== id) } : d));
   }
 
   async function remove(person: Person) {
@@ -203,6 +209,9 @@ export default function Circle() {
                       <button type="button" className="match-unmatch" onClick={() => remove(m)}>
                         Remove from circle
                       </button>
+                      <button type="button" className="report-link" onClick={() => setReportTarget(m)}>
+                        Report or block
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -226,6 +235,14 @@ export default function Circle() {
           )}
         </div>
       </main>
+      {reportTarget && (
+        <ReportBlockDialog
+          userId={reportTarget.id}
+          firstName={reportTarget.first_name}
+          onClose={() => setReportTarget(null)}
+          onBlocked={() => removeBlocked(reportTarget.id)}
+        />
+      )}
       <OnboardingStyles />
     </>
   );

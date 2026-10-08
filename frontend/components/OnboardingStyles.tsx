@@ -611,6 +611,8 @@ export default function OnboardingStyles() {
       /* Discovery (/home) */
       .discover-topbar {
         display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
         align-items: center;
         justify-content: space-between;
         margin-bottom: 1.5rem;
@@ -618,7 +620,9 @@ export default function OnboardingStyles() {
       .discover-topbar .wordmark { margin-bottom: 0; }
       .discover-nav {
         display: flex;
-        gap: 1.25rem;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 0.5rem 1.25rem;
         align-items: center;
       }
       .discover-nav-link {
@@ -791,6 +795,101 @@ export default function OnboardingStyles() {
         border: 2px solid rgba(232, 165, 72, 0.5);
         margin-bottom: 1rem;
       }
+
+      /* Settings (/settings) */
+      .settings-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid rgba(185, 175, 209, 0.12);
+      }
+      .settings-strong { margin: 0; color: #f6f1e7; font-weight: 600; }
+      .settings-links {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+      .settings-danger {
+        border: 1px solid rgba(244, 114, 182, 0.35);
+        border-radius: 12px;
+        padding: 1.25rem;
+      }
+      .settings-delete-btn {
+        background: #f472b6;
+        color: #1b1633;
+        border: none;
+        border-radius: 4px;
+        font-weight: 600;
+        padding: 0.75rem 1.25rem;
+        cursor: pointer;
+      }
+      .settings-delete-btn:disabled { opacity: 0.4; cursor: default; }
+
+      /* Admin (/admin) */
+      .admin-tabs { display: flex; gap: 1.25rem; margin-bottom: 1.25rem; }
+      .admin-details {
+        color: #f6f1e7;
+        font-size: 0.9rem;
+        font-style: italic;
+        margin: 0.75rem 0;
+        line-height: 1.5;
+      }
+
+      /* Report / block dialog, and the small link that opens it */
+      .dialog-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(10, 8, 20, 0.75);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        z-index: 1000;
+      }
+      .dialog {
+        background: #241f3d;
+        border: 1px solid rgba(185, 175, 209, 0.25);
+        border-radius: 12px;
+        padding: 1.5rem;
+        width: 100%;
+        max-width: 28rem;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+      .dialog-actions {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 0.75rem;
+        margin-top: 1.25rem;
+      }
+      .dialog-actions-stacked {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .dialog-check {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        color: #f6f1e7;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+      }
+      .report-link {
+        background: transparent;
+        border: none;
+        color: #8f84ad;
+        font-size: 0.8rem;
+        cursor: pointer;
+        text-decoration: underline;
+        padding: 0;
+        margin-top: 1rem;
+        margin-left: 1rem;
+      }
+      .report-link:hover { color: #f472b6; }
 
       /* The moment a match happens on Discovery */
       .match-moment {
