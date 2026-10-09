@@ -4,7 +4,7 @@ connects you both. See app/services/circles.py.
 """
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, Response
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
@@ -16,6 +16,8 @@ from app.schemas.circle import (
     CircleMember, CircleOut, CirclePerson, CircleRequestOut, CircleSettingsUpdate, InviteInfoOut, InviteLinkOut,
 )
 from app.services.circles import connect, disconnect, get_or_create_invite_code, inviter_for_code
+from app.services.email import send_email
+from app.services.notifications import circle_joined_email
 from app.services.photo_storage import public_photo_url
 from app.services.safety import is_blocked
 from app.services.public_profile import build_public_cards
@@ -85,7 +87,7 @@ def _my_pending_request(db: Session, user_id, request_id: str) -> CircleRequest:
 
 
 @router.post("/requests/{request_id}/accept", status_code=204)
-def accept_request(request_id: str, request: Request, db: Session = Depends(get_db)):
+def accept_request(request_id: str, request: Request, background: BackgroundTasks, db: Session = Depends(get_db)):
     user = get_current_user(request, db)
     req = _my_pending_request(db, user.id, request_id)
     if is_blocked(db, user.id, req.from_user_id):
@@ -93,6 +95,9 @@ def accept_request(request_id: str, request: Request, db: Session = Depends(get_
     req.status = CircleRequestStatus.accepted
     connect(db, req.from_user_id, user.id, source=req.source.replace("_link", ""))
     db.commit()
+    email = circle_joined_email(db, req.from_user_id, user.id)
+    if email:
+        background.add_task(send_email, email)
     return Response(status_code=204)
 
 

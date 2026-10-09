@@ -5,6 +5,7 @@ import shutil
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -16,6 +17,10 @@ from app.services.session_auth import get_current_user
 from app.services.photo_storage import UPLOADS_DIR, LINKEDIN_PHOTOS_DIR, public_photo_url, save_linkedin_photo
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
+
+
+class PreferencesUpdate(BaseModel):
+    email_notifications: bool
 
 
 @router.get("/linkedin/login")
@@ -152,9 +157,19 @@ async def me(request: Request, db: Session = Depends(get_db)):
         "email": user.email,
         "onboarding_completed": user.onboarding_completed,
         "account_status": user.account_status,
+        "email_notifications": user.email_notifications,
         "is_admin": user.is_admin,  # only ever about yourself - used to show the Admin link
         # Stored as a relative path to our own saved copy (or, for rows
         # not yet refreshed by a login, LinkedIn's legacy full URL) -
         # public_photo_url handles both shapes.
         "profile_photo_url": public_photo_url(user.profile_photo_url),
     }
+
+
+@router.put("/preferences")
+async def update_preferences(body: PreferencesUpdate, request: Request, db: Session = Depends(get_db)):
+    """Account-level preferences from the Settings page."""
+    user = get_current_user(request, db)
+    user.email_notifications = body.email_notifications
+    db.commit()
+    return {"email_notifications": user.email_notifications}
