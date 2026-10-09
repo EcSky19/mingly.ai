@@ -1,0 +1,6 @@
+# Mingly backups - copy to /etc/cron.d/mingly-backup (see docs/backups.md).
+# Times are the server's clock (UTC): 03:17 UTC is about 11pm in New York.
+# Nightly backup:
+17 3 * * * root /opt/mingly-ai/infrastructure/backup/backup.sh >> /var/log/mingly-backup.log 2>&1
+# Weekly proof that the latest backup restores (Sundays):
+17 4 * * 0 root /opt/mingly-ai/infrastructure/backup/restore-test.sh >> /var/log/mingly-backup.log 2>&1
