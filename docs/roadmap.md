@@ -45,8 +45,9 @@ A Cornell startup. A trust-first way for professionals to meet compatible people
 | LinkedIn link replaces email in match contact; company in matching by each person's choice | Oct 6 |
 | **Circles-lite:** personal invite links carried through sign-in, My Circle page, invite landing page, circle members leave Discovery, friends of friends ranked higher with "You both know Maya" | Oct 7 |
 | **Settings & safety:** Settings page (account, privacy overview, mutual-friend setting, blocked people, guidelines, account deletion); report & block from Discover, Matches, and My Circle, enforced in both directions everywhere; suspended and banned accounts locked out; admin review of reports with an audit log | Oct 8 |
+| **Notifications & backups:** emails for a new match and an accepted circle invite (any SMTP provider; on/off in Settings; skipped until an email account is connected); nightly database + photo backups mirrored to a Hetzner Storage Box, weekly restore test, disaster-recovery restore script ([docs/backups.md](backups.md)) | Oct 9 |
 
-Backend: 265 tests. Database at migration 0035.
+Backend: 279 tests. Database at migration 0036.
 
 ---
 
@@ -56,7 +57,7 @@ Backend: 265 tests. Database at migration 0035.
 |---|---|---|
 | ✅ **Oct 6–14** | **Circles-lite** (done Oct 7) - personal invite links + share sheet; joining via a link adds you to the inviter's circle (with a confirm step); My Circle page; mutual-friend signal in scoring and intros ("You both know Maya"); "show me as a mutual connection" setting | A friend invited by link joins, lands in the inviter's circle, and a friend-of-friend sees "You both know ..." in Discovery |
 | ✅ **Oct 15–23** | **Settings & safety** (done Oct 8, a week early) - Settings page (account deletion button, privacy overview, match contact info, discoverability settings, log out); report & block that remove someone from feed, matches, and circles; simple admin view of reports | Blocking removes a user from every surface in both directions; account deletion works from the UI (an App Store requirement) |
-| **Oct 26–30** | **Notifications & backups** - email on new match and on an accepted invite; automated production database + photo backups with a tested restore | A new match triggers an email; a backup is restored to a fresh database successfully |
+| ✅ **Oct 26–30** | **Notifications & backups** (built Oct 9; goes live once the email account and Storage Box are set up) - email on new match and on an accepted invite; automated production database + photo backups with a tested restore | A new match triggers an email; a backup is restored to a fresh database successfully |
 | **Nov 2–6** | **Phone & legal** - optional verified phone number (needed for contact matching later); "let people find me by my contact info" setting; Terms of Service and Privacy Policy pages (policy updated for invites, phone numbers, and contacts; lawyer review on your side) | Policy and terms live at public URLs; a phone number verifies end to end |
 | **Nov 9–13** | **Events pilot (curated, NYC + Ithaca)** - hand-curated events in both pilot cities, mapped to the activity/interest catalog; "Things to do" page; mark interest in an event; see which matches and circle members are interested; event co-interest as a matching signal. Data model includes a `source` field (curated / API / sponsored) so later phases drop in | Two users interested in the same event see it reflected in their match intro |
 | Nov 16–20 | Buffer | — |
