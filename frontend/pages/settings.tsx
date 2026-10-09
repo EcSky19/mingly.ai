@@ -6,7 +6,7 @@ import AppNav from "../components/AppNav";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-type Me = { first_name: string; last_name: string; email: string };
+type Me = { first_name: string; last_name: string; email: string; email_notifications: boolean };
 type BlockedPerson = { id: string; first_name: string; photo_url?: string | null };
 
 function resolveUrl(url: string): string {
@@ -57,6 +57,21 @@ export default function Settings() {
     }).catch(() => null);
     if (!res || !res.ok) {
       setShowAsMutual(!value);
+      setError("Couldn't save that setting - please try again.");
+    }
+  }
+
+  async function toggleEmails(value: boolean) {
+    if (!me) return;
+    setMe({ ...me, email_notifications: value });
+    const res = await fetch(`${API_URL}/api/auth/preferences`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ email_notifications: value }),
+    }).catch(() => null);
+    if (!res || !res.ok) {
+      setMe((m) => (m ? { ...m, email_notifications: !value } : m));
       setError("Couldn't save that setting - please try again.");
     }
   }
@@ -117,6 +132,20 @@ export default function Settings() {
                   </div>
                   <button type="button" className="discover-pass-btn" style={{ flex: "none" }} onClick={logout}>Log out</button>
                 </div>
+              )}
+
+              <h2 className="circle-section-title">Notifications</h2>
+              {me && (
+                <label className="circle-setting">
+                  <input type="checkbox" checked={me.email_notifications} onChange={(e) => toggleEmails(e.target.checked)} />
+                  <span>
+                    Email me about my matches and circle
+                    <p>
+                      A short email when you have a new match or someone joins your circle, sent to {me.email}. Never
+                      marketing, and never shared.
+                    </p>
+                  </span>
+                </label>
               )}
 
               <h2 className="circle-section-title">Privacy</h2>
