@@ -39,7 +39,7 @@ We do not share your personal data with third parties for their own marketing pu
 
 ## Data retention and deletion
 
-You can request account deletion at any time. Upon deletion, we remove your profile and personal data from active systems, subject to reasonable retention for legal, safety, or fraud-prevention purposes.
+You can delete your account at any time from Settings. Upon deletion, we remove your profile, photos, and personal data from active systems immediately. Backup copies, kept so we can recover from an outage, are deleted on a rolling basis within 14 days (backup snapshots at our storage provider may persist for up to a further 14 days). Some information may be retained longer where reasonably necessary for legal, safety, or fraud-prevention purposes - for example, records of a report made against an account.
 
 ## Your rights
 
