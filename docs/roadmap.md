@@ -2,7 +2,7 @@
 
 The living plan for Mingly.ai: what the product is, what's built, and the dated path to launch. Updated as decisions are made and milestones ship - status here reflects what's actually live in production, not intent.
 
-**Launch target: January 1, 2027.** _Last updated: October 7, 2026._
+**Launch target: January 1, 2027.** _Last updated: October 9, 2026._
 
 ---
 
@@ -22,6 +22,7 @@ A Cornell startup. A trust-first way for professionals to meet compatible people
 | Matching engine | Eligibility (bidirectional preferences, distance, consent), compatibility scoring (activities, interests, career similarity, alumni, languages, pets, lifestyle, goals), friendly explainable intros | ✅ Live |
 | Discovery | Ranked feed, Pass / Decide later / Connect, "About them" | ✅ Live |
 | Matches & connect | Mutual matching, match moment, Matches page, unmatch, contact info shown only to matches | ✅ Live |
+| 🆕 **Messaging** | Private in-app conversations between mutual matches and circle members, so nobody has to hand out a phone number or Instagram to say hello; report and block from any conversation | 🆕 Pre-beta (Oct 19–23) |
 | **Circles & network** | Your Circle = people you trust: **existing friends** (invites, phone contacts) and, later, **people you've met** through Mingly. Secondary network = friends of your circle, as a trust bridge to new people | ✅ Live (lite: invite links, My Circle, friends of friends in matching) |
 | **Events & plans** | Local events matched to your interests; interest in the same event as a strong match signal; opt-in sharing with audience controls. Absorbs the original "Activity Engine" | 🆕 Curated pilot pre-beta (NYC + Ithaca); full version post-launch |
 | Trust & safety | Report & block (everywhere), admin review, privacy settings, account deletion | ✅ Live |
@@ -55,13 +56,16 @@ Backend: 279 tests. Database at migration 0036.
 
 | Dates | Milestone | Exit test |
 |---|---|---|
-| ✅ **Oct 6–14** | **Circles-lite** (done Oct 7) - personal invite links + share sheet; joining via a link adds you to the inviter's circle (with a confirm step); My Circle page; mutual-friend signal in scoring and intros ("You both know Maya"); "show me as a mutual connection" setting | A friend invited by link joins, lands in the inviter's circle, and a friend-of-friend sees "You both know ..." in Discovery |
-| ✅ **Oct 15–23** | **Settings & safety** (done Oct 8, a week early) - Settings page (account deletion button, privacy overview, match contact info, discoverability settings, log out); report & block that remove someone from feed, matches, and circles; simple admin view of reports | Blocking removes a user from every surface in both directions; account deletion works from the UI (an App Store requirement) |
-| ✅ **Oct 26–30** | **Notifications & backups** (built Oct 9; goes live once the email account and Storage Box are set up) - email on new match and on an accepted invite; automated production database + photo backups with a tested restore | A new match triggers an email; a backup is restored to a fresh database successfully |
-| **Nov 2–6** | **Phone & legal** - optional verified phone number (needed for contact matching later); "let people find me by my contact info" setting; Terms of Service and Privacy Policy pages (policy updated for invites, phone numbers, and contacts; lawyer review on your side) | Policy and terms live at public URLs; a phone number verifies end to end |
+| ✅ **Oct 7** | **Circles-lite** (planned Oct 6–14) - personal invite links + share sheet; joining via a link adds you to the inviter's circle (with a confirm step); My Circle page; mutual-friend signal in scoring and intros ("You both know Maya"); "show me as a mutual connection" setting | A friend invited by link joins, lands in the inviter's circle, and a friend-of-friend sees "You both know ..." in Discovery |
+| ✅ **Oct 8** | **Settings & safety** (planned Oct 15–23) - Settings page (account deletion button, privacy overview, match contact info, discoverability settings, log out); report & block that remove someone from feed, matches, and circles; simple admin view of reports | Blocking removes a user from every surface in both directions; account deletion works from the UI (an App Store requirement) |
+| ✅ **Oct 9** | **Notifications & backups** (planned Oct 26–30; emails send once an email provider is connected, backups run once the Storage Box is set up) - email on new match and on an accepted invite; automated production database + photo backups with a tested restore | A new match triggers an email; a backup is restored to a fresh database successfully |
+| **Oct 12–16** | 🆕 **Shorter onboarding** - measure how long each step takes, then cut, combine, or move non-essential sections until after signup (filled in later from the profile page), so a new person reaches Discover in a few minutes. Every field keeps its privacy controls | A new user goes from sign-in to Discover in under 5 minutes |
+| **Oct 19–23** | 🆕 **Messaging-lite** - private conversations between mutual matches and between circle members (friends of friends can't message directly - they match first); Messages page and unread count in the nav; one email per new conversation, never per message; report from inside a conversation; blocking ends the conversation for both and hides its history; unmatching closes it. Text only - no photos, groups, read receipts, or typing indicators yet. Contact sharing stays as an optional extra | Two matches message each other without sharing any contact info; a block ends it instantly in both directions |
+| **Oct 26–30** | **Phone & legal** - optional verified phone number (needed for contact matching later); "let people find me by my contact info" setting; Terms of Service and Privacy Policy pages (policy updated for invites, phone numbers, and contacts; lawyer review on your side) | Policy and terms live at public URLs; a phone number verifies end to end |
+| Nov 2–6 | Buffer | — |
 | **Nov 9–13** | **Events pilot (curated, NYC + Ithaca)** - hand-curated events in both pilot cities, mapped to the activity/interest catalog; "Things to do" page; mark interest in an event; see which matches and circle members are interested; event co-interest as a matching signal. Data model includes a `source` field (curated / API / sponsored) so later phases drop in | Two users interested in the same event see it reflected in their match intro |
 | Nov 16–20 | Buffer | — |
-| **Nov 23–30** | **Web QA & beta prep** (Thanksgiving week) | Full end-to-end pass on desktop and phone browsers: invite → sign up → onboard → discover → match → connect → event |
+| **Nov 23–30** | **Web QA & beta prep** (Thanksgiving week) | Full end-to-end pass on desktop and phone browsers: invite → sign up → onboard → discover → match → message → event |
 | **Dec 1–27** | **Private beta (web)** - two cohorts, NYC and Ithaca, recruited through invite links (Cornell networks in both), so each starts with real local density | Real matches and real meetings happen, with feedback captured |
 | **Nov 30–Dec 16** (in parallel) | **Phone apps** - Capacitor wrap; contacts permission → "Already on Mingly → add to circle" and "Invite"; store submission and review. Apps join the beta when approved | Approved in both stores |
 | **Dec 28–Jan 1** | **Final polish & launch** | — |
@@ -78,13 +82,14 @@ Backend: 279 tests. Database at migration 0036.
 - Affiliate ticket links - first revenue
 - Earned circles: post-meet feedback ("did you meet?") adds people you've met to your circle
 - Secondary network surfacing in Discovery, beyond the mutual-friend signal
-- Onboarding length revision, informed by beta drop-off data
+- Onboarding refinements, informed by beta drop-off data (the main cut happens pre-beta)
 - Funnel analytics
 
 **Q2 2027 - Smarter matching**
 - Semantic embeddings (pgvector) and an ML ranker trained on real behavior, with the heuristic kept as a fallback
 - Admin recommendation inspector
-- Small-group plans (3–4 people)
+- Small-group plans (3–4 people), with group messaging
+- Messaging upgrades: photos, read receipts, real-time delivery
 - Optional LinkedIn connections spreadsheet import
 
 **H2 2027 - Scale & revenue**
@@ -95,7 +100,7 @@ Backend: 279 tests. Database at migration 0036.
 
 ## Decisions log
 
-- **Contact sharing instead of in-app messaging (V0).** Matches see an optional LinkedIn profile link, phone, and/or Instagram the other person chose to share; nothing is shared by default. Messaging can come later.
+- **In-app messaging before beta** (decided Oct 9) - replaces the earlier V0 choice of contact sharing alone. Asking a brand-new match for a phone number or Instagram is too personal (the same reason email was dropped), and abuse that happens off-platform can't be reported or blocked. Mutual matches and circle members can message; friends of friends can't message directly and must match first, so no one gets unsolicited messages. Contact sharing (LinkedIn link, phone, Instagram) stays as an optional extra, off by default.
 - **LinkedIn link instead of email for match contact** - email is too personal for a first reach-out; a LinkedIn profile fits Mingly's professional, trust-first identity. Only genuine linkedin.com/in/ links are accepted.
 - **Recurring Routines removed** - revealing real-world patterns ("my gym on Tuesdays") is a safety risk. Event sharing must honor the same lesson.
 - **Conversation Topics removed** - redundant with Interests.

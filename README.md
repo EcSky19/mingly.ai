@@ -83,7 +83,7 @@ The full dated plan lives in **[docs/roadmap.md](docs/roadmap.md)**. In short:
 | When | What |
 |---|---|
 | October | Circles (shipped Oct 7) and **Settings & safety** (shipped Oct 8): report and block everywhere, admin review, account deletion |
-| Late Oct–Nov | Notification emails and nightly backups (built Oct 9), then verified phone numbers, Terms & Privacy Policy, and a **curated events pilot** in NYC and Ithaca |
+| Late Oct–Nov | Notification emails and nightly backups (built Oct 9), a **shorter onboarding**, **in-app messaging** between matches and circle members (so no one has to share a phone number to say hello), verified phone numbers, Terms & Privacy Policy, and a **curated events pilot** in NYC and Ithaca |
 | December | **Private beta** on the web from Dec 1; **iOS and Android apps**, including finding friends from your phone contacts |
 | January 1, 2027 | **Launch** |
 | 2027 | Automatically sourced local **events** with audience-controlled sharing, smarter (learned) matching, and sponsored events once the community has grown |
