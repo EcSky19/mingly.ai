@@ -206,6 +206,9 @@ export default function Circle() {
                           {m.headline && <p className="discover-headline">{m.headline}</p>}
                         </div>
                       </div>
+                      <button type="button" className="cta match-message-btn" onClick={() => router.push(`/messages/${m.id}`)}>
+                        Message {m.first_name}
+                      </button>
                       <button type="button" className="match-unmatch" onClick={() => remove(m)}>
                         Remove from circle
                       </button>

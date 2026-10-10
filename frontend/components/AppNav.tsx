@@ -6,6 +6,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const LINKS = [
   { href: "/home", label: "Discover" },
   { href: "/matches", label: "Matches" },
+  { href: "/messages", label: "Messages" },
   { href: "/circle", label: "My Circle" },
   { href: "/profile", label: "My Profile" },
   { href: "/settings", label: "Settings" },
@@ -25,10 +26,29 @@ export default function AppNav() {
       .catch(() => {});
   }, []);
 
+  // Unread badge on Messages: conversations with something new. Checked on
+  // every page change and every 30 seconds while the tab is visible.
+  const [unread, setUnread] = useState(0);
+  useEffect(() => {
+    let cancelled = false;
+    const check = () =>
+      fetch(`${API_URL}/api/messages/unread`, { credentials: "include" })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => !cancelled && d && setUnread(d.conversations))
+        .catch(() => {});
+    check();
+    const timer = setInterval(() => document.visibilityState === "visible" && check(), 30000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [router.asPath]);
+
   // The onboarding pages are where you edit your profile, so My Profile
   // stays highlighted there too.
   function isActive(href: string) {
     if (href === "/profile") return router.pathname === "/profile" || router.pathname.startsWith("/onboarding");
+    if (href === "/messages") return router.pathname.startsWith("/messages");
     return router.pathname === href;
   }
 
@@ -56,6 +76,9 @@ export default function AppNav() {
             onClick={() => router.push(link.href)}
           >
             {link.label}
+            {link.href === "/messages" && unread > 0 && (
+              <span className="nav-badge" aria-label={`${unread} unread`}>{unread}</span>
+            )}
           </button>
         ))}
         {isAdmin && (

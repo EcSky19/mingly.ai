@@ -67,7 +67,7 @@ export default function Matches() {
   }
 
   async function unmatch(match: Match) {
-    if (!window.confirm(`Unmatch with ${match.first_name}? You'll both lose each other's contact info, and this can't be undone.`)) {
+    if (!window.confirm(`Unmatch with ${match.first_name}? You'll both lose each other's contact info and your conversation will close. This can't be undone.`)) {
       return;
     }
     setUnmatchError("");
@@ -146,6 +146,10 @@ export default function Matches() {
                       </div>
                     )}
 
+                    <button type="button" className="cta match-message-btn" onClick={() => router.push(`/messages/${m.id}`)}>
+                      Message {m.first_name}
+                    </button>
+
                     <div className="match-contact">
                       {hasContact ? (
                         <>
@@ -174,8 +178,8 @@ export default function Matches() {
                         </>
                       ) : (
                         <p className="match-contact-none">
-                          {m.first_name} hasn't added a way to reach them yet. Make sure yours is on your
-                          profile so they can reach you.
+                          {m.first_name} hasn't shared other contact info - message them here on Mingly. You can
+                          add yours on your profile whenever you're ready.
                         </p>
                       )}
                     </div>
