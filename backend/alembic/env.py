@@ -20,6 +20,7 @@ from app.models import user_interaction  # noqa: F401
 from app.models import user_match_contact  # noqa: F401
 from app.models import circle  # noqa: F401
 from app.models import safety  # noqa: F401
+from app.models import messaging  # noqa: F401
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
