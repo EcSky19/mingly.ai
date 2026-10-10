@@ -33,9 +33,13 @@ We do not sell your personal data. We do not use your information for advertisin
 
 You control which profile fields are visible to other users versus used only internally for matching (`visible_on_profile` vs. `usable_for_matching`). Fields marked private for matching are never shown on your public profile even if used to compute recommendations.
 
+## Messages
+
+Messages you send on Mingly are visible only to you and the person you're talking to. You can message people you've matched with and people in your circle. If either of you unmatches, leaves the other's circle, or blocks the other, the conversation closes and its history is hidden from both of you. Messages are stored on our servers so we can deliver them; the Mingly team does not read conversations except where needed to investigate a safety report or to comply with the law. Email notifications about messages never include the message itself. When either person deletes their account, the conversation and all of its messages are deleted.
+
 ## Data sharing
 
-We do not share your personal data with third parties for their own marketing purposes. We may share data with service providers who help us operate the platform (e.g., hosting infrastructure), under contractual confidentiality obligations.
+We do not share your personal data with third parties for their own marketing purposes. We may share data with service providers who help us operate the platform (e.g., hosting infrastructure and email delivery), under contractual confidentiality obligations.
 
 ## Data retention and deletion
 
