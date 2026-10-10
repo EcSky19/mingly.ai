@@ -1,5 +1,6 @@
 """
-Notification emails: a new match, and someone joining your circle.
+Notification emails: a new match, someone joining your circle, and the
+first message in a new conversation.
 
 Each function only *builds* the email (or returns None when it shouldn't be
 sent); routes hand the result to a background task that sends it after the
@@ -74,6 +75,26 @@ def circle_joined_email(db: Session, recipient_id: UUID, other_id: UUID) -> Emai
             "Friends of your circle will see you both as a mutual connection (if you allow it), "
             "which helps everyone meet people they can trust.\n\n"
             f"See your circle: {settings.APP_URL}/circle"
+            + _footer()
+        ),
+    )
+
+
+def new_conversation_email(db: Session, recipient_id: UUID, sender_id: UUID) -> Email | None:
+    """When someone starts a conversation with you - once per conversation,
+    never per message. The message itself is never put in the email: inboxes
+    are shared, forwarded, and previewed on lock screens."""
+    people = _people(db, recipient_id, sender_id)
+    if not people:
+        return None
+    recipient, sender = people
+    return Email(
+        to=recipient.email,
+        subject=f"{sender.first_name} sent you a message on Mingly",
+        text=(
+            f"Hi {recipient.first_name},\n\n"
+            f"{sender.first_name} started a conversation with you on Mingly.\n\n"
+            f"Read and reply: {settings.APP_URL}/messages/{sender.id}"
             + _footer()
         ),
     )
